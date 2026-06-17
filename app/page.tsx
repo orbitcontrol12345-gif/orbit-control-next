@@ -59,7 +59,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative min-h-screen overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+      <section className="relative min-h-[82vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
         <div
           className="absolute inset-0"
           style={{
@@ -68,7 +68,7 @@ export default async function HomePage() {
           }}
         />
 
-        <div className="page-container relative grid min-h-screen items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -120,8 +120,10 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
+</section>
+
 {/* MARQUEE STRIP */}
-<section className="mt-6 overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3 rounded-lg">
+<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
   <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
     <span>✓ PLC SYSTEMS</span>
     <span>✓ HMI PANELS</span>
