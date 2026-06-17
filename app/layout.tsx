@@ -8,67 +8,79 @@ import Footer from '@/components/layout/Footer';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://xeltronic.com'),
-
+  metadataBase: new URL('https://www.orbit-surplus.com'),
   alternates: {
     canonical: '/',
   },
-
   title: {
-    default: 'Xeltronic Electrical Solution — Industrial Automation Spare Parts',
-    template: '%s | Xeltronic Electrical Solution',
+    default: 'Orbit Control Automation — Industrial Automation & Surplus Parts',
+    template: '%s | Orbit Control Automation',
   },
   description:
-    'Global supplier of industrial automation and electrical spare parts. PLCs, HMIs, drives, sensors, circuit breakers, and obsolete automation parts. Fast RFQ response. Worldwide shipping via DHL & FedEx.',
+    'Orbit Control Automation supplies industrial automation, electrical, PLC, HMI, VFD, sensors, circuit breakers, relays, obsolete and surplus spare parts worldwide with fast RFQ response.',
   keywords: [
     'industrial automation parts',
+    'surplus automation parts',
     'PLC spare parts',
-    'HMI parts',
+    'HMI panels',
     'VFD drives',
-    'Siemens parts',
+    'Siemens PLC',
     'ABB automation',
     'Allen-Bradley parts',
-    'obsolete PLC parts',
-    'industrial electrical parts UAE',
-    'request for quote industrial',
+    'Schneider Electric parts',
+    'obsolete industrial parts',
+    'automation spare parts UAE',
+    'industrial electrical surplus',
   ],
-  authors: [{ name: 'Xeltronic Electrical Solution' }],
+  authors: [{ name: 'Orbit Control Automation' }],
   openGraph: {
     type: 'website',
-    siteName: 'Xeltronic Electrical Solution',
-    title: 'Xeltronic Electrical Solution — Industrial Automation Spare Parts',
-    description: 'Global B2B supplier of industrial automation and electrical spare parts. Fast RFQ response.',
+    siteName: 'Orbit Control Automation',
+    title: 'Orbit Control Automation — Industrial Automation & Surplus Parts',
+    description:
+      'Global B2B supplier of industrial automation, electrical, obsolete and surplus spare parts.',
+    url: 'https://orbit-surplus.com',
+    images: ['/logo.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Xeltronic Electrical Solution',
-    description: 'Global B2B supplier of industrial automation spare parts.',
+    title: 'Orbit Control Automation',
+    description:
+      'Global supplier of industrial automation and surplus spare parts.',
+    images: ['/logo.png'],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className={`${inter.className} bg-navy-900 text-slate-100`}>
-  <Header />
-  <main>{children}</main>
-  <Footer />
-  <FloatingContact />
+      <body className={`${inter.className} min-h-screen bg-[#07111f] text-slate-100 antialiased`}>
+        <div className="fixed inset-0 -z-10 overflow-hidden bg-[radial-gradient(circle_at_top_left,#153c4f_0%,transparent_32%),radial-gradient(circle_at_top_right,#4b2e12_0%,transparent_28%),linear-gradient(180deg,#07111f_0%,#081827_45%,#050b14_100%)]" />
+        <div className="fixed inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
 
-  <script
-  id="organization-schema"
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: "Xeltronic Electrical Solution",
-      url: "https://xeltronic.com",
-      logo: "https://xeltronic.com/logo.png",
-    }),
-  }}
-/>
-</body>
+        <Header />
+
+        <main className="relative">
+          {children}
+        </main>
+
+        <Footer />
+        <FloatingContact />
+
+        <script
+          id="organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Orbit Control Automation',
+              url: 'https://www.orbit-surplus.com',
+              logo: 'https://www.orbit-surplus.com/logo.png',
+            }),
+          }}
+        />
+      </body>
     </html>
   );
 }
