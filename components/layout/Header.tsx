@@ -137,13 +137,14 @@ export default function Header() {
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <Image
+  <Image
   src="/logo.png"
   alt="Orbit Control Automation"
-  width={300}
-  height={80}
+  width={420}
+  height={120}
   priority
-  className="h-16 w-auto md:h-20"
- />
+  className="h-20 w-auto md:h-24"
+/>
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
