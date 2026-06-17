@@ -226,7 +226,20 @@ export default async function HomePage() {
       </section>
 
      {/* BRANDS - Clean Orbit Showcase */}
-<section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-18">
+
+<section
+  className="relative overflow-hidden border-y border-white/10 py-18"
+  style={{
+    background: `
+      radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 30%),
+      radial-gradient(circle at 80% 30%, rgba(245,158,11,0.08), transparent 30%),
+      linear-gradient(180deg,#06111d 0%,#081827 100%)
+    `,
+  }}
+>
+
+ 
+
   <div className="page-container">
     <div className="mb-9 text-center">
       <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
