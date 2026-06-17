@@ -134,13 +134,13 @@ export default function Header() {
       </div>
 
       <div className="page-container">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <Image
   src="/logo.png"
   alt="Orbit Control Automation"
-  width={320}
-  height={100}
+  width={300}
+  height={80}
   priority
   className="h-16 w-auto md:h-20"
  />
