@@ -159,3 +159,11 @@
   outline: 2px solid #c9a84c;
   outline-offset: 2px;
 }
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
