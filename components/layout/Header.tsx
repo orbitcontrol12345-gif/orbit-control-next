@@ -136,7 +136,7 @@ export default function Header() {
       <div className="page-container">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
-            <Image
+        
   <Image
   src="/logo.png"
   alt="Orbit Control Automation"
