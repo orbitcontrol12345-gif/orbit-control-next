@@ -92,7 +92,10 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-     <section className="relative min-h-[92vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+<section className="relative min-h-[92vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+  <div className="absolute inset-0 bg-[#06111d]" />
+
+  <div className="page-container relative grid min-h-[92vh] items-center gap-12 py-20 lg:grid-cols-[1.1fr_0.9fr]">
   <div
     className="absolute inset-0"
     style={{
