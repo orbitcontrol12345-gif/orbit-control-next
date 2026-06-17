@@ -1,0 +1,116 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { CheckCircle, XCircle, ExternalLink, FileText } from 'lucide-react';
+import type { Product } from '@/lib/types';
+
+interface ProductCardProps {
+  product: Product;
+}
+
+function ConditionBadge({ condition }: { condition: Product['condition'] }) {
+  const text = String(condition || '');
+
+  const label =
+    text.toLowerCase().includes('open box') ||
+    text.toLowerCase().includes('without box')
+      ? 'New'
+      : text;
+
+  return <span className="badge-condition-used">{label}</span>;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+  const productUrl = `/products/${product.slug}`;
+
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
+      {/* Image */}
+      <Link
+        href={productUrl}
+        aria-label={`View details for ${product.name}`}
+        className="relative block h-44 overflow-hidden bg-white"
+      >
+        <Image
+          src={product.imageUrl}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+        <div className="absolute left-2 top-2">
+          <ConditionBadge condition={product.condition} />
+        </div>
+      </Link>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-4">
+        {/* Brand + category */}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
+            {product.brand}
+          </span>
+
+          <span className="truncate text-xs text-slate-500">
+            {product.category}
+          </span>
+        </div>
+
+        {/* Part number */}
+        <p className="mb-1 text-xs font-mono text-slate-400">
+          PN:{' '}
+          <span className="font-semibold text-slate-300">
+            {product.partNumber}
+          </span>
+        </p>
+
+        {/* Name */}
+        <Link href={productUrl} className="mb-3 block flex-1">
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100 transition-colors group-hover:text-gold-400">
+            {product.name}
+          </h3>
+        </Link>
+
+        {/* Stock */}
+        <div className="mb-4 flex items-center gap-1.5">
+          {product.inStock ? (
+            <>
+              <CheckCircle size={13} className="text-emerald-400" />
+              <span className="text-xs font-medium text-emerald-400">
+                In Stock
+              </span>
+            </>
+          ) : (
+            <>
+              <XCircle size={13} className="text-slate-500" />
+              <span className="text-xs text-slate-500">
+                Check Availability
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href={productUrl}
+            className="flex items-center justify-center gap-1.5 rounded border border-navy-600 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+          >
+            <ExternalLink size={12} />
+            Details
+          </Link>
+
+          <Link
+            href={`/rfq?part=${encodeURIComponent(product.partNumber)}`}
+            className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 transition-colors hover:bg-gold-400"
+          >
+            <FileText size={12} />
+            Get Quote
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
