@@ -17,7 +17,16 @@ import {
   Settings,
   Archive,
 } from 'lucide-react';
-
+<section className="border-y border-white/10 bg-[#071421] py-4 overflow-hidden">
+  <div className="whitespace-nowrap animate-[marquee_35s_linear_infinite]">
+    <span className="mx-8 text-sm font-bold text-cyan-200">
+      SIEMENS • ABB • SCHNEIDER ELECTRIC • ALLEN-BRADLEY • HONEYWELL • OMRON • YOKOGAWA • FANUC • BECKHOFF • KEYENCE • MITSUBISHI ELECTRIC • PHOENIX CONTACT
+    </span>
+    <span className="mx-8 text-sm font-bold text-cyan-200">
+      SIEMENS • ABB • SCHNEIDER ELECTRIC • ALLEN-BRADLEY • HONEYWELL • OMRON • YOKOGAWA • FANUC • BECKHOFF • KEYENCE • MITSUBISHI ELECTRIC • PHOENIX CONTACT
+    </span>
+  </div>
+</section>
 import HeroSearchBar from '@/components/shared/HeroSearchBar';
 import ProductCard from '@/components/products/ProductCard';
 import { CATEGORIES, BRANDS } from '@/lib/data';
