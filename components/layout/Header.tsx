@@ -11,6 +11,7 @@ import type { Product } from '@/lib/types';
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Products', href: '/products' },
+  { label: 'Manufacturers', href: '/manufacturers' },
   { label: 'Brands', href: '/brands' },
   { label: 'Categories', href: '/categories' },
   { label: 'Sell Surplus', href: '/sell-surplus' },
