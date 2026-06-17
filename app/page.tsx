@@ -225,53 +225,80 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* BRANDS */}
-      <section className="bg-[#06111d] py-16">
-        <div className="page-container">
-          <div className="mb-9 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-cyan-300">
-                Manufacturers
-              </p>
-              <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
-                Automation Brands We Supply
-              </h2>
+      {/* BRANDS - Orbit Style */}
+<section className="relative overflow-hidden border-y border-white/10 bg-[#07111f] py-20">
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_80%_30%,rgba(245,158,11,0.12),transparent_28%)]" />
+
+  <div className="page-container relative">
+    <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
+          Global Automation Brands
+        </p>
+        <h2 className="mt-3 max-w-2xl text-3xl font-black text-white md:text-4xl">
+          We source trusted industrial brands for urgent maintenance needs.
+        </h2>
+      </div>
+
+      <Link
+        href="/brands"
+        className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-5 py-2 text-sm font-bold text-amber-300 transition hover:bg-amber-300/20"
+      >
+        Explore all brands
+        <ArrowRight size={16} />
+      </Link>
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {BRANDS.slice(0, 12).map((brand, index) => (
+        <Link
+          key={brand.slug}
+          href={`/brands/${brand.slug}`}
+          className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/10 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] ${
+            index % 5 === 0 ? 'lg:col-span-2' : ''
+          }`}
+        >
+          <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-400/10 blur-2xl transition group-hover:bg-amber-400/20" />
+
+          <div className="flex min-h-[120px] items-center justify-between gap-5">
+            <div className="flex h-20 w-28 shrink-0 items-center justify-center rounded-2xl bg-white p-4 shadow-lg shadow-black/20">
+              {brand.logo ? (
+                <Image
+                  src={brand.logo}
+                  alt={`${brand.name} logo`}
+                  width={180}
+                  height={80}
+                  className="max-h-14 w-auto object-contain"
+                />
+              ) : (
+                <span className="text-center text-sm font-black text-slate-800">
+                  {brand.name}
+                </span>
+              )}
             </div>
 
-            <Link
-              href="/brands"
-              className="inline-flex items-center gap-2 text-sm font-bold text-amber-300 hover:text-amber-200"
-            >
-              View all brands
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-lg font-black text-white">
+                {brand.name}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                PLCs, drives, sensors, controls and spare parts.
+              </p>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {BRANDS.slice(0, 12).map((brand) => (
-              <Link
-                key={brand.slug}
-                href={`/brands/${brand.slug}`}
-                className="group flex h-32 items-center justify-center rounded-2xl border border-white/10 bg-white p-5 shadow-lg shadow-black/10 transition hover:-translate-y-1 hover:border-amber-400 hover:shadow-amber-500/10"
-              >
-                {brand.logo ? (
-                  <Image
-                    src={brand.logo}
-                    alt={`${brand.name} logo`}
-                    width={220}
-                    height={100}
-                    className="max-h-20 w-auto object-contain transition duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="text-center text-sm font-bold text-slate-700">
-                    {brand.name}
-                  </span>
-                )}
-              </Link>
-            ))}
+              <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
+                View Parts
+                <ArrowRight
+                  size={14}
+                  className="transition group-hover:translate-x-1"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* CATEGORIES */}
       <section className="border-y border-white/10 bg-[#0a1d2e] py-16">
