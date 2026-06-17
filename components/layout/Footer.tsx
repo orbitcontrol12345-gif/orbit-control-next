@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Zap, Mail, Phone, MapPin, Linkedin, Globe, ArrowRight } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe } from 'lucide-react';
 import Image from 'next/image';
+
 const footerLinks = {
   company: [
     { label: 'About Us', href: '/about' },
@@ -10,12 +11,12 @@ const footerLinks = {
     { label: 'Contact Us', href: '/contact' },
   ],
   policies: [
-  { label: 'Shipping Policy', href: '/shipping-policy' },
-  { label: 'Warranty & Returns', href: '/warranty-policy' },
-  { label: 'Privacy Policy', href: '/privacy-policy' },
-  { label: 'Legal Disclaimer', href: '/disclaimer' },
-  { label: 'Request a Quote', href: '/rfq' },
-],
+    { label: 'Shipping Policy', href: '/shipping-policy' },
+    { label: 'Warranty & Returns', href: '/warranty-policy' },
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Legal Disclaimer', href: '/disclaimer' },
+    { label: 'Request a Quote', href: '/rfq' },
+  ],
   categories: [
     { label: 'PLCs', href: '/categories/plcs' },
     { label: 'HMIs', href: '/categories/hmis' },
@@ -28,59 +29,91 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-navy-950 border-t border-navy-800">
-      
-
-      {/* Main footer */}
-      <div className="page-container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Brand column */}
+    <footer className="border-t border-white/10 bg-[#050b14]">
+      <div className="page-container py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 bg-gold-500 rounded flex items-center justify-center">
-                <Image
-  src="/logo.png"
-  alt="Xeltronic Electrical Solution"
-  width={170}
-  height={55}
-  className="h-5 w-auto"
-/>
-              </div>
+            <Link href="/" className="mb-5 flex items-center">
+              <Image
+                src="/logo.png"
+                alt="Orbit Control Automation"
+                width={360}
+                height={110}
+                className="h-20 w-auto object-contain"
+              />
             </Link>
-            <p className="text-slate-400 text-sm leading-relaxed mb-6 max-w-xs">
-              Global supplier of industrial automation and electrical spare parts. Specializing in PLCs, HMIs, drives, sensors, and obsolete automation components.
+
+            <p className="mb-6 max-w-md text-sm leading-7 text-slate-400">
+              Orbit Control Automation supplies industrial automation, electrical,
+              obsolete and surplus spare parts worldwide, including PLCs, HMIs,
+              VFDs, sensors, relays, circuit breakers and control system components.
             </p>
-            <div className="space-y-2.5">
+
+            <div className="space-y-3">
               <div className="flex items-start gap-3 text-sm text-slate-400">
-                <MapPin size={15} className="text-gold-500 shrink-0 mt-0.5" />
-                <span>United Arab Emirates</span>
+                <MapPin size={16} className="mt-0.5 shrink-0 text-amber-400" />
+                <span>United Arab Emirates, Ajman</span>
               </div>
+
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Mail size={15} className="text-gold-500 shrink-0" />
-                <a href="mailto:info@xeltronic.com" className="hover:text-gold-500 transition-colors">
-                  info@xeltronic.com
+                <Mail size={16} className="shrink-0 text-amber-400" />
+                <a
+                  href="mailto:info@orbit-surplus.com"
+                  className="transition-colors hover:text-amber-300"
+                >
+                  info@orbit-surplus.com
                 </a>
               </div>
+
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Phone size={15} className="text-gold-500 shrink-0" />
-                <span>+971 6 767 7094</span>
+                <Mail size={16} className="shrink-0 text-amber-400" />
+                <a
+                  href="mailto:sales@orbit-surplus.com"
+                  className="transition-colors hover:text-amber-300"
+                >
+                  sales@orbit-surplus.com
+                </a>
               </div>
+
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Globe size={15} className="text-gold-500 shrink-0" />
-                <span>Worldwide Shipping via DHL &amp; FedEx</span>
+                <Phone size={16} className="shrink-0 text-amber-400" />
+                <a
+                  href="tel:+971676777094"
+                  className="transition-colors hover:text-amber-300"
+                >
+                  +971 6 767 7094
+                </a>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm text-slate-400">
+                <Phone size={16} className="shrink-0 text-amber-400" />
+                <a
+                  href="https://wa.me/971544272141"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors hover:text-amber-300"
+                >
+                  WhatsApp: +971 54 427 2141
+                </a>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm text-slate-400">
+                <Globe size={16} className="shrink-0 text-amber-400" />
+                <span>Worldwide shipping via DHL &amp; FedEx</span>
               </div>
             </div>
           </div>
 
-          {/* Company */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Company</h4>
+            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+              Company
+            </h4>
             <ul className="space-y-2.5">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 hover:text-gold-500 transition-colors"
+                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
                   >
                     {link.label}
                   </Link>
@@ -89,15 +122,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Categories */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Categories</h4>
+            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+              Categories
+            </h4>
             <ul className="space-y-2.5">
               {footerLinks.categories.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 hover:text-gold-500 transition-colors"
+                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
                   >
                     {link.label}
                   </Link>
@@ -106,15 +140,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Policies */}
           <div>
-            <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Policies</h4>
+            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+              Policies
+            </h4>
             <ul className="space-y-2.5">
               {footerLinks.policies.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 hover:text-gold-500 transition-colors"
+                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
                   >
                     {link.label}
                   </Link>
@@ -125,11 +160,16 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-navy-800">
-        <div className="page-container py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Xeltronic Electrical Solution. All rights reserved.</p>
-          <div className="flex items-center gap-4">
+      <div className="border-t border-white/10">
+        <div className="page-container flex flex-col items-center justify-between gap-3 py-4 text-xs text-slate-500 sm:flex-row">
+          <p>
+            © {new Date().getFullYear()} Orbit Control Automation. All rights
+            reserved.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span>www.orbit-surplus.com</span>
+            <span>|</span>
             <span>Industrial Automation Spare Parts</span>
             <span>|</span>
             <span>United Arab Emirates</span>
