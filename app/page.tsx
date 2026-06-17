@@ -225,77 +225,55 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* BRANDS - Orbit Style */}
-<section className="relative overflow-hidden border-y border-white/10 bg-[#07111f] py-20">
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_80%_30%,rgba(245,158,11,0.12),transparent_28%)]" />
-
-  <div className="page-container relative">
-    <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
-          Global Automation Brands
-        </p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-black text-white md:text-4xl">
-          We source trusted industrial brands for urgent maintenance needs.
-        </h2>
-      </div>
-
-      <Link
-        href="/brands"
-        className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-5 py-2 text-sm font-bold text-amber-300 transition hover:bg-amber-300/20"
-      >
-        Explore all brands
-        <ArrowRight size={16} />
-      </Link>
+     {/* BRANDS - Clean Orbit Showcase */}
+<section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-18">
+  <div className="page-container">
+    <div className="mb-9 text-center">
+      <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
+        Global Automation Brands
+      </p>
+      <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
+        Trusted Industrial Manufacturers We Supply
+      </h2>
+      <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+        Sourcing automation, electrical and obsolete spare parts from leading global brands.
+      </p>
     </div>
 
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {BRANDS.slice(0, 12).map((brand, index) => (
-        <Link
-          key={brand.slug}
-          href={`/brands/${brand.slug}`}
-          className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-xl shadow-black/10 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] ${
-            index % 5 === 0 ? 'lg:col-span-2' : ''
-          }`}
-        >
-          <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-amber-400/10 blur-2xl transition group-hover:bg-amber-400/20" />
-
-          <div className="flex min-h-[120px] items-center justify-between gap-5">
-            <div className="flex h-20 w-28 shrink-0 items-center justify-center rounded-2xl bg-white p-4 shadow-lg shadow-black/20">
-              {brand.logo ? (
-                <Image
-                  src={brand.logo}
-                  alt={`${brand.name} logo`}
-                  width={180}
-                  height={80}
-                  className="max-h-14 w-auto object-contain"
-                />
-              ) : (
-                <span className="text-center text-sm font-black text-slate-800">
-                  {brand.name}
-                </span>
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-lg font-black text-white">
+    <div className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/20">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        {BRANDS.slice(0, 12).map((brand) => (
+          <Link
+            key={brand.slug}
+            href={`/brands/${brand.slug}`}
+            className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-white p-5 transition duration-300 hover:-translate-y-1 hover:border-amber-400 hover:shadow-xl hover:shadow-amber-500/10"
+          >
+            {brand.logo ? (
+              <Image
+                src={brand.logo}
+                alt={`${brand.name} logo`}
+                width={210}
+                height={90}
+                className="max-h-16 w-auto object-contain transition duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <span className="text-center text-sm font-black text-slate-800">
                 {brand.name}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                PLCs, drives, sensors, controls and spare parts.
-              </p>
+              </span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
 
-              <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
-                View Parts
-                <ArrowRight
-                  size={14}
-                  className="transition group-hover:translate-x-1"
-                />
-              </div>
-            </div>
-          </div>
-        </Link>
-      ))}
+    <div className="mt-7 text-center">
+      <Link
+        href="/brands"
+        className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-6 py-2.5 text-sm font-bold text-amber-300 transition hover:bg-amber-300/20"
+      >
+        View all brands
+        <ArrowRight size={16} />
+      </Link>
     </div>
   </div>
 </section>
