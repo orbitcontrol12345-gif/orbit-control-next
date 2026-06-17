@@ -66,18 +66,49 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <FloatingContact />
 
         <script
-          id="organization-schema"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Organization',
-              name: 'Orbit Control Automation',
-              url: 'https://www.orbit-surplus.com',
-              logo: 'https://www.orbit-surplus.com/logo.png',
-            }),
-          }}
-        />
+  id="seo-schema"
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.orbit-surplus.com/#organization",
+          name: "Orbit Control Automation",
+          url: "https://www.orbit-surplus.com",
+          logo: "https://www.orbit-surplus.com/logo.png",
+          email: "info@orbit-surplus.com",
+          telephone: "+971676777094",
+          address: {
+            "@type": "PostalAddress",
+            addressCountry: "AE",
+            addressRegion: "Ajman",
+            addressLocality: "Ajman",
+          },
+          sameAs: [
+            "https://www.orbit-surplus.com"
+          ],
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.orbit-surplus.com/#website",
+          url: "https://www.orbit-surplus.com",
+          name: "Orbit Control Automation",
+          publisher: {
+            "@id": "https://www.orbit-surplus.com/#organization",
+          },
+          potentialAction: {
+            "@type": "SearchAction",
+            target:
+              "https://www.orbit-surplus.com/products?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+          },
+        },
+      ],
+    }),
+  }}
+/>
       </body>
     </html>
   );
