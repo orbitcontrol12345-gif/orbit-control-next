@@ -93,11 +93,13 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <section className="relative min-h-[92vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.22),transparent_30%),radial-gradient(circle_at_85%_20%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#06111d_0%,#0b1f2f_45%,#06111d_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px] opacity-30" />
-        <div className="absolute -right-24 top-20 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="absolute -left-24 bottom-20 h-96 w-96 rounded-full bg-cyan-400/10 blur-3xl" />
-
+        <div
+  className="absolute inset-0"
+  style={{
+    background:
+      "linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)",
+  }}
+/>
         <div className="page-container relative grid min-h-[92vh] items-center gap-12 py-20 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">
