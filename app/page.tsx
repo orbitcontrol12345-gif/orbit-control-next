@@ -92,15 +92,16 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[92vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
-        <div
-  className="absolute inset-0"
-  style={{
-    background:
-      "linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)",
-  }}
-/>
-        <div className="page-container relative grid min-h-[92vh] items-center gap-12 py-20 lg:grid-cols-[1.1fr_0.9fr]">
+     <section className="relative min-h-[92vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+  <div
+    className="absolute inset-0"
+    style={{
+      background:
+        'linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
+    }}
+  />
+
+  <div className="page-container relative grid min-h-[92vh] items-center gap-12 py-20 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.9)]" />
