@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: '%s | Orbit Control Automation',
   },
   description:
-    'Orbit Control Automation supplies industrial automation, electrical, PLC, HMI, VFD, sensors, circuit breakers, relays, obsolete and surplus spare parts worldwide with fast RFQ response.',
+    'Orbit Control Automation is a trusted worldwide supplier of industrial automation and electrical spare parts, offering PLCs, HMIs, drives, VFDs, sensors, relays, circuit breakers, industrial control systems, obsolete automation components, and surplus equipment. We provide new, used, refurbished, and hard-to-find parts from leading brands including Siemens, ABB, Schneider Electric, Allen-Bradley, Honeywell, Omron, GE, Yokogawa, and Mitsubishi Electric. Fast RFQ response, competitive pricing, quality-tested products, and worldwide shipping via DHL and FedEx.'
   keywords: [
     'industrial automation parts',
     'surplus automation parts',
