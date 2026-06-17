@@ -59,7 +59,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative min-h-screen overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+      {/* HERO */}
+      <section className="relative min-h-[82vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
         <div
           className="absolute inset-0"
           style={{
@@ -68,7 +69,7 @@ export default async function HomePage() {
           }}
         />
 
-        <div className="page-container relative grid min-h-screen items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -160,6 +161,30 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* MARQUEE STRIP */}
+      <section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
+        <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
+          <span>✓ PLC SYSTEMS</span>
+          <span>✓ HMI PANELS</span>
+          <span>✓ VFD DRIVES</span>
+          <span>✓ CIRCUIT BREAKERS</span>
+          <span>✓ INDUSTRIAL BOARDS</span>
+          <span>✓ OBSOLETE PARTS</span>
+          <span>✓ WORLDWIDE SHIPPING</span>
+          <span>✓ FAST RFQ RESPONSE</span>
+
+          <span>✓ PLC SYSTEMS</span>
+          <span>✓ HMI PANELS</span>
+          <span>✓ VFD DRIVES</span>
+          <span>✓ CIRCUIT BREAKERS</span>
+          <span>✓ INDUSTRIAL BOARDS</span>
+          <span>✓ OBSOLETE PARTS</span>
+          <span>✓ WORLDWIDE SHIPPING</span>
+          <span>✓ FAST RFQ RESPONSE</span>
+        </div>
+      </section>
+
+      {/* TRUST BOXES */}
       <section className="border-b border-white/10 bg-[#081827] py-10">
         <div className="page-container grid grid-cols-2 gap-4 md:grid-cols-4">
           {[
@@ -179,28 +204,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-{/* MARQUEE STRIP */}
-<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
-  <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
-    <span>✓ PLC SYSTEMS</span>
-    <span>✓ HMI PANELS</span>
-    <span>✓ VFD DRIVES</span>
-    <span>✓ CIRCUIT BREAKERS</span>
-    <span>✓ INDUSTRIAL BOARDS</span>
-    <span>✓ OBSOLETE PARTS</span>
-    <span>✓ WORLDWIDE SHIPPING</span>
-    <span>✓ FAST RFQ RESPONSE</span>
 
-    <span>✓ PLC SYSTEMS</span>
-    <span>✓ HMI PANELS</span>
-    <span>✓ VFD DRIVES</span>
-    <span>✓ CIRCUIT BREAKERS</span>
-    <span>✓ INDUSTRIAL BOARDS</span>
-    <span>✓ OBSOLETE PARTS</span>
-    <span>✓ WORLDWIDE SHIPPING</span>
-    <span>✓ FAST RFQ RESPONSE</span>
-  </div>
-</section>
+      {/* BRANDS */}
       <section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-20">
         <div
           className="absolute inset-0"
@@ -262,6 +267,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* CATEGORIES */}
       <section className="border-y border-white/10 bg-[#0a1d2e] py-20">
         <div className="page-container">
           <div className="mb-10 text-center">
@@ -301,6 +307,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* FEATURED PRODUCTS */}
       {featuredProducts.length > 0 && (
         <section className="bg-[#06111d] py-20">
           <div className="page-container">
