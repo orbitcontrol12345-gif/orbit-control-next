@@ -121,7 +121,7 @@ export default async function HomePage() {
             </div>
           </div>
 {/* MARQUEE STRIP */}
-<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
+<section className="mt-6 overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3 rounded-lg">
   <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
     <span>✓ PLC SYSTEMS</span>
     <span>✓ HMI PANELS</span>
