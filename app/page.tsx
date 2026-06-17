@@ -17,16 +17,7 @@ import {
   Settings,
   Archive,
 } from 'lucide-react';
-<section className="border-y border-white/10 bg-[#071421] py-4 overflow-hidden">
-  <div className="whitespace-nowrap animate-[marquee_35s_linear_infinite]">
-    <span className="mx-8 text-sm font-bold text-cyan-200">
-      SIEMENS • ABB • SCHNEIDER ELECTRIC • ALLEN-BRADLEY • HONEYWELL • OMRON • YOKOGAWA • FANUC • BECKHOFF • KEYENCE • MITSUBISHI ELECTRIC • PHOENIX CONTACT
-    </span>
-    <span className="mx-8 text-sm font-bold text-cyan-200">
-      SIEMENS • ABB • SCHNEIDER ELECTRIC • ALLEN-BRADLEY • HONEYWELL • OMRON • YOKOGAWA • FANUC • BECKHOFF • KEYENCE • MITSUBISHI ELECTRIC • PHOENIX CONTACT
-    </span>
-  </div>
-</section>
+
 import HeroSearchBar from '@/components/shared/HeroSearchBar';
 import ProductCard from '@/components/products/ProductCard';
 import { CATEGORIES, BRANDS } from '@/lib/data';
@@ -188,7 +179,28 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+{/* MARQUEE STRIP */}
+<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
+  <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
+    <span>✓ PLC SYSTEMS</span>
+    <span>✓ HMI PANELS</span>
+    <span>✓ VFD DRIVES</span>
+    <span>✓ CIRCUIT BREAKERS</span>
+    <span>✓ INDUSTRIAL BOARDS</span>
+    <span>✓ OBSOLETE PARTS</span>
+    <span>✓ WORLDWIDE SHIPPING</span>
+    <span>✓ FAST RFQ RESPONSE</span>
 
+    <span>✓ PLC SYSTEMS</span>
+    <span>✓ HMI PANELS</span>
+    <span>✓ VFD DRIVES</span>
+    <span>✓ CIRCUIT BREAKERS</span>
+    <span>✓ INDUSTRIAL BOARDS</span>
+    <span>✓ OBSOLETE PARTS</span>
+    <span>✓ WORLDWIDE SHIPPING</span>
+    <span>✓ FAST RFQ RESPONSE</span>
+  </div>
+</section>
       <section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-20">
         <div
           className="absolute inset-0"
