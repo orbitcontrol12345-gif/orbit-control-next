@@ -97,7 +97,7 @@ export default function Header() {
     }
   };
 
-    return (
+  return (
     <header
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         scrolled
@@ -124,10 +124,10 @@ export default function Header() {
             <span>|</span>
 
             <a
-              href="mailto:info@xeltronic.com"
+              href="mailto:info@orbit-surplus.com"
               className="transition-colors hover:text-gold-500"
             >
-              info@xeltronic.com
+              info@orbit-surplus.com
             </a>
           </div>
         </div>
@@ -136,15 +136,14 @@ export default function Header() {
       <div className="page-container">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
-        
-  <Image
+            <Image
   src="/logo.png"
   alt="Orbit Control Automation"
-  width={420}
-  height={120}
+  width={300}
+  height={80}
   priority
-  className="h-20 w-auto md:h-24"
-/>
+  className="h-16 w-auto md:h-20"
+ />
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
