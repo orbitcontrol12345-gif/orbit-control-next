@@ -228,17 +228,22 @@ export default async function HomePage() {
      {/* BRANDS - Clean Orbit Showcase */}
 
 <section
-  className="relative overflow-hidden border-y border-white/10 py-18"
+  className="relative overflow-hidden border-y border-white/10 py-20"
   style={{
-    background: `
-      radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 30%),
-      radial-gradient(circle at 80% 30%, rgba(245,158,11,0.08), transparent 30%),
-      linear-gradient(180deg,#06111d 0%,#081827 100%)
+    backgroundImage: `
+      linear-gradient(180deg, rgba(6,17,29,0.92), rgba(8,24,39,0.96)),
+      radial-gradient(circle at 18% 25%, rgba(34,211,238,0.20), transparent 28%),
+      radial-gradient(circle at 82% 35%, rgba(245,158,11,0.18), transparent 30%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0px, rgba(255,255,255,0.045) 1px, transparent 1px, transparent 80px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 80px)
     `,
   }}
 >
-
- 
+  
+<div className="absolute left-[-120px] top-[-120px] h-80 w-80 rounded-full border border-cyan-300/20" />
+<div className="absolute right-[-160px] bottom-[-160px] h-96 w-96 rounded-full border border-amber-300/20" />
+<div className="absolute left-1/2 top-0 h-full w-px bg-gradient-to-b from-transparent via-cyan-300/20 to-transparent" />
+ <div className="page-container relative">
 
   <div className="page-container">
     <div className="mb-9 text-center">
