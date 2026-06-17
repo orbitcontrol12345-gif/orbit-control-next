@@ -120,6 +120,28 @@ export default async function HomePage() {
               ))}
             </div>
           </div>
+{/* MARQUEE STRIP */}
+<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
+  <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
+    <span>✓ PLC SYSTEMS</span>
+    <span>✓ HMI PANELS</span>
+    <span>✓ VFD DRIVES</span>
+    <span>✓ CIRCUIT BREAKERS</span>
+    <span>✓ INDUSTRIAL BOARDS</span>
+    <span>✓ OBSOLETE PARTS</span>
+    <span>✓ WORLDWIDE SHIPPING</span>
+    <span>✓ FAST RFQ RESPONSE</span>
+
+    <span>✓ PLC SYSTEMS</span>
+    <span>✓ HMI PANELS</span>
+    <span>✓ VFD DRIVES</span>
+    <span>✓ CIRCUIT BREAKERS</span>
+    <span>✓ INDUSTRIAL BOARDS</span>
+    <span>✓ OBSOLETE PARTS</span>
+    <span>✓ WORLDWIDE SHIPPING</span>
+    <span>✓ FAST RFQ RESPONSE</span>
+  </div>
+</section>
 
           <div className="hidden lg:block">
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/30">
@@ -179,28 +201,7 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-{/* MARQUEE STRIP */}
-<section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
-  <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
-    <span>✓ PLC SYSTEMS</span>
-    <span>✓ HMI PANELS</span>
-    <span>✓ VFD DRIVES</span>
-    <span>✓ CIRCUIT BREAKERS</span>
-    <span>✓ INDUSTRIAL BOARDS</span>
-    <span>✓ OBSOLETE PARTS</span>
-    <span>✓ WORLDWIDE SHIPPING</span>
-    <span>✓ FAST RFQ RESPONSE</span>
 
-    <span>✓ PLC SYSTEMS</span>
-    <span>✓ HMI PANELS</span>
-    <span>✓ VFD DRIVES</span>
-    <span>✓ CIRCUIT BREAKERS</span>
-    <span>✓ INDUSTRIAL BOARDS</span>
-    <span>✓ OBSOLETE PARTS</span>
-    <span>✓ WORLDWIDE SHIPPING</span>
-    <span>✓ FAST RFQ RESPONSE</span>
-  </div>
-</section>
       <section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-20">
         <div
           className="absolute inset-0"
