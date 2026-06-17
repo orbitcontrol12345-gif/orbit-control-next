@@ -137,13 +137,13 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <Image
-              src="/logo.png"
-              alt="Xeltronic Electrical Solution"
-              width={160}
-              height={50}
-              priority
-              className="h-9 w-auto md:h-12"
-            />
+  src="/logo.png"
+  alt="Orbit Control Automation"
+  width={320}
+  height={100}
+  priority
+  className="h-16 w-auto md:h-20"
+ />
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
