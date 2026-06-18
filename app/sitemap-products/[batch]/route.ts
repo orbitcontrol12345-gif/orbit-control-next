@@ -1,4 +1,4 @@
-import { getWooProductsPage } from '@/lib/woocommerce';
+import { getSupabaseProductsPage } from '@/lib/supabase-products';
 
 const SITE_URL = 'https://orbit-surplus.com';
 
@@ -24,20 +24,23 @@ export async function GET(
   const perPage = 100;
   const pagesPerBatch = 35;
 
-  if (!batchNumber || batchNumber < 1 || batchNumber > 4) {
+  if (!Number.isFinite(batchNumber) || batchNumber < 1 || batchNumber > 4) {
     return new Response('Not Found', { status: 404 });
   }
 
   const startPage = (batchNumber - 1) * pagesPerBatch + 1;
-  const endPage = batchNumber * pagesPerBatch;
-
   const pageNumbers = Array.from(
     { length: pagesPerBatch },
     (_, index) => startPage + index
   );
 
   const results = await Promise.allSettled(
-    pageNumbers.map((page) => getWooProductsPage({ page, perPage }))
+    pageNumbers.map((page) =>
+      getSupabaseProductsPage({
+        page,
+        perPage,
+      })
+    )
   );
 
   const products = results.flatMap((result) =>
@@ -64,6 +67,9 @@ ${urls}
 </urlset>`;
 
   return new Response(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+    },
   });
 }
