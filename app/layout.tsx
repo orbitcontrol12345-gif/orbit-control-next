@@ -37,15 +37,15 @@ export const metadata: Metadata = {
     title: 'Orbit Control Automation — Industrial Automation & Surplus Parts',
     description:
       'Global B2B supplier of industrial automation, electrical, obsolete and surplus spare parts.',
-    url: 'https://orbit-surplus.com',
-    images: ['/logo.png'],
+    url: 'https://www.orbit-surplus.com',
+    images: ['https://www.orbit-surplus.com/logo.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Orbit Control Automation',
     description:
       'Global supplier of industrial automation and surplus spare parts.',
-    images: ['/logo.png'],
+    images: ['https://www.orbit-surplus.com/logo.png'],
   },
 };
 
