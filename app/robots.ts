@@ -5,7 +5,14 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: [
+        '/api/',
+        '/admin/',
+      ],
     },
-    sitemap: 'https://xeltronic.com/sitemap.xml',
+
+    sitemap: 'https://www.orbit-surplus.com/sitemap.xml',
+
+    host: 'https://www.orbit-surplus.com',
   };
 }
