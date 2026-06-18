@@ -65,7 +65,7 @@ const accessToken = String(token.access_token).trim();
   seller: 'orbitcontrol',
   source: 'ebay',
   is_active: true,
-  last_seen_at: new Date().toISOString(),
+  
 };
   });
 
