@@ -27,7 +27,7 @@ const footerLinks = {
     { label: 'Circuit Breakers', href: '/categories/circuit-breakers' },
     { label: 'Obsolete Parts', href: '/categories/obsolete-parts' },
   ],
-};
+
 
 export default function Footer() {
   return (
