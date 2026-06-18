@@ -82,7 +82,7 @@ const response = await fetch('/api/sell-surplus', {
 };
   if (success) {
     return (
-      <div className="min-h-screen bg-navy-900 pt-20 flex items-center justify-center">
+      <div className="relative pb-16">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={36} className="text-emerald-400" />
