@@ -219,11 +219,12 @@ export default async function HomePage() {
         <div
           className="absolute inset-0"
           style={{
-            background:
-              'repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 90px), repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 90px)',
-          }}
-        />
-
+            backgroundImage:
+        'linear-gradient(90deg, rgba(125,211,252,0.45) 1px, transparent 1px), linear-gradient(0deg, rgba(125,211,252,0.35) 1px, transparent 1px)',
+      backgroundSize: '72px 72px',
+    }}
+  />
+        
         <div className="page-container relative">
           <div className="mb-9 text-center">
             <p className="text-xs font-black uppercase tracking-widest text-cyan-300">
