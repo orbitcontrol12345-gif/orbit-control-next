@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const accessToken = String(token.access_token).trim();
 
   const params = new URLSearchParams({
-    q: 'Industrial Automation & Motion Controls',
+    q: 'Siemens',
     limit: '10',
     offset: searchParams.get('offset') || '0',
     filter: 'sellers:{orbitcontrol}',
@@ -70,20 +70,29 @@ export async function GET(request: Request) {
   });
 
   let inserted = 0;
-  let supabaseError = null;
+let supabaseError = null;
 
-  if (save) {
-    const { data: insertedData, error } = await supabaseAdmin
-  .from('products_test')
-  .insert(products)
-  .select();
+if (save && products.length === 0) {
+  return NextResponse.json({
+    success: false,
+    message: 'No products fetched from eBay. Nothing saved.',
+    ebayResponse: data,
+    products,
+  });
+}
 
-    if (error) {
-      supabaseError = error;
-    } else {
-      inserted = insertedData?.length || 0;
-    }
+if (save) {
+  const { data: insertedData, error } = await supabaseAdmin
+    .from('products_test')
+    .insert(products)
+    .select();
+
+  if (error) {
+    supabaseError = error;
+  } else {
+    inserted = insertedData?.length || 0;
   }
+}
 
   return NextResponse.json({
     success: !supabaseError,
