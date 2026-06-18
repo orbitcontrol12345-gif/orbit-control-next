@@ -68,7 +68,35 @@ export default async function HomePage() {
               'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
           }}
         />
+{/* SUBTLE PCB CIRCUIT LINES */}
+<svg
+  className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.055]"
+  viewBox="0 0 1440 820"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g stroke="#7dd3fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M70 180 H220 V250 H340" />
+    <circle cx="70" cy="180" r="5" fill="#7dd3fc" />
+    <circle cx="220" cy="250" r="5" fill="#7dd3fc" />
+    <circle cx="340" cy="250" r="5" fill="#7dd3fc" />
 
+    <path d="M1030 140 H1190 V230 H1340" />
+    <circle cx="1030" cy="140" r="5" fill="#7dd3fc" />
+    <circle cx="1190" cy="230" r="5" fill="#7dd3fc" />
+    <circle cx="1340" cy="230" r="5" fill="#7dd3fc" />
+
+    <path d="M930 520 H1100 V610 H1280" />
+    <circle cx="930" cy="520" r="5" fill="#7dd3fc" />
+    <circle cx="1100" cy="610" r="5" fill="#7dd3fc" />
+    <circle cx="1280" cy="610" r="5" fill="#7dd3fc" />
+
+    <path d="M120 650 H300 V560 H430" />
+    <circle cx="120" cy="650" r="5" fill="#7dd3fc" />
+    <circle cx="300" cy="560" r="5" fill="#7dd3fc" />
+    <circle cx="430" cy="560" r="5" fill="#7dd3fc" />
+  </g>
+</svg>
         <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
