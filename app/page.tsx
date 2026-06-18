@@ -77,15 +77,7 @@ export default async function HomePage() {
       backgroundSize: '72px 72px',
     }}
   />
-  <div
-    className="absolute left-[8%] top-[18%] h-40 w-40 rounded-full border border-cyan-300/30"
-    style={{ clipPath: 'polygon(50% 0%, 60% 20%, 82% 18%, 72% 38%, 92% 50%, 72% 62%, 82% 82%, 60% 80%, 50% 100%, 40% 80%, 18% 82%, 28% 62%, 8% 50%, 28% 38%, 18% 18%, 40% 20%)' }}
-  />
-  <div
-    className="absolute right-[14%] top-[22%] h-56 w-56 rounded-full border border-amber-300/25"
-    style={{ clipPath: 'polygon(50% 0%, 58% 18%, 78% 12%, 72% 34%, 94% 42%, 76% 54%, 88% 74%, 64% 70%, 50% 100%, 36% 70%, 12% 74%, 24% 54%, 6% 42%, 28% 34%, 22% 12%, 42% 18%)' }}
-  />
-</div>
+  
         <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
