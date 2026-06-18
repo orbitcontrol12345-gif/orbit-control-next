@@ -1,5 +1,8 @@
 import type { Product } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+
+const PRODUCTS_TABLE = 'products_test';
+
 function cleanProductName(name: string) {
   return name
     .replace(/\bnew without box\b/gi, '')
@@ -15,6 +18,7 @@ function cleanProductName(name: string) {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
 function mapSupabaseProduct(item: any): Product {
   return {
     id: String(item.id),
@@ -24,18 +28,12 @@ function mapSupabaseProduct(item: any): Product {
     name: cleanProductName(item.name || ''),
     category: item.category || 'Industrial Parts',
     condition: item.condition || 'Used',
-    inStock: true,
+    inStock: item.is_active !== false,
     description: item.description || item.name || '',
     technicalSpecs: {},
     imageUrl: item.image_url || '/placeholder-product.jpg',
-    tags: [
-      item.sku,
-      item.part_number,
-      item.brand,
-      item.category,
-      item.name,
-    ].filter(Boolean),
-    slug: item.slug || String(item.id),
+    tags: [item.sku, item.part_number, item.brand, item.category, item.name].filter(Boolean),
+    slug: item.slug || item.sku || item.ebay_item_id || String(item.id),
   };
 }
 
@@ -52,22 +50,21 @@ export async function getSupabaseProductsPage({
   const to = from + perPage - 1;
 
   let query = supabaseAdmin
-    .from('products_test')
+    .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
+    .eq('is_active', true)
     .order('id', { ascending: true })
     .range(from, to);
 
   if (search) {
     query = query.or(
-  `name.ilike.%${search}%,sku.ilike.%${search}%,part_number.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%`
-);
+      `name.ilike.%${search}%,sku.ilike.%${search}%,part_number.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%`
+    );
   }
 
   const { data, count, error } = await query;
 
-  if (error) {
-    return { products: [], totalProducts: 0, totalPages: 0 };
-  }
+  if (error) return { products: [], totalProducts: 0, totalPages: 0 };
 
   return {
     products: (data || []).map(mapSupabaseProduct),
@@ -75,6 +72,7 @@ export async function getSupabaseProductsPage({
     totalPages: Math.max(1, Math.ceil((count || 0) / perPage)),
   };
 }
+
 export async function getSupabaseProductsByCategoryTerms({
   terms,
   page = 1,
@@ -92,15 +90,14 @@ export async function getSupabaseProductsByCategoryTerms({
     .join(',');
 
   const { data, count, error } = await supabaseAdmin
-    .from('products')
+    .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
+    .eq('is_active', true)
     .or(filters)
     .order('id', { ascending: true })
     .range(from, to);
 
-  if (error) {
-    return { products: [], totalProducts: 0, totalPages: 0 };
-  }
+  if (error) return { products: [], totalProducts: 0, totalPages: 0 };
 
   return {
     products: (data || []).map(mapSupabaseProduct),
@@ -108,21 +105,22 @@ export async function getSupabaseProductsByCategoryTerms({
     totalPages: Math.max(1, Math.ceil((count || 0) / perPage)),
   };
 }
+
 export async function getSupabaseProductBySlug(slug: string): Promise<Product | null> {
   const decodedSlug = decodeURIComponent(slug);
 
   let { data, error } = await supabaseAdmin
-    .from('products')
+    .from(PRODUCTS_TABLE)
     .select('*')
     .eq('slug', decodedSlug)
     .maybeSingle();
 
   if (!data) {
     const { data: fallback } = await supabaseAdmin
-      .from('products')
+      .from(PRODUCTS_TABLE)
       .select('*')
       .or(
-        `slug.ilike.%${decodedSlug}%,sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug}`
+        `slug.eq.${decodedSlug},sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug}`
       )
       .limit(1)
       .maybeSingle();
@@ -134,12 +132,14 @@ export async function getSupabaseProductBySlug(slug: string): Promise<Product | 
 
   return mapSupabaseProduct(data);
 }
+
 export async function getSupabaseRelatedProducts(product: Product): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
-    .from('products')
+    .from(PRODUCTS_TABLE)
     .select('*')
+    .eq('is_active', true)
     .or(`brand.eq.${product.brand},category.eq.${product.category}`)
-    .neq('slug', product.slug)
+    .neq('sku', product.sku)
     .limit(4);
 
   if (error) return [];
