@@ -42,9 +42,8 @@ export default function BrandsPage({ searchParams }: Props) {
     style={{
       background:
         'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
-      </div>
-);
-}
+    }}
+  >
 
       {/* Header */}
       <section className="border-b border-navy-700 bg-navy-800">
@@ -78,7 +77,7 @@ export default function BrandsPage({ searchParams }: Props) {
               </div>
             </div>
 
-            <div className="group flex flex-col justify-between rounded-xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300">
+            <div className="group flex flex-col justify-between rounded-xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300"
               <div>
                 <p className="text-xl font-bold text-gold-500">{BRANDS.length}+</p>
                 <p className="text-xs text-slate-500">Brands</p>
@@ -122,7 +121,7 @@ export default function BrandsPage({ searchParams }: Props) {
               >
                 <div>
                   <div className="mb-5 flex items-start justify-between">
-                    className="group flex h-28 items-center justify-center rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] hover:border-cyan-400/30 transition-all duration-300"
+                    <div className="flex h-20 w-36 items-center justify-center rounded-lg border border-gold-500/20 bg-white p-3 transition-all group-hover:border-gold-500/50">
                       {brand.logo ? (
                         <Image
                           src={brand.logo}
