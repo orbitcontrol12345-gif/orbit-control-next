@@ -1,4 +1,4 @@
-const SITE_URL = 'https://xeltronic.com';
+const SITE_URL = 'https://orbit-surplus.com';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 86400;
@@ -12,6 +12,10 @@ export async function GET() {
     '/rfq',
     '/sell-surplus',
     '/contact',
+    '/about',
+    '/shipping-policy',
+    '/warranty-policy',
+    '/privacy-policy',
     '/disclaimer',
   ];
 
@@ -30,6 +34,8 @@ ${pages
 </urlset>`;
 
   return new Response(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: {
+      'Content-Type': 'application/xml',
+    },
   });
 }
