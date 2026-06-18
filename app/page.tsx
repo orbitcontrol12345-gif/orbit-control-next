@@ -243,7 +243,7 @@ export default async function HomePage() {
                       alt={`${brand.name} logo`}
                       width={210}
                       height={90}
-                      className="max-h-28 w-auto object-contain"
+                      className="max-h-28 w-auto object-contain transition group-hover:scale-105"
                     />
                   ) : (
                     <span className="text-center text-sm font-black text-white">
