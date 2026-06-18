@@ -68,16 +68,7 @@ export default async function HomePage() {
               'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
           }}
         />
-<div className="absolute inset-0 opacity-[0.08]">
-  <div
-    className="absolute inset-0"
-    style={{
-      backgroundImage:
-        'linear-gradient(90deg, rgba(125,211,252,0.45) 1px, transparent 1px), linear-gradient(0deg, rgba(125,211,252,0.35) 1px, transparent 1px)',
-      backgroundSize: '72px 72px',
-    }}
-  />
-  
+
         <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
@@ -219,12 +210,11 @@ export default async function HomePage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage:
-        'linear-gradient(90deg, rgba(125,211,252,0.45) 1px, transparent 1px), linear-gradient(0deg, rgba(125,211,252,0.35) 1px, transparent 1px)',
-      backgroundSize: '72px 72px',
-    }}
-  />
-        
+            background:
+              'repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 90px), repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 90px)',
+          }}
+        />
+
         <div className="page-container relative">
           <div className="mb-9 text-center">
             <p className="text-xs font-black uppercase tracking-widest text-cyan-300">
