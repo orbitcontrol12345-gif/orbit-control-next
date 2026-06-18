@@ -13,7 +13,7 @@ export default function DisclaimerPage() {
               Independent Supplier Statement
             </h2>
             <p>
-              Xeltronic Electrical Solution is an independent supplier,
+              Orbit Control Automation is an independent supplier,
               reseller, purchaser, and distributor of industrial automation,
               electrical control, instrumentation, and surplus equipment.
               We are not an authorized distributor, dealer, representative,
@@ -43,7 +43,7 @@ export default function DisclaimerPage() {
               References to manufacturers, trademarks, brands, or product
               names do not imply any affiliation, authorization,
               sponsorship, endorsement, partnership, or agency relationship
-              between Xeltronic Electrical Solution and the respective
+              between Orbit Control Automation and the respective
               trademark owners.
             </p>
           </section>
@@ -66,7 +66,7 @@ export default function DisclaimerPage() {
             </h2>
             <p>
               While every effort is made to provide accurate information,
-              Xeltronic Electrical Solution does not guarantee the
+              Orbit Control Automation does not guarantee the
               completeness, accuracy, reliability, or suitability of any
               technical specifications, images, descriptions, or compatibility
               information published on this website.
@@ -78,7 +78,7 @@ export default function DisclaimerPage() {
               Limitation of Liability
             </h2>
             <p>
-              Xeltronic Electrical Solution shall not be liable for any direct,
+              Orbit Control Automation shall not be liable for any direct,
               indirect, incidental, consequential, special, or economic damages
               arising from the use, installation, misuse, performance,
               failure, or inability to use any product purchased from this
