@@ -83,9 +83,11 @@ if (save && products.length === 0) {
 
 if (save) {
   const { data: insertedData, error } = await supabaseAdmin
-    .from('products')
-    .insert(products)
-    .select();
+  .from('products_test')
+  .upsert(products, {
+    onConflict: 'sku',
+  })
+  .select();
 
   if (error) {
     supabaseError = error;
