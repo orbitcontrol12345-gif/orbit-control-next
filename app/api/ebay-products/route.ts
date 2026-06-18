@@ -83,7 +83,7 @@ if (save && products.length === 0) {
 
 if (save) {
   const { data: insertedData, error } = await supabaseAdmin
-    .from('products_test')
+    .from('products')
     .insert(products)
     .select();
 
