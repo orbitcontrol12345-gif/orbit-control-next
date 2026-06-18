@@ -70,7 +70,7 @@ export default function BrandsPage({ searchParams }: Props) {
               </div>
             </div>
 
-            <div className="group flex flex-col justify-between rounded-xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300"
+            <div className="group flex h-full flex-col justify-between rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-xl hover:shadow-black/20"
               <div>
                 <p className="text-xl font-bold text-gold-500">{BRANDS.length}+</p>
                 <p className="text-xs text-slate-500">Brands</p>
