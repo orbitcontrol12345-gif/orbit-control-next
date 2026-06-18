@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-navy-900 pt-20">
+    <div className="min-h-screen pt-20">
       <div
         className="relative border-b border-navy-700"
         style={{
