@@ -3,15 +3,18 @@ import Link from 'next/link';
 import { ShieldCheck, Package } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Warranty & Return Policy',
-  description: 'Xeltronic Electrical Solution warranty and return policy for industrial automation spare parts.',
+  title: 'Warranty & Return Policy | Orbit Control Automation',
+  description:
+    'Warranty and return policy for industrial automation, electrical, surplus and obsolete spare parts supplied by Orbit Control Automation.',
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-10">
-      <h2 className="text-xl font-bold text-white mb-4 pb-3 border-b border-navy-700">{title}</h2>
-      <div className="text-slate-300 space-y-3 leading-relaxed">{children}</div>
+      <h2 className="mb-4 border-b border-navy-700 pb-3 text-xl font-bold text-white">
+        {title}
+      </h2>
+      <div className="space-y-3 leading-relaxed text-slate-300">{children}</div>
     </section>
   );
 }
@@ -19,128 +22,223 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function WarrantyPolicyPage() {
   return (
     <div className="min-h-screen bg-navy-900 pt-20">
-      <div className="bg-navy-800 border-b border-navy-700">
+      <div className="border-b border-navy-700 bg-navy-800">
         <div className="page-container py-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gold-500/10 border border-gold-500/20 rounded-lg flex items-center justify-center">
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gold-500/20 bg-gold-500/10">
               <ShieldCheck size={18} className="text-gold-500" />
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Warranty &amp; Return Policy</h1>
-          <p className="text-slate-400">Last updated: January 2025</p>
+
+          <h1 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+            Warranty &amp; Return Policy
+          </h1>
+
+          <p className="text-slate-400">Last updated: January 2026</p>
         </div>
       </div>
 
       <div className="page-container py-12">
         <div className="max-w-3xl">
-          {/* Warranty highlights */}
-          <div className="grid sm:grid-cols-3 gap-4 mb-10">
+          <div className="mb-10 rounded-xl border border-gold-500/20 bg-navy-800 p-6">
+            <p className="leading-relaxed text-slate-300">
+              Orbit Control Automation supplies industrial automation, electrical,
+              surplus and obsolete spare parts to B2B customers worldwide. Because
+              industrial spare parts vary by condition, age, availability and
+              application, warranty and return eligibility depends on the product
+              condition stated in the quotation, invoice or product description.
+            </p>
+          </div>
+
+          <div className="mb-10 grid gap-4 sm:grid-cols-3">
             {[
-              { title: 'New Parts', warranty: 'Manufacturer warranty applies' },
-              { title: 'Refurbished Parts', warranty: '90-day limited warranty' },
-              { title: 'Used Parts', warranty: '30-day DOA warranty' },
+              { title: 'New Parts', warranty: 'Manufacturer warranty when applicable' },
+              { title: 'Refurbished Parts', warranty: 'Limited functional warranty' },
+              { title: 'Used / Surplus Parts', warranty: 'Tested or supplied as stated' },
             ].map(({ title, warranty }) => (
-              <div key={title} className="bg-navy-800 border border-gold-500/20 rounded-lg p-4 text-center">
-                <p className="text-sm font-bold text-white mb-1">{title}</p>
+              <div
+                key={title}
+                className="rounded-lg border border-gold-500/20 bg-navy-800 p-4 text-center"
+              >
+                <p className="mb-1 text-sm font-bold text-white">{title}</p>
                 <p className="text-xs text-gold-500">{warranty}</p>
               </div>
             ))}
           </div>
 
           <Section title="1. Warranty Coverage">
-            <p><strong className="text-white">New Parts:</strong> All new parts carry the original manufacturer&apos;s warranty. The duration and terms of the manufacturer&apos;s warranty apply. Xeltronic facilitates warranty claims to the extent possible.</p>
-            <p><strong className="text-white">Refurbished Parts:</strong> Refurbished parts are covered by a 90-day limited warranty from the date of delivery. This warranty covers functional defects that existed at the time of shipment.</p>
-            <p><strong className="text-white">Used Parts:</strong> Used parts carry a 30-day DOA (Dead on Arrival) warranty. If a used part is found to be non-functional upon receipt and proper installation, we will replace or refund the item.</p>
-            <p><strong className="text-white">&ldquo;Not Working&rdquo; Parts:</strong> Parts sold as &ldquo;Not Working&rdquo; or &ldquo;for parts&rdquo; carry no warranty and are sold as-is for repair purposes.</p>
+            <p>
+              All products are supplied according to the condition, description and
+              terms stated in the quotation, invoice or sales confirmation.
+            </p>
+
+            <p>
+              <strong className="text-white">New Products:</strong> New products may
+              be covered by the original manufacturer warranty where such warranty is
+              available and transferable.
+            </p>
+
+            <p>
+              <strong className="text-white">Refurbished Products:</strong>{' '}
+              Refurbished products are inspected and tested prior to shipment and may
+              be covered by a limited functional warranty if stated in writing.
+            </p>
+
+            <p>
+              <strong className="text-white">Used and Surplus Products:</strong>{' '}
+              Used and surplus products are supplied based on the stated condition and
+              availability. These products may show signs of previous storage,
+              handling or use.
+            </p>
+
+            <p>
+              <strong className="text-white">Obsolete and Discontinued Parts:</strong>{' '}
+              Obsolete parts are sourced based on market availability and are subject
+              to limited warranty terms unless otherwise agreed in writing.
+            </p>
           </Section>
 
-          <Section title="2. Warranty Exclusions">
+          <Section title="2. Inspection Before Shipment">
+            <p>
+              Orbit Control Automation inspects products before dispatch whenever
+              possible. For applicable items, photos, condition details or basic
+              verification may be provided before shipment upon request.
+            </p>
+
+            <p>
+              Customers are responsible for confirming part numbers, compatibility,
+              voltage, configuration, firmware, revision level and application
+              suitability before placing an order.
+            </p>
+          </Section>
+
+          <Section title="3. Warranty Exclusions">
             <p>The warranty does not cover:</p>
-            <ul className="list-none space-y-2 mt-2">
+
+            <ul className="mt-2 space-y-2">
               {[
-                'Damage caused by improper installation or incorrect wiring',
-                'Damage caused by overvoltage, electrical surges, or static discharge',
-                'Physical damage caused by accident, misuse, or negligence',
-                'Damage resulting from incompatible systems or incorrect configuration',
-                'Normal wear and tear',
-                'Parts modified or repaired by unauthorized parties',
-                'Software or firmware issues',
-                'Consumable components (fans, batteries, contactors)',
+                'Incorrect installation, wiring, commissioning or configuration',
+                'Electrical surge, overvoltage, short circuit or improper power supply',
+                'Damage caused by misuse, negligence, modification or unauthorized repair',
+                'Compatibility issues with customer equipment, software, firmware or systems',
+                'Normal wear and tear, cosmetic marks, packaging condition or storage marks',
+                'Consumables such as batteries, fans, fuses, bulbs, seals or similar parts',
+                'Items sold as-is, for parts, repair only, damaged or non-working',
+                'Losses related to downtime, production delay, labor, installation or consequential damages',
               ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-red-400 rounded-full shrink-0" />
-                  {item}
+                <li key={item} className="flex items-start gap-2 text-sm">
+                  <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gold-500" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </Section>
 
-          <Section title="3. Return Procedure">
-            <p>To initiate a return or warranty claim:</p>
-            <ol className="list-none space-y-3 mt-3">
-              {[
-                'Contact us at info@xeltronic.com within the warranty period with your order number and a detailed description of the issue',
-                'Our technical team will review the claim and may request photos, videos, or test reports',
-                'If the claim is approved, we will issue a Return Merchandise Authorization (RMA) number',
-                'Ship the item back to us using the instructions provided with the RMA',
-                'Upon receipt and inspection, we will issue a replacement or refund',
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm">
-                  <div className="w-5 h-5 bg-gold-500/20 border border-gold-500/30 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-gold-500 mt-0.5">
-                    {i + 1}
-                  </div>
-                  {item}
-                </li>
-              ))}
-            </ol>
-          </Section>
+          <Section title="4. Return Eligibility">
+            <p>Returns may be accepted only when one of the following applies:</p>
 
-          <Section title="4. Return Shipping Costs">
-            <p>For warranty claims where the fault is verified to be on our end, Xeltronic will cover the return shipping cost or provide a shipping label. For returns not related to a proven defect, return shipping costs are the buyer&apos;s responsibility.</p>
-          </Section>
-
-          <Section title="5. Refunds">
-            <p>Refunds are issued for:</p>
-            <ul className="list-none space-y-2 mt-2">
+            <ul className="mt-2 space-y-2">
               {[
-                'Items that cannot be replaced within a reasonable timeframe',
-                'Verified DOA items where no replacement is available',
-                'Orders cancelled before shipment',
+                'The product received does not match the confirmed order',
+                'The item arrives damaged and the issue is reported promptly',
+                'The product is proven defective upon receipt and is covered by written warranty terms',
+                'A return has been approved in writing by Orbit Control Automation',
               ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shrink-0" />
-                  {item}
+                <li key={item} className="flex items-start gap-2 text-sm">
+                  <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
-            <p>Refunds are processed within 7–14 business days via the original payment method.</p>
+
+            <p>
+              Return requests must be submitted within 7 days of delivery unless a
+              different period is stated in writing. The request must include the
+              invoice number, part number, photos and a clear description of the issue.
+            </p>
           </Section>
 
-          <Section title="6. Non-Returnable Items">
-            <p>The following items are non-returnable:</p>
-            <ul className="list-none space-y-2 mt-2">
+          <Section title="5. Non-Returnable Items">
+            <p>The following items are generally non-returnable:</p>
+
+            <ul className="mt-2 space-y-2">
               {[
-                'Items marked as "sold as-is" or "for parts"',
-                'Items with clearly visible physical damage not reported within 48 hours of delivery',
-                'Software licenses and digital products',
-                'Custom or specially sourced items',
+                'Special-order or specially sourced products',
+                'Obsolete, discontinued or limited-availability parts',
+                'Products installed, used, modified or opened after delivery',
+                'Software, licenses, firmware, digital products or configured items',
+                'Products sold as-is, final sale or non-returnable',
+                'Items returned without prior written authorization',
               ].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 bg-amber-400 rounded-full shrink-0" />
-                  {item}
+                <li key={item} className="flex items-start gap-2 text-sm">
+                  <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </Section>
 
-          <Section title="7. Contact for Warranty Claims">
-            <p>Email: <a href="mailto:warranty@xeltronic.com" className="text-gold-500 hover:text-gold-400">warranty@xeltronic.com</a></p>
-            <p>Phone: +971 XX XXX XXXX</p>
-            <p>Please have your order number and invoice ready when contacting us.</p>
+          <Section title="6. Return Authorization">
+            <p>
+              No product may be returned without prior written approval. If a return is
+              approved, Orbit Control Automation will issue return instructions. The
+              product must be returned in the same condition received, properly packed
+              and protected against shipping damage.
+            </p>
+
+            <p>
+              Unauthorized returns may be refused, returned to the sender or held until
+              further instructions are provided.
+            </p>
           </Section>
 
-          <div className="bg-navy-800 border border-gold-500/20 rounded-xl p-6 text-center">
-            <p className="text-slate-300 text-sm mb-3">Questions about warranty? Contact our support team.</p>
+          <Section title="7. Refunds and Replacements">
+            <p>
+              If a warranty claim is approved, Orbit Control Automation may, at its
+              discretion, provide a replacement, repair, credit note or refund depending
+              on product availability and the original sales terms.
+            </p>
+
+            <p>
+              Refunds, when approved, are processed after the returned item is received
+              and inspected. Shipping, customs duties, taxes, bank fees and handling
+              charges may be non-refundable unless otherwise agreed in writing.
+            </p>
+          </Section>
+
+          <Section title="8. Shipping Damage">
+            <p>
+              Any shipping damage must be reported immediately upon delivery. Customers
+              should keep all packaging materials and provide clear photos of the
+              package, label, product and damage. Claims may be rejected if damage is
+              reported late or without supporting evidence.
+            </p>
+          </Section>
+
+          <Section title="9. Contact for Warranty or Return Requests">
+            <p>
+              Email:{' '}
+              <a
+                href="mailto:info@orbit-surplus.com"
+                className="text-gold-500 transition hover:text-gold-400"
+              >
+                info@orbit-surplus.com
+              </a>
+            </p>
+
+            <p>Phone: +971 55 483 5199</p>
+
+            <p>
+              Please include your invoice number, part number, photos and a detailed
+              explanation of the issue when contacting us.
+            </p>
+          </Section>
+
+          <div className="rounded-xl border border-gold-500/20 bg-navy-800 p-6 text-center">
+            <p className="mb-3 text-sm text-slate-300">
+              Questions about warranty, returns or product condition?
+            </p>
+
             <Link href="/contact" className="btn-gold inline-flex">
               <Package size={15} />
               Contact Support
