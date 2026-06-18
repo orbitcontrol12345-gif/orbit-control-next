@@ -37,12 +37,9 @@ export default function BrandsPage({ searchParams }: Props) {
   });
 
   return (
-  <div
-    className="relative min-h-screen overflow-hidden pt-20"
+  <div className="min-h-screen pt-20">
     style={{
-      background:
-        'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
-    }}
+      
   >
 
       {/* Header */}
