@@ -81,27 +81,27 @@ export default function ContactPage() {
     <h2 className="font-bold text-white mb-5">Get in Touch</h2>
 
     <div className="space-y-3">
-      <a href="mailto:info@xeltronic.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
+      <a href="mailto:info@orbit-surplus.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
         <Mail size={18} className="text-gold-400" />
         <div>
           <p className="text-xs text-slate-400">General Inquiries</p>
-          <p className="font-semibold text-white">info@xeltronic.com</p>
+          <p className="font-semibold text-white">info@orbit-surplus.com</p>
         </div>
       </a>
 
-      <a href="mailto:sales@xeltronic.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
+      <a href="mailto:sales@orbit-surplus.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
         <Mail size={18} className="text-gold-400" />
         <div>
           <p className="text-xs text-slate-400">Sales Department</p>
-          <p className="font-semibold text-white">sales@xeltronic.com</p>
+          <p className="font-semibold text-white">sales@orbit-surplus.com</p>
         </div>
       </a>
 
-      <a href="mailto:rfq@xeltronic.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
+      <a href="mailto:rfq@orbit-surplus.com" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
         <Mail size={18} className="text-gold-400" />
         <div>
           <p className="text-xs text-slate-400">RFQ / Purchasing</p>
-          <p className="font-semibold text-white">rfq@xeltronic.com</p>
+          <p className="font-semibold text-white">rfq@orbit-surplus.com</p>
         </div>
       </a>
 
