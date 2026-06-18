@@ -19,26 +19,103 @@ export const CATEGORIES: {
   { name: 'Contactors', slug: 'contactors', description: 'Motor contactors, auxiliary contactors and industrial switching devices', icon: 'zap' },
 ];
 
-export const BRANDS: {
-  name: string;
-  slug: string;
-  logo: string;
-  description: string;
-  productCount: number;
-  country: string;
-}[] = [
- { name: 'ABB', slug: 'abb', logo: '/brands/abb.svg', description: 'Global leader in electrification and automation technologies', productCount: 24, country: 'Switzerland' },
-{ name: 'Siemens', slug: 'siemens', logo: '/brands/siemens.svg', description: 'World leader in industrial automation, drives and PLCs', productCount: 31, country: 'Germany' },
-{ name: 'Schneider Electric', slug: 'schneider-electric', logo: '/brands/schneider-electric.svg', description: 'Energy management and industrial automation solutions', productCount: 18, country: 'France' },
-{ name: 'Allen-Bradley', slug: 'allen-bradley', logo: '/brands/allen-bradley.svg', description: 'Rockwell Automation premium industrial controls brand', productCount: 22, country: 'USA' },
-{ name: 'Omron', slug: 'omron', logo: '/brands/omron.svg', description: 'Precision sensing, control and motion solutions', productCount: 19, country: 'Japan' },
-{ name: 'Honeywell', slug: 'honeywell', logo: '/brands/honeywell.svg', description: 'Process control and industrial automation equipment', productCount: 14, country: 'USA' },
-{ name: 'Yokogawa', slug: 'yokogawa', logo: '/brands/yokogawa.svg', description: 'Process automation and measurement instrumentation', productCount: 11, country: 'Japan' },
-{ name: 'Phoenix Contact', slug: 'phoenix-contact', logo: '/brands/phoenix-contact.svg', description: 'Electrical connection and automation technology', productCount: 16, country: 'Germany' },
-{ name: 'GE Fanuc', slug: 'ge-fanuc', logo: '/brands/ge-fanuc.svg', description: 'Industrial automation controls and motion systems', productCount: 13, country: 'USA' },
-{ name: 'Mitsubishi Electric', slug: 'mitsubishi-electric', logo: '/brands/mitsubishi-electric.svg', description: 'Factory automation and industrial electronics', productCount: 20, country: 'Japan' },
-{ name: 'Beckhoff', slug: 'beckhoff', logo: '/brands/beckhoff.svg', description: 'PC-based control and EtherCAT automation technology', productCount: 9, country: 'Germany' },
-{ name: 'Keyence', slug: 'keyence', logo: '/brands/keyence.svg', description: 'Industrial sensors, vision systems and measurement', productCount: 15, country: 'Japan' },
+export const BRANDS = [
+  {
+    name: 'ABB',
+    slug: 'abb',
+    logo: '/brands/abb.png',
+    description: 'Global leader in electrification and automation technologies',
+    productCount: 24,
+    country: 'Switzerland',
+  },
+  {
+    name: 'Siemens',
+    slug: 'siemens',
+    logo: '/brands/siemens.png',
+    description: 'World leader in industrial automation, drives and PLCs',
+    productCount: 31,
+    country: 'Germany',
+  },
+  {
+    name: 'Schneider Electric',
+    slug: 'schneider-electric',
+    logo: '/brands/schneider-electric.png',
+    description: 'Energy management and industrial automation solutions',
+    productCount: 18,
+    country: 'France',
+  },
+  {
+    name: 'Allen-Bradley',
+    slug: 'allen-bradley',
+    logo: '/brands/allen-bradley.png',
+    description: 'Rockwell Automation premium industrial controls brand',
+    productCount: 22,
+    country: 'USA',
+  },
+  {
+    name: 'Omron',
+    slug: 'omron',
+    logo: '/brands/omron.png',
+    description: 'Precision sensing, control and motion solutions',
+    productCount: 19,
+    country: 'Japan',
+  },
+  {
+    name: 'Honeywell',
+    slug: 'honeywell',
+    logo: '/brands/honeywell.png',
+    description: 'Process control and industrial automation equipment',
+    productCount: 14,
+    country: 'USA',
+  },
+  {
+    name: 'Yokogawa',
+    slug: 'yokogawa',
+    logo: '/brands/yokogawa.png',
+    description: 'Process automation and measurement instrumentation',
+    productCount: 11,
+    country: 'Japan',
+  },
+  {
+    name: 'Phoenix Contact',
+    slug: 'phoenix-contact',
+    logo: '/brands/phoenix-contact.png',
+    description: 'Electrical connection and automation technology',
+    productCount: 16,
+    country: 'Germany',
+  },
+  {
+    name: 'GE Fanuc',
+    slug: 'ge-fanuc',
+    logo: '/brands/ge-fanuc.png',
+    description: 'Industrial automation controls and motion systems',
+    productCount: 13,
+    country: 'USA',
+  },
+  {
+    name: 'Mitsubishi Electric',
+    slug: 'mitsubishi-electric',
+    logo: '/brands/mitsubishi-electric.png',
+    description: 'Factory automation and industrial electronics',
+    productCount: 20,
+    country: 'Japan',
+  },
+  {
+    name: 'Beckhoff',
+    slug: 'beckhoff',
+    logo: '/brands/beckhoff.png',
+    description: 'PC-based control and EtherCAT automation technology',
+    productCount: 9,
+    country: 'Germany',
+  },
+  {
+    name: 'Keyence',
+    slug: 'keyence',
+    logo: '/brands/keyence.png',
+    description: 'Industrial sensors, vision systems and measurement',
+    productCount: 15,
+    country: 'Japan',
+  },
 ];
 
 const PEXELS_ELECTRONICS = 'https://images.pexels.com/photos/1148820/pexels-photo-1148820.jpeg?auto=compress&cs=tinysrgb&w=600';
