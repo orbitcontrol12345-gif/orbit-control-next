@@ -1,6 +1,6 @@
 import { getWooProductsPage } from '@/lib/woocommerce';
 
-const SITE_URL = 'https://xeltronic.com';
+const SITE_URL = 'https://orbit-surplus.com';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 86400;
