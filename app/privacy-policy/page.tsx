@@ -3,7 +3,7 @@ import { Shield } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Xeltronic Electrical Solution privacy policy. How we collect, use, and protect your personal information.',
+  description: 'Orbit Control Automation privacy policy. How we collect, use, and protect your personal information.',
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-3xl">
           <div className="bg-navy-800 border border-navy-700 rounded-xl p-5 mb-10">
             <p className="text-sm text-slate-300 leading-relaxed">
-              At Xeltronic Electrical Solution (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or submit inquiries to us.
+              At Orbit Control Automation (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or submit inquiries to us.
             </p>
           </div>
 
@@ -126,8 +126,8 @@ export default function PrivacyPolicyPage() {
 
           <Section title="10. Contact Us">
             <p>For privacy-related inquiries or to exercise your rights:</p>
-            <p>Email: <a href="mailto:privacy@xeltronic.com" className="text-gold-500 hover:text-gold-400">privacy@xeltronic.com</a></p>
-            <p>Xeltronic Electrical Solution, United Arab Emirates</p>
+            <p>Email: <a href="mailto:info@orbit-surplus.com" className="text-gold-500 hover:text-gold-400">info@orbit-surplus.com</a></p>
+            <p>Orbit Control Automation, United Arab Emirates</p>
           </Section>
         </div>
       </div>
