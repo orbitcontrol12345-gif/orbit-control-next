@@ -52,7 +52,7 @@ export async function getSupabaseProductsPage({
   const to = from + perPage - 1;
 
   let query = supabaseAdmin
-    .from('products')
+    .from('products_test')
     .select('*', { count: 'exact' })
     .order('id', { ascending: true })
     .range(from, to);
