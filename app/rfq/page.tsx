@@ -68,7 +68,7 @@ export default function RFQPage() {
 
             {/* Trust */}
             <div className="bg-navy-800 border border-navy-700 rounded-xl p-5">
-              <h3 className="font-bold text-white mb-4">Why Xeltronic</h3>
+              <h3 className="font-bold text-white mb-4">Why Orbit Control</h3>
               <ul className="space-y-3">
                 {[
                   { icon: Clock, text: '24-hour quote response' },
@@ -89,9 +89,9 @@ export default function RFQPage() {
   <h3 className="font-bold text-white mb-3">Prefer to Contact Directly?</h3>
 
   <div className="space-y-2">
-    <a href="mailto:info@xeltronic.com" className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-gold-500 transition-colors">
+    <a href="mailto:info@orbit-surplus.com" className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-gold-500 transition-colors">
       <Mail size={15} className="text-gold-500" />
-      info@xeltronic.com
+      info@orbit-surplus.com
     </a>
 
     <a href="tel:+971554835199" className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-gold-500 transition-colors">
