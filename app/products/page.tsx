@@ -35,7 +35,7 @@ export default async function ProductsPage({
     <div>
       <ProductsClient initialProducts={products || []} />
 
-      <div className="bg-navy-900 pb-16">
+      <div className="relative pb-16">
         <div className="page-container">
           <div className="mb-5 mt-6 text-center text-sm font-semibold text-slate-300">
             Showing {products.length} products on this page · Total Products: {totalProducts} · Page {currentPage} of {totalPages}
