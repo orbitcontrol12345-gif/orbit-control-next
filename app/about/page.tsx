@@ -16,15 +16,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen pt-20">
-      <div
-        className="relative border-b border-navy-700"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(8,13,26,0.97), rgba(8,13,26,0.85)), url('https://images.pexels.com/photos/1148820/pexels-photo-1148820.jpeg?auto=compress&cs=tinysrgb&w=1920')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <div className="relative border-b border-navy-700/50">
         <div className="page-container py-16">
           <div className="max-w-2xl">
             <h1 className="mb-5 text-4xl font-bold leading-tight text-white md:text-5xl">
