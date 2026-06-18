@@ -38,6 +38,8 @@ export default function BrandsPage({ searchParams }: Props) {
 
  return (
   <div className="min-h-screen pt-20">
+      </div>
+   
     {/* Header */}
     <section className="border-b border-navy-700 bg-navy-800">
         <div className="page-container py-10">
