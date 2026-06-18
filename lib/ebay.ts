@@ -1,7 +1,12 @@
 export async function getEbayToken() {
-  const auth = Buffer.from(
-  `${process.env.EBAY_CLIENT_ID}:${process.env.EBAY_CLIENT_SECRET}`
-).toString('base64');
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET');
+  }
+
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   const response = await fetch(
     'https://api.ebay.com/identity/v1/oauth2/token',
@@ -16,9 +21,11 @@ export async function getEbayToken() {
     }
   );
 
-const data = await response.json();
+  const data = await response.json();
 
-return data;
+  if (!response.ok || !data.access_token) {
+    throw new Error(`eBay token error: ${JSON.stringify(data)}`);
+  }
 
-return data.access_token;
+  return data;
 }
