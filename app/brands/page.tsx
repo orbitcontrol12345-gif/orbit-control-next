@@ -13,7 +13,7 @@ import {
 import { BRANDS } from '@/lib/data';
 
 export const metadata: Metadata = {
-  title: 'Industrial Automation Brands | Xeltronic UAE',
+  title: 'Industrial Automation Brands | Orbit Control Automation',
   description:
     'Browse industrial automation brands including ABB, Siemens, Schneider Electric, Allen-Bradley, Omron, Honeywell, Mitsubishi Electric and more.',
 };
@@ -36,12 +36,10 @@ export default function BrandsPage({ searchParams }: Props) {
     );
   });
 
- return (
-  <div className="min-h-screen pt-20">
-      </div>
-   
-    {/* Header */}
-    <section className="border-b border-navy-700 bg-navy-800">
+  return (
+    <div className="min-h-screen pt-20">
+      {/* Header */}
+      <section className="border-b border-navy-700/50 bg-transparent">
         <div className="page-container py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
@@ -72,7 +70,7 @@ export default function BrandsPage({ searchParams }: Props) {
               </div>
             </div>
 
-            <div className="group flex h-full flex-col justify-between rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-xl hover:shadow-black/20"
+            <div className="grid grid-cols-3 gap-4 rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 shadow-xl shadow-black/20">
               <div>
                 <p className="text-xl font-bold text-gold-500">{BRANDS.length}+</p>
                 <p className="text-xs text-slate-500">Brands</p>
@@ -94,7 +92,7 @@ export default function BrandsPage({ searchParams }: Props) {
 
       <div className="page-container py-8">
         {/* Search */}
-        <div className="mb-8 rounded-2xl border border-gold-500/20 bg-navy-800 p-6">
+        <div className="mb-8 rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 shadow-xl shadow-black/20">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-white">Find Parts by Brand</h2>
             <p className="mt-1 text-sm text-slate-400">
@@ -112,7 +110,7 @@ export default function BrandsPage({ searchParams }: Props) {
               <Link
                 key={brand.slug}
                 href={`/brands/${brand.slug}`}
-                className="group flex h-[300px] flex-col justify-between rounded-xl border border-navy-700 bg-navy-800 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/50 hover:bg-navy-700 hover:shadow-xl hover:shadow-black/20"
+                className="group flex h-[300px] flex-col justify-between rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-xl hover:shadow-black/20"
               >
                 <div>
                   <div className="mb-5 flex items-start justify-between">
@@ -159,7 +157,7 @@ export default function BrandsPage({ searchParams }: Props) {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-gold-500/20 bg-navy-800 p-10 text-center">
+          <div className="rounded-2xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-10 text-center">
             <h3 className="text-2xl font-bold text-white">No Brands Found</h3>
 
             <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
@@ -177,7 +175,7 @@ export default function BrandsPage({ searchParams }: Props) {
         )}
 
         {/* CTA Banner */}
-        <div className="mt-12 rounded-3xl border border-gold-500/20 bg-gradient-to-r from-navy-800 to-navy-700 p-10 text-center">
+        <div className="mt-12 rounded-3xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-10 text-center">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-gold-500/20 bg-gold-500/10">
             <Zap size={26} className="text-gold-500" />
           </div>
