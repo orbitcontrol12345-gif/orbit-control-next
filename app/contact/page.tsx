@@ -66,7 +66,7 @@ export default function ContactPage() {
   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,211,238,0.16),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(245,158,11,0.12),transparent_30%),linear-gradient(180deg,#06111d_0%,#071827_45%,#050b14_100%)]" />
   <div className="relative">
     </div>
-      </div>
+     
       {/* Header */}
       <div className="border-b border-navy-700/50">
         <div className="page-container py-10">
