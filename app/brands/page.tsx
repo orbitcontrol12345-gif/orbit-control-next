@@ -36,10 +36,10 @@ export default function BrandsPage({ searchParams }: Props) {
     );
   });
 
-  return (
-    
-      {/* Header */}
-      <section className="border-b border-navy-700 bg-navy-800">
+ return (
+  <div className="min-h-screen pt-20">
+    {/* Header */}
+    <section className="border-b border-navy-700 bg-navy-800">
         <div className="page-container py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
