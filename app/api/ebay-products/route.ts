@@ -74,9 +74,9 @@ export async function GET(request: Request) {
 
   if (save) {
     const { data: insertedData, error } = await supabaseAdmin
-      .from('products_test')
-      .upsert(products, { onConflict: 'ebay_item_id' })
-      .select();
+  .from('products_test')
+  .insert(products)
+  .select();
 
     if (error) {
       supabaseError = error;
