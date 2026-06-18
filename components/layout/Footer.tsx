@@ -28,7 +28,7 @@ const footerLinks = {
     { label: 'Obsolete Parts', href: '/categories/obsolete-parts' },
   ],
 
-
+};
 export default function Footer() {
   return (
     <footer className="border-t border-white/10 bg-[#050b14]">
