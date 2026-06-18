@@ -1,4 +1,4 @@
-const SITE_URL = 'https://xeltronic.com';
+const SITE_URL = 'https://orbit-surplus.com';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 86400;
@@ -25,6 +25,9 @@ ${sitemaps
 </sitemapindex>`;
 
   return new Response(xml, {
-    headers: { 'Content-Type': 'application/xml' },
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+    },
   });
 }
