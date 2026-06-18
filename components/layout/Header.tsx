@@ -13,7 +13,6 @@ const navLinks = [
   { label: 'Products', href: '/products' },
   { label: 'Brands', href: '/brands' },
   { label: 'Categories', href: '/categories' },
-  { label: 'Sell Surplus', href: '/sell-surplus' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -31,7 +30,6 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -54,16 +52,12 @@ export default function Header() {
       }
 
       try {
-        const res = await fetch(
-          `/api/search-products?q=${encodeURIComponent(q)}`,
-          {
-            signal: controller.signal,
-            cache: 'no-store',
-          }
-        );
+        const res = await fetch(`/api/search-products?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
 
         const data = await res.json();
-
         setSuggestions(Array.isArray(data) ? data : []);
         setSearchOpen(true);
       } catch {
@@ -75,7 +69,6 @@ export default function Header() {
     }
 
     loadSuggestions();
-
     return () => controller.abort();
   }, [searchQuery]);
 
@@ -87,14 +80,11 @@ export default function Header() {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const submitSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!searchQuery.trim()) {
-      e.preventDefault();
-    }
+    if (!searchQuery.trim()) e.preventDefault();
   };
 
   return (
@@ -134,16 +124,16 @@ export default function Header() {
       </div>
 
       <div className="page-container">
-        <div className="flex h-20 items-center justify-between">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <div className="flex h-20 items-center justify-between gap-4">
+          <Link href="/" className="flex shrink-0 items-center">
             <Image
-  src="/logo.png"
-  alt="Orbit Control Automation"
-  width={300}
-  height={80}
-  priority
-  className="h-16 w-auto md:h-20"
- />
+              src="/logo.png"
+              alt="Orbit Control Automation"
+              width={280}
+              height={76}
+              priority
+              className="h-14 w-auto md:h-[68px]"
+            />
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -181,7 +171,7 @@ export default function Header() {
                     if (searchQuery.trim()) setSearchOpen(true);
                   }}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-56 bg-transparent px-2.5 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                  className="w-52 bg-transparent px-2.5 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 xl:w-60"
                 />
               </form>
 
@@ -231,14 +221,10 @@ export default function Header() {
 
                               <span
                                 className={`text-xs ${
-                                  p.inStock
-                                    ? 'text-emerald-400'
-                                    : 'text-slate-500'
+                                  p.inStock ? 'text-emerald-400' : 'text-slate-500'
                                 }`}
                               >
-                                {p.inStock
-                                  ? '● In Stock'
-                                  : '○ Check availability'}
+                                {p.inStock ? '● In Stock' : '○ Check availability'}
                               </span>
                             </div>
                           </div>
@@ -286,7 +272,7 @@ export default function Header() {
               )}
             </div>
 
-            <Link href="/rfq" className="btn-gold px-4 py-2 text-sm">
+            <Link href="/rfq" className="btn-gold px-5 py-2 text-sm">
               Request Quote
             </Link>
           </div>
@@ -317,6 +303,13 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+
+            <Link
+              href="/sell-surplus"
+              className="block rounded px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Sell Surplus
+            </Link>
 
             <div className="border-t border-navy-700 pt-3">
               <Link href="/rfq" className="btn-gold w-full justify-center text-sm">
