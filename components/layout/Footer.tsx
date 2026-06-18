@@ -4,11 +4,13 @@ import Image from 'next/image';
 
 const footerLinks = {
   company: [
-    { label: 'About Us', href: '/about' },
-    { label: 'Brands We Carry', href: '/brands' },
-    { label: 'Product Categories', href: '/categories' },
-    { label: 'Sell Your Surplus', href: '/sell-surplus' },
-    { label: 'Contact Us', href: '/contact' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Brands', href: '/brands' },
+  { label: 'Manufacturers', href: '/manufacturers' },
+  { label: 'Product Categories', href: '/categories' },
+  { label: 'Sell Your Surplus', href: '/sell-surplus' },
+  { label: 'Contact Us', href: '/contact' },
+],
   ],
   policies: [
     { label: 'Shipping Policy', href: '/shipping-policy' },
