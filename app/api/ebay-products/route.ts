@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const save = searchParams.get('save') === 'true';
 
   const token = await getEbayToken();
-  const accessToken = String(token.access_token).trim();
+const accessToken = String(token.access_token).trim();
 
   const params = new URLSearchParams({
     q: 'Siemens',
