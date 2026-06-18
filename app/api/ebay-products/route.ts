@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
   const params = new URLSearchParams({
     q: 'Industrial Automation & Motion Controls',
-    limit: '200',
+    limit: '10',
     offset: searchParams.get('offset') || '0',
     filter: 'sellers:{orbitcontrol}',
   });
@@ -74,8 +74,8 @@ export async function GET(request: Request) {
 
   if (save) {
     const { data: insertedData, error } = await supabaseAdmin
-      .from('products')
-      .upsert(products, { onConflict: 'sku' })
+      .from('products_test')
+      .upsert(products, { onConflict: 'ebay_item_id' })
       .select();
 
     if (error) {
