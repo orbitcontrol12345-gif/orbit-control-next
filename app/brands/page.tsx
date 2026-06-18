@@ -121,7 +121,7 @@ export default function BrandsPage({ searchParams }: Props) {
               >
                 <div>
                   <div className="mb-5 flex items-start justify-between">
-                    <div className="flex h-20 w-36 items-center justify-center rounded-lg border border-gold-500/20 bg-white p-3 transition-all group-hover:border-gold-500/50">
+                    className="group flex h-28 items-center justify-center rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] hover:border-cyan-400/30 transition-all duration-300"
                       {brand.logo ? (
                         <Image
                           src={brand.logo}
