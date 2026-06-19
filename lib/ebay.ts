@@ -16,7 +16,11 @@ export async function getEbayToken() {
   const body = new URLSearchParams({
   grant_type: 'refresh_token',
   refresh_token: refreshToken,
-  scope: 'https://api.ebay.com/oauth/api_scope',
+  scope: [
+  'https://api.ebay.com/oauth/api_scope',
+  'https://api.ebay.com/oauth/api_scope/sell.inventory.readonly',
+  'https://api.ebay.com/oauth/api_scope/sell.inventory',
+].join(' '),
 });
 
   const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
