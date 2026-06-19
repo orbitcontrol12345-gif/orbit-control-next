@@ -12,7 +12,17 @@ function slugify(text: string) {
     .replace(/^-|-$/g, '')
     .slice(0, 180);
 }
+function extractModelFromTitle(title: string) {
+  const cleaned = title
+    .replace(/\b(Siemens|ABB|Schneider|Allen Bradley|Allen-Bradley|Honeywell|Omron|Yokogawa|Emerson|Foxboro|GE|General Electric)\b/gi, '')
+    .replace(/\b(New|Used|Open Box|New Open Box|Without Box|No Box|W\/O Box)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
+  const match = cleaned.match(/\b[A-Z0-9]{2,}[A-Z0-9\-\/\.]{2,}\b/i);
+
+  return match ? match[0].toUpperCase() : cleaned.slice(0, 80);
+}
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const save = searchParams.get('save') === 'true';
@@ -51,17 +61,21 @@ export async function GET(request: Request) {
     const brand = brandMatch ? brandMatch[1] : 'Unknown';
 
     return {
-      ebay_item_id: ebayItemId,
-      sku: ebayItemId,
-      part_number: extractModelFromTitle(title),
-      brand,
-      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
-      name: title,
-      condition: item.condition || 'Used',
-      image_url: item.image?.imageUrl || '',
-      description: title,
-      is_active: true,
-    };
+  ebay_item_id: ebayItemId,
+  sku: ebayItemId,
+  part_number: extractModelFromTitle(title),
+  brand,
+  category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+  name: title,
+  condition: item.condition || 'Used',
+  image_url: item.image?.imageUrl || '',
+  description: title,
+  slug: slugify(`${ebayItemId}-${title}`),
+  marketplace: 'EBAY_US',
+  seller: 'orbitcontrol',
+  source: 'ebay',
+  is_active: true,
+};
   });
 
   if (save && products.length === 0) {
