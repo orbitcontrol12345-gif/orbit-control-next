@@ -5,16 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 180);
-}
-
-function extractModelFromTitle(title: string) {
-  const INDUSTRIAL_BRANDS = [
+const INDUSTRIAL_BRANDS = [
   'SIEMENS',
   'ABB',
   'SCHNEIDER ELECTRIC',
@@ -28,12 +19,13 @@ function extractModelFromTitle(title: string) {
   'HIRSCHMANN',
   'ALSTOM',
   'KAHLER',
+  'KAHLE',
   'TURCK',
   'PILZ',
   'BECKHOFF',
   'KEYENCE',
-  'MITSUBISHI',
   'MITSUBISHI ELECTRIC',
+  'MITSUBISHI',
   'PHOENIX CONTACT',
   'PHOENIX',
   'GE',
@@ -44,8 +36,8 @@ function extractModelFromTitle(title: string) {
   'DANFOSS',
   'PEPPERL FUCHS',
   'PEPPERL+FUCHS',
-  'ENDRESS',
   'ENDRESS HAUSER',
+  'ENDRESS',
   'BOSCH',
   'REXROTH',
   'BANNER',
@@ -73,12 +65,18 @@ function extractModelFromTitle(title: string) {
   'TELEMECANIQUE',
 ];
 
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 180);
+}
+
 function detectBrand(title: string) {
   const upperTitle = title.toUpperCase();
 
-  const found = INDUSTRIAL_BRANDS.find((brand) =>
-    upperTitle.includes(brand)
-  );
+  const found = INDUSTRIAL_BRANDS.find((brand) => upperTitle.includes(brand));
 
   if (!found) return 'UNKNOWN';
 
@@ -86,6 +84,7 @@ function detectBrand(title: string) {
   if (found === 'SCHNEIDER') return 'SCHNEIDER ELECTRIC';
   if (found === 'PHOENIX') return 'PHOENIX CONTACT';
   if (found === 'GENERAL ELECTRIC') return 'GE';
+  if (found === 'KAHLE') return 'KAHLER';
 
   return found;
 }
@@ -94,10 +93,10 @@ function extractModelFromTitle(title: string) {
   const upper = title.toUpperCase();
 
   const patterns = [
-    /\b\d[A-Z]{2}\d{4}-[A-Z0-9]{4,}-[A-Z0-9]{2,}\b/g,   // 6ES7331-7KF02-0AB0
+    /\b\d[A-Z]{2}\d{4}-[A-Z0-9]{4,}-[A-Z0-9]{2,}\b/g,
     /\b\d[A-Z]{2}\d{4}-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+\b/g,
-    /\b[A-Z]{2,}\d{3,}[A-Z0-9\-\/\.]*\b/g,              // MACH1030, CPU1214C
-    /\b\d[A-Z]{1,3}\d{3,}[A-Z0-9\-\/\.]*\b/g,           // 7PA3030-1
+    /\b[A-Z]{2,}\d{3,}[A-Z0-9\-\/\.]*\b/g,
+    /\b\d[A-Z]{1,3}\d{3,}[A-Z0-9\-\/\.]*\b/g,
     /\b[A-Z0-9]+(?:[-\/\.][A-Z0-9]+){1,}\b/g,
   ];
 
@@ -126,7 +125,7 @@ function extractModelFromTitle(title: string) {
   const filtered = allMatches
     .map((m) => m.trim())
     .filter((m) => m.length >= 4)
-    .filter((m) => !/^\d{10,}$/.test(m)) // يمنع eBay item id
+    .filter((m) => !/^\d{10,}$/.test(m))
     .filter((m) => !badWords.includes(m))
     .filter((m) => !INDUSTRIAL_BRANDS.includes(m));
 
@@ -174,7 +173,7 @@ export async function GET() {
   const accessToken = String(token.access_token).trim();
 
   const params = new URLSearchParams({
-    q: 'Industrial Automation',
+    q: 'PLC',
     limit: String(limit),
     offset: String(offset),
     filter: 'sellers:{orbitcontrol}',
@@ -196,8 +195,8 @@ export async function GET() {
   const products = items.map((item: any) => {
     const title = item.title || '';
     const ebayItemId = item.legacyItemId || item.itemId || '';
-
     const brand = detectBrand(title);
+
     return {
       ebay_item_id: ebayItemId,
       sku: ebayItemId,
@@ -227,26 +226,22 @@ export async function GET() {
       .upsert(products, { onConflict: 'sku' })
       .select();
 
-    if (error) {
-      supabaseError = error;
-    } else {
-      inserted = data?.length || 0;
-    }
+    if (error) supabaseError = error;
+    else inserted = data?.length || 0;
   }
 
   const nextOffset = items.length < limit ? 0 : offset + limit;
 
-  await supabaseAdmin
-    .from('import_state')
-    .upsert({
-      id: stateId,
-      last_offset: nextOffset,
-      last_run_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+  await supabaseAdmin.from('import_state').upsert({
+    id: stateId,
+    last_offset: nextOffset,
+    last_run_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
   return NextResponse.json({
     success: !supabaseError,
+    query: 'PLC',
     offset,
     nextOffset,
     fetched: items.length,
