@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     return {
       ebay_item_id: ebayItemId,
       sku: ebayItemId,
-      part_number: ebayItemId,
+      part_number: extractModelFromTitle(title),
       brand,
       category: item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: title,
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
 
   if (save) {
     const { data: insertedData, error } = await supabaseAdmin
-      .from('products_test')
+      .from('products')
       .upsert(products, { onConflict: 'sku' })
       .select();
 
