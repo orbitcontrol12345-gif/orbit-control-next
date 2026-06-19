@@ -64,6 +64,13 @@ function cleanTitle(title: string) {
     .replace(/\bDAMAGED BOX\b/gi, '')
     .replace(/\bOLD BOX\b/gi, '')
     .replace(/\bWITH OLD BOX\b/gi, '')
+    .replace(/\bNC\/NO\b/gi, '')
+.replace(/\bWITH SOCKET\b/gi, '')
+.replace(/\bW\/\b/gi, '')
+.replace(/\bWITH\b/gi, '')
+.replace(/\bSOCKET\b/gi, '')
+.replace(/\s*-\s*$/g, '')
+.replace(/\s*\/\s*$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -113,7 +120,7 @@ export async function GET(request: Request) {
   name: cleanTitle(title),
   condition: item.condition || 'Used',
   image_url: item.image?.imageUrl || '',
-  description: title,
+  description: cleanTitle(title),
   slug: slugify(`${ebayItemId}-${title}`),
   marketplace: 'EBAY_US',
   seller: 'orbitcontrol',
