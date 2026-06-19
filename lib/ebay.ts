@@ -14,15 +14,10 @@ export async function getEbayToken() {
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   const body = new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-    scope: [
-      'https://api.ebay.com/oauth/api_scope',
-      'https://api.ebay.com/oauth/api_scope/sell.inventory',
-      'https://api.ebay.com/oauth/api_scope/sell.fulfillment',
-      'https://api.ebay.com/oauth/api_scope/sell.feed',
-    ].join(' '),
-  });
+  grant_type: 'refresh_token',
+  refresh_token: refreshToken,
+  scope: 'https://api.ebay.com/oauth/api_scope',
+});
 
   const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
