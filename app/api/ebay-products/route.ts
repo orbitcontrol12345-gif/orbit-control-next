@@ -13,15 +13,59 @@ function slugify(text: string) {
     .slice(0, 180);
 }
 function extractModelFromTitle(title: string) {
-  const cleaned = title
-    .replace(/\b(Siemens|ABB|Schneider|Allen Bradley|Allen-Bradley|Honeywell|Omron|Yokogawa|Emerson|Foxboro|GE|General Electric)\b/gi, '')
-    .replace(/\b(New|Used|Open Box|New Open Box|Without Box|No Box|W\/O Box)\b/gi, '')
+  const ignored = [
+    'SIEMENS',
+    'SIMATIC',
+    'SITOP',
+    'SIRIUS',
+    'SINAMICS',
+    'CPU',
+    'HMI',
+    'PLC',
+    'MODULE',
+    'POWER',
+    'SUPPLY',
+    'INTERFACE',
+    'RELAY',
+    'NEW',
+    'USED',
+    'OPEN',
+    'BOX',
+  ];
+
+  const matches = title.match(/\b[A-Z0-9]+(?:[-\/\.][A-Z0-9]+)+\b/gi) || [];
+
+  const filtered = matches
+    .map((m) => m.toUpperCase())
+    .filter((m) => {
+      if (m.length < 4) return false;
+      if (ignored.includes(m)) return false;
+      if (/^\d{10,}$/.test(m)) return false;
+      return true;
+    });
+
+  return filtered[0] || '';
+}
+function cleanTitle(title: string) {
+  return title
+    .replace(/\bNEW OPEN BOX\b/gi, '')
+    .replace(/\bOPEN BOX\b/gi, '')
+    .replace(/\bNEW\b/gi, '')
+    .replace(/\bUSED\b/gi, '')
+    .replace(/\bFOR PARTS\b/gi, '')
+    .replace(/\bPARTS ONLY\b/gi, '')
+    .replace(/\bNOT WORKING\b/gi, '')
+    .replace(/\bPARTS OR NOT WORKING\b/gi, '')
+    .replace(/\bW\/O BOX\b/gi, '')
+    .replace(/\bWITHOUT BOX\b/gi, '')
+    .replace(/\bNO BOX\b/gi, '')
+    .replace(/\bFILTHY BOX\b/gi, '')
+    .replace(/\bWITH FILTHY BOX\b/gi, '')
+    .replace(/\bDAMAGED BOX\b/gi, '')
+    .replace(/\bOLD BOX\b/gi, '')
+    .replace(/\bWITH OLD BOX\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
-
-  const match = cleaned.match(/\b[A-Z0-9]{2,}[A-Z0-9\-\/\.]{2,}\b/i);
-
-  return match ? match[0].toUpperCase() : cleaned.slice(0, 80);
 }
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -66,7 +110,7 @@ export async function GET(request: Request) {
   part_number: extractModelFromTitle(title),
   brand,
   category: item.categories?.[0]?.categoryName || 'Industrial Automation',
-  name: title,
+  name: cleanTitle(title),
   condition: item.condition || 'Used',
   image_url: item.image?.imageUrl || '',
   description: title,
