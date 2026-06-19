@@ -248,14 +248,23 @@ export async function GET() {
 const ebayBrand =
   getAspect(itemDetails, ['Brand', 'Manufacturer']) || detectBrand(title);
 
-const ebayModel =
-  getAspect(itemDetails, [
-    'MPN',
-    'Manufacturer Part Number',
-    'Catalog Number',
-    'Model Number',
-    'Model',
-  ]) || extractModelFromTitle(title);
+const modelFromEbay = getAspect(itemDetails, [
+  'MPN',
+  'Manufacturer Part Number',
+  'Catalog Number',
+  'Model Number',
+  'Model',
+]);
+
+const modelFromTitle = extractModelFromTitle(title);
+
+const badModel =
+  !modelFromEbay ||
+  /^\d+\/\d+/i.test(modelFromEbay) ||
+  /MA$/i.test(modelFromEbay) ||
+  modelFromEbay.toUpperCase() === 'UNKNOWN';
+
+const ebayModel = badModel ? modelFromTitle : modelFromEbay;
     const brand = ebayBrand || 'UNKNOWN';
     return {
       ebay_item_id: ebayItemId,
