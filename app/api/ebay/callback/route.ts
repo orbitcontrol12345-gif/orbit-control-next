@@ -11,16 +11,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'No code received' });
   }
 
-  const clientId = process.env.EBAY_CLIENT_ID!;
-  const clientSecret = process.env.EBAY_CLIENT_SECRET!;
-  const ruName = process.env.EBAY_RUNAME!;
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+
+  const ruName = 'Continue_to_Cre-Continue-Xeltro-mxfsqy';
+
+  if (!clientId || !clientSecret) {
+    return NextResponse.json({
+      success: false,
+      error: 'Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET',
+    });
+  }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
   const body = new URLSearchParams();
-  body.set('grant_type', 'authorization_code');
-  body.set('code', code);
-  body.set('redirect_uri', ruName);
+  body.append('grant_type', 'authorization_code');
+  body.append('code', code);
+  body.append('redirect_uri', ruName);
 
   const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
