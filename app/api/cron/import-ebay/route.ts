@@ -14,24 +14,123 @@ function slugify(text: string) {
 }
 
 function extractModelFromTitle(title: string) {
-  const ignored = [
-    'SIEMENS', 'SIMATIC', 'SITOP', 'SIRIUS', 'SINAMICS',
-    'CPU', 'HMI', 'PLC', 'MODULE', 'POWER', 'SUPPLY',
-    'INTERFACE', 'RELAY', 'NEW', 'USED', 'OPEN', 'BOX',
+  const INDUSTRIAL_BRANDS = [
+  'SIEMENS',
+  'ABB',
+  'SCHNEIDER ELECTRIC',
+  'SCHNEIDER',
+  'ALLEN-BRADLEY',
+  'ALLEN BRADLEY',
+  'ROCKWELL',
+  'OMRON',
+  'HONEYWELL',
+  'YOKOGAWA',
+  'HIRSCHMANN',
+  'ALSTOM',
+  'KAHLER',
+  'TURCK',
+  'PILZ',
+  'BECKHOFF',
+  'KEYENCE',
+  'MITSUBISHI',
+  'MITSUBISHI ELECTRIC',
+  'PHOENIX CONTACT',
+  'PHOENIX',
+  'GE',
+  'GENERAL ELECTRIC',
+  'FANUC',
+  'FOXBORO',
+  'EMERSON',
+  'DANFOSS',
+  'PEPPERL FUCHS',
+  'PEPPERL+FUCHS',
+  'ENDRESS',
+  'ENDRESS HAUSER',
+  'BOSCH',
+  'REXROTH',
+  'BANNER',
+  'SICK',
+  'IFM',
+  'FESTO',
+  'EATON',
+  'CUTLER HAMMER',
+  'SQUARE D',
+  'WAGO',
+  'WEIDMULLER',
+  'LENZE',
+  'PROSOFT',
+  'ADVANTECH',
+  'RED LION',
+  'BENTLY NEVADA',
+  'TRICONEX',
+  'WOODWARD',
+  'MOXA',
+  'HIMA',
+  'PARKER',
+  'BAILEY',
+  'WESTINGHOUSE',
+  'KOLLMORGEN',
+  'TELEMECANIQUE',
+];
+
+function detectBrand(title: string) {
+  const upperTitle = title.toUpperCase();
+
+  const found = INDUSTRIAL_BRANDS.find((brand) =>
+    upperTitle.includes(brand)
+  );
+
+  if (!found) return 'UNKNOWN';
+
+  if (found === 'ALLEN BRADLEY') return 'ALLEN-BRADLEY';
+  if (found === 'SCHNEIDER') return 'SCHNEIDER ELECTRIC';
+  if (found === 'PHOENIX') return 'PHOENIX CONTACT';
+  if (found === 'GENERAL ELECTRIC') return 'GE';
+
+  return found;
+}
+
+function extractModelFromTitle(title: string) {
+  const upper = title.toUpperCase();
+
+  const patterns = [
+    /\b\d[A-Z]{2}\d{4}-[A-Z0-9]{4,}-[A-Z0-9]{2,}\b/g,   // 6ES7331-7KF02-0AB0
+    /\b\d[A-Z]{2}\d{4}-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+\b/g,
+    /\b[A-Z]{2,}\d{3,}[A-Z0-9\-\/\.]*\b/g,              // MACH1030, CPU1214C
+    /\b\d[A-Z]{1,3}\d{3,}[A-Z0-9\-\/\.]*\b/g,           // 7PA3030-1
+    /\b[A-Z0-9]+(?:[-\/\.][A-Z0-9]+){1,}\b/g,
   ];
 
-  const matches = title.match(/\b[A-Z0-9]+(?:[-\/\.][A-Z0-9]+)+\b/gi) || [];
+  const badWords = [
+    'SIEMENS',
+    'SIMATIC',
+    'SITOP',
+    'SIRIUS',
+    'SINAMICS',
+    'POWER',
+    'SUPPLY',
+    'MODULE',
+    'INTERFACE',
+    'RELAY',
+    'SWITCH',
+    'INDUSTRIAL',
+    'AUTOMATION',
+    'NEW',
+    'USED',
+    'OPEN',
+    'BOX',
+  ];
 
-  const filtered = matches
-    .map((m) => m.toUpperCase())
-    .filter((m) => {
-      if (m.length < 4) return false;
-      if (ignored.includes(m)) return false;
-      if (/^\d{10,}$/.test(m)) return false;
-      return true;
-    });
+  const allMatches = patterns.flatMap((pattern) => upper.match(pattern) || []);
 
-  return filtered[0] || '';
+  const filtered = allMatches
+    .map((m) => m.trim())
+    .filter((m) => m.length >= 4)
+    .filter((m) => !/^\d{10,}$/.test(m)) // يمنع eBay item id
+    .filter((m) => !badWords.includes(m))
+    .filter((m) => !INDUSTRIAL_BRANDS.includes(m));
+
+  return filtered[0] || 'UNKNOWN';
 }
 
 function cleanTitle(title: string) {
@@ -98,12 +197,7 @@ export async function GET() {
     const title = item.title || '';
     const ebayItemId = item.legacyItemId || item.itemId || '';
 
-    const brandMatch = title.match(
-      /\b(Siemens|ABB|Schneider|Allen Bradley|Allen-Bradley|Honeywell|Omron|Yokogawa|Emerson|Foxboro|GE|General Electric|Bosch|Phoenix|Phoenix Contact|Danfoss|Mitsubishi|Fuji|Keyence|Banner|Sick|IFM|Festo|Eaton|Cutler Hammer|Square D)\b/i
-    );
-
-    const brand = brandMatch ? brandMatch[1].toUpperCase() : 'Unknown';
-
+    const brand = detectBrand(title);
     return {
       ebay_item_id: ebayItemId,
       sku: ebayItemId,
