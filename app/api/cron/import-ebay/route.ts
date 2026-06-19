@@ -1,0 +1,162 @@
+import { NextResponse } from 'next/server';
+import { getEbayToken } from '@/lib/ebay';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 180);
+}
+
+function extractModelFromTitle(title: string) {
+  const ignored = [
+    'SIEMENS', 'SIMATIC', 'SITOP', 'SIRIUS', 'SINAMICS',
+    'CPU', 'HMI', 'PLC', 'MODULE', 'POWER', 'SUPPLY',
+    'INTERFACE', 'RELAY', 'NEW', 'USED', 'OPEN', 'BOX',
+  ];
+
+  const matches = title.match(/\b[A-Z0-9]+(?:[-\/\.][A-Z0-9]+)+\b/gi) || [];
+
+  const filtered = matches
+    .map((m) => m.toUpperCase())
+    .filter((m) => {
+      if (m.length < 4) return false;
+      if (ignored.includes(m)) return false;
+      if (/^\d{10,}$/.test(m)) return false;
+      return true;
+    });
+
+  return filtered[0] || '';
+}
+
+function cleanTitle(title: string) {
+  return title
+    .replace(/\bNEW OPEN BOX\b/gi, '')
+    .replace(/\bOPEN BOX\b/gi, '')
+    .replace(/\bNEW\b/gi, '')
+    .replace(/\bUSED\b/gi, '')
+    .replace(/\bFOR PARTS\b/gi, '')
+    .replace(/\bPARTS ONLY\b/gi, '')
+    .replace(/\bNOT WORKING\b/gi, '')
+    .replace(/\bPARTS OR NOT WORKING\b/gi, '')
+    .replace(/\bW\/O BOX\b/gi, '')
+    .replace(/\bWITHOUT BOX\b/gi, '')
+    .replace(/\bNO BOX\b/gi, '')
+    .replace(/\bFILTHY BOX\b/gi, '')
+    .replace(/\bWITH FILTHY BOX\b/gi, '')
+    .replace(/\bDAMAGED BOX\b/gi, '')
+    .replace(/\bOLD BOX\b/gi, '')
+    .replace(/\bWITH OLD BOX\b/gi, '')
+    .replace(/\bNC\/NO\b/gi, '')
+    .replace(/\bWITH SOCKET\b/gi, '')
+    .replace(/\bW\/\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export async function GET() {
+  const stateId = 'ebay_import';
+  const limit = 200;
+
+  const { data: state } = await supabaseAdmin
+    .from('import_state')
+    .select('last_offset')
+    .eq('id', stateId)
+    .maybeSingle();
+
+  const offset = state?.last_offset || 0;
+
+  const token = await getEbayToken();
+  const accessToken = String(token.access_token).trim();
+
+  const params = new URLSearchParams({
+    q: 'Industrial Automation',
+    limit: String(limit),
+    offset: String(offset),
+    filter: 'sellers:{orbitcontrol}',
+  });
+
+  const response = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item_summary/search?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
+      },
+    }
+  );
+
+  const ebayData = await response.json();
+  const items = ebayData.itemSummaries || [];
+
+  const products = items.map((item: any) => {
+    const title = item.title || '';
+    const ebayItemId = item.legacyItemId || item.itemId || '';
+
+    const brandMatch = title.match(
+      /\b(Siemens|ABB|Schneider|Allen Bradley|Allen-Bradley|Honeywell|Omron|Yokogawa|Emerson|Foxboro|GE|General Electric|Bosch|Phoenix|Phoenix Contact|Danfoss|Mitsubishi|Fuji|Keyence|Banner|Sick|IFM|Festo|Eaton|Cutler Hammer|Square D)\b/i
+    );
+
+    const brand = brandMatch ? brandMatch[1].toUpperCase() : 'Unknown';
+
+    return {
+      ebay_item_id: ebayItemId,
+      sku: ebayItemId,
+      part_number: extractModelFromTitle(title),
+      brand,
+      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+      name: cleanTitle(title),
+      condition: item.condition || 'Used',
+      image_url: item.image?.imageUrl || '',
+      description: title,
+      slug: slugify(`${ebayItemId}-${title}`),
+      marketplace: 'EBAY_US',
+      seller: 'orbitcontrol',
+      source: 'ebay',
+      is_active: true,
+      last_seen_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  });
+
+  let inserted = 0;
+  let supabaseError = null;
+
+  if (products.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .upsert(products, { onConflict: 'sku' })
+      .select();
+
+    if (error) {
+      supabaseError = error;
+    } else {
+      inserted = data?.length || 0;
+    }
+  }
+
+  const nextOffset = items.length < limit ? 0 : offset + limit;
+
+  await supabaseAdmin
+    .from('import_state')
+    .upsert({
+      id: stateId,
+      last_offset: nextOffset,
+      last_run_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+  return NextResponse.json({
+    success: !supabaseError,
+    offset,
+    nextOffset,
+    fetched: items.length,
+    inserted,
+    supabaseError,
+  });
+}
