@@ -8,7 +8,7 @@ export async function GET() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
   const { data, error } = await supabaseAdmin
-    .from('products_test')
+    .from('products')
     .select('id')
     .limit(1);
 
