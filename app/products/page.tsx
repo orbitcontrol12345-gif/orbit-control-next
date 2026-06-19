@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
 import ProductsClient from './ProductsClient';
-
+import ProductCard from '@/components/products/ProductCard';
+import { getSupabaseProductsPage } from '@/lib/supabase-products';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
