@@ -150,7 +150,11 @@ if (brand !== 'UNKNOWN') {
     .filter((m) => !badWords.includes(m))
     .filter((m) => !INDUSTRIAL_BRANDS.includes(m));
 
-  return filtered[0] || 'UNKNOWN';
+  const preferred = filtered.find(
+  (m) => m.includes('-') || m.includes('/')
+);
+
+return preferred || filtered[0] || 'UNKNOWN';
 }
 
 function cleanTitle(title: string) {
@@ -175,6 +179,10 @@ function cleanTitle(title: string) {
     .replace(/\bWITH SOCKET\b/gi, '')
     .replace(/\bW\/\b/gi, '')
     .replace(/\s+/g, ' ')
+    .replace(/\bLOT\s*\d+\s*PCS?\.?\b/gi, '')
+    .replace(/\b\d+\s*PCS?\.?\b/gi, '')
+    .replace(/\bLOT OF \d+\b/gi, '')
+    .replace(/\bLOT\b/gi, '')
     .trim();
 }
 async function getEbayItemDetails(itemId: string, accessToken: string) {
