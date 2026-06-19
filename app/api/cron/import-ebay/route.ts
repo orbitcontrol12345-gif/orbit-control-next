@@ -164,10 +164,37 @@ function cleanTitle(title: string) {
     .replace(/\s+/g, ' ')
     .trim();
 }
+async function getEbayItemDetails(itemId: string, accessToken: string) {
+  const res = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(itemId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
+      },
+    }
+  );
 
+  if (!res.ok) return null;
+  return res.json();
+}
+
+function getAspect(itemDetails: any, names: string[]) {
+  const aspects = itemDetails?.localizedAspects || [];
+
+  for (const name of names) {
+    const found = aspects.find(
+      (a: any) => String(a.name).toLowerCase() === name.toLowerCase()
+    );
+
+    if (found?.value) return String(found.value).trim();
+  }
+
+  return '';
+}
 export async function GET() {
   const stateId = 'ebay_import';
-  const limit = 200;
+  const limit = 20;
 
   const { data: state } = await supabaseAdmin
     .from('import_state')
@@ -200,15 +227,23 @@ export async function GET() {
   const ebayData = await response.json();
   const items = ebayData.itemSummaries || [];
 
-  const products = items.map((item: any) => {
+  const products = await Promise.all(items.map(async (item: any) => {
     const title = item.title || '';
     const ebayItemId = item.legacyItemId || item.itemId || '';
-    const brand = detectBrand(title);
+    const itemDetails = await getEbayItemDetails(item.itemId, accessToken);
 
+const ebayBrand =
+  getAspect(itemDetails, ['Brand', 'Manufacturer']) || detectBrand(title);
+
+const ebayModel =
+  getAspect(itemDetails, ['Model', 'MPN', 'Manufacturer Part Number', 'Catalog Number']) ||
+  extractModelFromTitle(title);
+    const brand = ebayBrand || 'UNKNOWN';
     return {
       ebay_item_id: ebayItemId,
       sku: ebayItemId,
-      model_number: extractModelFromTitle(title),
+      model_number: ebayModel || 'UNKNOWN',
+      part_number: ebayModel || 'UNKNOWN',
       brand,
       category: item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: cleanTitle(title),
@@ -223,7 +258,7 @@ export async function GET() {
       last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-  });
+  }));
 
   let inserted = 0;
   let supabaseError = null;
