@@ -208,7 +208,7 @@ export async function GET() {
     return {
       ebay_item_id: ebayItemId,
       sku: ebayItemId,
-      part_number: extractModelFromTitle(title),
+      model_number: extractModelFromTitle(title),
       brand,
       category: item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: cleanTitle(title),
