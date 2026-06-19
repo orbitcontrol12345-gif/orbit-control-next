@@ -120,7 +120,7 @@ export async function GET(request: Request) {
   name: cleanTitle(title),
   condition: item.condition || 'Used',
   image_url: item.image?.imageUrl || '',
-  description: cleanTitle(title),
+  description: title,
   slug: slugify(`${ebayItemId}-${title}`),
   marketplace: 'EBAY_US',
   seller: 'orbitcontrol',
