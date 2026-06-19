@@ -91,6 +91,19 @@ function detectBrand(title: string) {
 
 function extractModelFromTitle(title: string) {
   const upper = title.toUpperCase();
+  const brand = detectBrand(title);
+if (brand !== 'UNKNOWN') {
+  const afterBrand = upper.split(brand)[1]?.trim() || '';
+  const directModel = afterBrand.match(/\b[A-Z0-9]{4,}(?:[-\/][A-Z0-9]+)*\b/);
+
+  if (
+    directModel &&
+    !/^\d{10,}$/.test(directModel[0]) &&
+    !/^\d+\/\d+/.test(directModel[0])
+  ) {
+    return directModel[0];
+  }
+}
 
   const patterns = [
     /\b[A-Z]{2,5}\d{2,5}\b/g,
