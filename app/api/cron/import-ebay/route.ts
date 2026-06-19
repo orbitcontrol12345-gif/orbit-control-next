@@ -93,6 +93,7 @@ function extractModelFromTitle(title: string) {
   const upper = title.toUpperCase();
 
   const patterns = [
+    /\b[A-Z]{2,5}\d{2,5}\b/g,
     /\b\d[A-Z]{2}\d{4}-[A-Z0-9]{4,}-[A-Z0-9]{2,}\b/g,
     /\b\d[A-Z]{2}\d{4}-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+\b/g,
     /\b[A-Z]{2,}\d{3,}[A-Z0-9\-\/\.]*\b/g,
@@ -118,7 +119,11 @@ function extractModelFromTitle(title: string) {
     'USED',
     'OPEN',
     'BOX',
-  ];
+    'EMPTY',
+    'REV',
+    'REV.',
+    'LOT',
+     ];
 
   const allMatches = patterns.flatMap((pattern) => upper.match(pattern) || []);
 
