@@ -194,7 +194,7 @@ function getAspect(itemDetails: any, names: string[]) {
 }
 export async function GET() {
   const stateId = 'ebay_import';
-  const limit = 20;
+  const limit = 200;
 
   const { data: state } = await supabaseAdmin
     .from('import_state')
