@@ -6,33 +6,21 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const error = url.searchParams.get('error');
-
-  if (error) {
-    return NextResponse.json({ success: false, error });
-  }
 
   if (!code) {
-    return NextResponse.json({ success: false, message: 'No code received' });
+    return NextResponse.json({ success: false, error: 'No code received' });
   }
 
-  const clientId = process.env.EBAY_CLIENT_ID;
-  const clientSecret = process.env.EBAY_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    return NextResponse.json({
-      success: false,
-      error: 'Missing EBAY_CLIENT_ID or EBAY_CLIENT_SECRET',
-    });
-  }
+  const clientId = process.env.EBAY_CLIENT_ID!;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET!;
+  const ruName = process.env.EBAY_RUNAME!;
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
 
-  const body = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: 'Continue_to_Cre-Continue-Xeltro-mxfsgy',
-  });
+  const body = new URLSearchParams();
+  body.set('grant_type', 'authorization_code');
+  body.set('code', code);
+  body.set('redirect_uri', ruName);
 
   const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
@@ -40,7 +28,7 @@ export async function GET(request: Request) {
       Authorization: `Basic ${auth}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body,
+    body: body.toString(),
   });
 
   const data = await response.json();
