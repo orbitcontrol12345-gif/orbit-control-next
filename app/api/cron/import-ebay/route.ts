@@ -236,8 +236,13 @@ const ebayBrand =
   getAspect(itemDetails, ['Brand', 'Manufacturer']) || detectBrand(title);
 
 const ebayModel =
-  getAspect(itemDetails, ['Model', 'MPN', 'Manufacturer Part Number', 'Catalog Number']) ||
-  extractModelFromTitle(title);
+  getAspect(itemDetails, [
+    'MPN',
+    'Manufacturer Part Number',
+    'Catalog Number',
+    'Model Number',
+    'Model',
+  ]) || extractModelFromTitle(title);
     const brand = ebayBrand || 'UNKNOWN';
     return {
       ebay_item_id: ebayItemId,
