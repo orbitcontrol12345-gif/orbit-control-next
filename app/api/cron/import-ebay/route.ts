@@ -126,6 +126,9 @@ function extractModelFromTitle(title: string) {
     .map((m) => m.trim())
     .filter((m) => m.length >= 4)
     .filter((m) => !/^\d{10,}$/.test(m))
+    .filter((m) => !/^\d{1,3}\/\d{1,3}$/.test(m))
+    .filter((m) => !/^\d+\/\d+$/.test(m))
+    .filter((m) => !['90/80', '110/120', '220/240', '24/48'].includes(m))
     .filter((m) => !badWords.includes(m))
     .filter((m) => !INDUSTRIAL_BRANDS.includes(m));
 
