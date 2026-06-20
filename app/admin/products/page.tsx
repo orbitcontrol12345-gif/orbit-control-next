@@ -4,12 +4,26 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function AdminProductsPage() {
-  const { data: products, error } = await supabaseAdmin
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const q = searchParams.q?.trim() || '';
+
+  let query = supabaseAdmin
     .from('products')
     .select('id, sku, name, brand, model_number, part_number, image_url, is_active, source_type, updated_at')
     .eq('source_type', 'manual')
     .order('updated_at', { ascending: false });
+
+  if (q) {
+    query = query.or(
+      `name.ilike.%${q}%,sku.ilike.%${q}%,part_number.ilike.%${q}%,model_number.ilike.%${q}%,brand.ilike.%${q}%`
+    );
+  }
+
+  const { data: products, error } = await query;
 
   if (error) {
     return (
@@ -22,7 +36,7 @@ export default async function AdminProductsPage() {
   return (
     <div className="min-h-screen bg-[#06111d] px-6 pt-40 pb-24 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold">Manual Products</h1>
 
           <Link
@@ -32,6 +46,34 @@ export default async function AdminProductsPage() {
             Add Product
           </Link>
         </div>
+
+        <form method="GET" className="mb-6">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="Search by SKU, model number, brand, or product name..."
+              className="w-full rounded-lg border border-cyan-400/20 bg-[#071827] px-4 py-3 text-white outline-none"
+            />
+
+            <button
+              type="submit"
+              className="rounded-lg bg-cyan-400 px-6 py-3 font-bold text-[#06111d]"
+            >
+              Search
+            </button>
+
+            {q && (
+              <Link
+                href="/admin/products"
+                className="rounded-lg bg-slate-600 px-6 py-3 font-bold text-white"
+              >
+                Clear
+              </Link>
+            )}
+          </div>
+        </form>
 
         <div className="overflow-hidden rounded-2xl border border-cyan-400/10 bg-[#0b1f2f]">
           <table className="w-full text-left text-sm">
