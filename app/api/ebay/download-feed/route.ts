@@ -12,7 +12,7 @@ export async function GET() {
     const accessToken = String(token.access_token).trim();
 
     const response = await fetch(
-      `https://api.ebay.com/sell/feed/v1/inventory_task/${taskId}/download_result_file`,
+      `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
