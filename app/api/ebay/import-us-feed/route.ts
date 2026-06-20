@@ -44,6 +44,10 @@ function cleanTitle(title: string, brand: string) {
     .replace(/\bMISSING STAND\b/gi, '')
     .replace(/\bNO ACCESSORIES\b/gi, '')
     .replace(/\bWITHOUT ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
+    .replace(/\bW\/O ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT ANY ACCESSORY\b/gi, '')
+    .replace(/\bWITHOUT ACCESSORY\b/gi, '')
     .replace(/\s*[-–—]\s*$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
