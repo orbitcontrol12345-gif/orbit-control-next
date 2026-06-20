@@ -25,6 +25,10 @@ function cleanTitle(title: string, brand: string) {
   let t = String(title || '');
 
   t = t
+    function cleanTitle(title: string, brand: string) {
+  let t = String(title || '');
+
+  t = t
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
     .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
     .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
@@ -39,9 +43,15 @@ function cleanTitle(title: string, brand: string) {
     .replace(/\bWITH OLD BOX\b/gi, '')
     .replace(/\bWITH FILTHY BOX\b/gi, '')
     .replace(/\bFILTHY BOX\b/gi, '')
+    .replace(/\bDAMAGED BOX\b/gi, '')
+    .replace(/\bOLD STOCK BOX\b/gi, '')
+    .replace(/\bSHELF WEAR\b/gi, '')
     .replace(/\bMISSING STAND\s*&\s*BUTTON\b/gi, '')
     .replace(/\bMISSING BUTTON\b/gi, '')
     .replace(/\bMISSING STAND\b/gi, '')
+    .replace(/\bMISSING COVER\b/gi, '')
+    .replace(/\bMISSING LID\b/gi, '')
+    .replace(/\bMISSING KNOB\b/gi, '')
     .replace(/\bNO ACCESSORIES\b/gi, '')
     .replace(/\bWITHOUT ACCESSORIES\b/gi, '')
     .replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
