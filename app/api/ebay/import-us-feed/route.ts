@@ -21,7 +21,52 @@ function getAspect(details: any, names: string[]) {
   }
   return '';
 }
+function cleanTitle(title: string, brand: string) {
+  let t = String(title || '');
 
+  t = t
+    .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
+    .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
+    .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
+    .replace(/^\s*LOT\s+/i, '')
+    .replace(/\bNEW OPEN BOX\b/gi, '')
+    .replace(/\bOPEN BOX\b/gi, '')
+    .replace(/\bNEW\b/gi, '')
+    .replace(/\bUSED\b/gi, '')
+    .replace(/\bW\/O BOX\b/gi, '')
+    .replace(/\bWITHOUT BOX\b/gi, '')
+    .replace(/\bNO BOX\b/gi, '')
+    .replace(/\bWITH OLD BOX\b/gi, '')
+    .replace(/\bWITH FILTHY BOX\b/gi, '')
+    .replace(/\bFILTHY BOX\b/gi, '')
+    .replace(/\bMISSING STAND\s*&\s*BUTTON\b/gi, '')
+    .replace(/\bMISSING BUTTON\b/gi, '')
+    .replace(/\bMISSING STAND\b/gi, '')
+    .replace(/\bNO ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT ACCESSORIES\b/gi, '')
+    .replace(/\s*[-–—]\s*$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (brand && brand !== 'UNKNOWN') {
+    const safeBrand = brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    t = t.replace(new RegExp(`^${safeBrand}\\s+`, 'i'), '').trim();
+  }
+
+  return t || title;
+}
+
+function cleanCondition(condition: string) {
+  const c = String(condition || '').toLowerCase();
+
+  if (c.includes('refurb')) return 'Refurbished';
+  if (c.includes('open box')) return 'New – Open box';
+  if (c.includes('new')) return 'New';
+  if (c.includes('parts') || c.includes('not working')) return 'For parts';
+  if (c.includes('used')) return 'Used';
+
+  return condition || 'Used';
+}
 async function getItemDetails(itemId: string, accessToken: string) {
   const res = await fetch(`https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${itemId}`, {
     headers: {
@@ -78,7 +123,8 @@ export async function GET(request: Request) {
     if (!details) continue;
 
     const title = details.title || '';
-    const brand = getAspect(details, ['Brand', 'Manufacturer']) || 'UNKNOWN';
+const brand = getAspect(details, ['Brand', 'Manufacturer']) || 'UNKNOWN';
+const cleanedTitle = cleanTitle(title, brand);
     const model =
       getAspect(details, ['MPN', 'Manufacturer Part Number', 'Model Number', 'Catalog Number', 'Model']) ||
       'UNKNOWN';
@@ -90,11 +136,10 @@ export async function GET(request: Request) {
       model_number: model,
       brand,
       category: details.categoryPath || 'Industrial Automation',
-      name: title,
-      condition: details.condition || 'Used',
-      image_url: details.image?.imageUrl || '',
-      description: title,
-      slug: slugify(`${item.itemId}-${title}`),
+      name: cleanedTitle,
+condition: cleanCondition(details.condition || 'Used'),
+description: title,
+slug: slugify(`${item.itemId}-${cleanedTitle}`),
       marketplace: 'EBAY_US',
       seller: 'orbitcontrol',
       source: 'ebay-feed',
