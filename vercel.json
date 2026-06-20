@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/import-ebay",
+      "path": "/api/cron/import-us-feed-batch",
       "schedule": "*/15 * * * *"
     }
   ]
