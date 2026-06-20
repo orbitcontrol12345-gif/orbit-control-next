@@ -25,10 +25,7 @@ function cleanTitle(title: string, brand: string) {
   let t = String(title || '');
 
   t = t
-    function cleanTitle(title: string, brand: string) {
-  let t = String(title || '');
-
-  t = t
+    t = t
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
     .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
     .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
