@@ -31,10 +31,32 @@ export default function AddProductPage() {
     const data = await res.json();
 
     if (data.success) {
-      setStatus('Product added successfully ✅');
+      setStatus(`Product added successfully ✅ SKU: ${data.product?.sku}`);
       e.currentTarget.reset();
     } else {
       setStatus(`Error: ${data.error?.message || data.error}`);
+    }
+  }
+
+  async function handleDelete() {
+    const sku = prompt('Enter manual product SKU to delete');
+
+    if (!sku) return;
+
+    setStatus('Deleting...');
+
+    const res = await fetch('/api/admin/delete-manual-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sku }),
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.deleted > 0) {
+      setStatus('Product deleted successfully ✅');
+    } else {
+      setStatus('Product not found or not manual');
     }
   }
 
@@ -67,9 +89,22 @@ export default function AddProductPage() {
             className="w-full rounded-lg p-3 text-black"
           />
 
-          <button className="rounded-lg bg-cyan-400 px-6 py-3 font-bold text-[#06111d]">
-            Save Product
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="rounded-lg bg-cyan-400 px-6 py-3 font-bold text-[#06111d]"
+            >
+              Save Product
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="rounded-lg bg-red-500 px-6 py-3 font-bold text-white"
+            >
+              Delete Manual Product
+            </button>
+          </div>
         </form>
 
         {status && <p className="mt-5 text-sm text-cyan-200">{status}</p>}
