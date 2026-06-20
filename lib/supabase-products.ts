@@ -113,14 +113,16 @@ export async function getSupabaseProductBySlug(slug: string): Promise<Product | 
     .from(PRODUCTS_TABLE)
     .select('*')
     .eq('slug', decodedSlug)
+    .eq('is_active', true)
     .maybeSingle();
 
   if (!data) {
     const { data: fallback } = await supabaseAdmin
       .from(PRODUCTS_TABLE)
       .select('*')
+      .eq('is_active', true)
       .or(
-        `slug.eq.${decodedSlug},sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug}`
+        `slug.eq.${decodedSlug},sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug},model_number.eq.${decodedSlug}`
       )
       .limit(1)
       .maybeSingle();
