@@ -20,7 +20,7 @@ export default async function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#06111d] px-6 py-24 text-white">
+    <div className="min-h-screen bg-[#06111d] px-6 pt-40 pb-24 text-white">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Manual Products</h1>
