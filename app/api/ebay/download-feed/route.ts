@@ -12,14 +12,14 @@ export async function GET() {
     const accessToken = String(token.access_token).trim();
 
     const response = await fetch(
-      `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Accept-Language': 'en-US',
-        },
-      }
-    );
+  `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`,
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Accept-Language': 'en-US',
+    },
+  }
+);
 
     const text = await response.text();
 
