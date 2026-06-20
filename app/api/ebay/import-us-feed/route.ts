@@ -149,6 +149,11 @@ const cleanedTitle = cleanTitle(title, brand);
       category: details.categoryPath || 'Industrial Automation',
       name: cleanedTitle,
 condition: cleanCondition(details.condition || 'Used'),
+      image_url:
+  details.image?.imageUrl ||
+  details.thumbnailImages?.[0]?.imageUrl ||
+  details.additionalImages?.[0]?.imageUrl ||
+  '',
 description: title,
 slug: slugify(`${item.itemId}-${cleanedTitle}`),
       marketplace: 'EBAY_US',
