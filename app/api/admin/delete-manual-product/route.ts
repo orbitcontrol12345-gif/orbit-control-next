@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-async function deleteManualProduct(sku: string) {
+async function hideProduct(sku: string) {
   return supabaseAdmin
     .from('products')
     .update({
@@ -12,8 +12,7 @@ async function deleteManualProduct(sku: string) {
       updated_at: new Date().toISOString(),
     })
     .eq('sku', sku)
-    .eq('source_type', 'manual')
-    .select();
+    .select('sku,is_active,source_type');
 }
 
 export async function POST(request: Request) {
@@ -24,11 +23,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Missing sku' }, { status: 400 });
   }
 
-  const { data, error } = await deleteManualProduct(sku);
+  const { data, error } = await hideProduct(sku);
 
   return NextResponse.json({
     success: !error,
-    deleted: data?.length || 0,
+    hidden: data?.length || 0,
+    data,
     error,
   });
 }
@@ -40,11 +40,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'Missing sku' }, { status: 400 });
   }
 
-  const { data, error } = await deleteManualProduct(sku);
+  const { data, error } = await hideProduct(sku);
 
   return NextResponse.json({
     success: !error,
-    deleted: data?.length || 0,
+    hidden: data?.length || 0,
+    data,
     error,
   });
 }
