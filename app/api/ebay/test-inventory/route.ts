@@ -13,9 +13,10 @@ export async function GET() {
       'https://api.ebay.com/sell/inventory/v1/inventory_item?limit=10&offset=0',
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+  Authorization: `Bearer ${accessToken}`,
+  'Content-Type': 'application/json',
+  'Accept-Language': 'en-US',
+},
       }
     );
 
