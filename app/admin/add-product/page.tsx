@@ -53,11 +53,11 @@ export default function AddProductPage() {
 
     const data = await res.json();
 
-    if (data.success && data.deleted > 0) {
-      setStatus('Product deleted successfully ✅');
-    } else {
-      setStatus('Product not found or not manual');
-    }
+    if (data.success && data.hidden > 0) {
+  setStatus('Product hidden successfully ✅');
+} else {
+  setStatus('Product not found');
+}
   }
 
   return (
@@ -102,7 +102,7 @@ export default function AddProductPage() {
               onClick={handleDelete}
               className="rounded-lg bg-red-500 px-6 py-3 font-bold text-white"
             >
-              Delete Manual Product
+              Hide Product
             </button>
           </div>
         </form>
