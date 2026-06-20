@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
+import JSZip from 'jszip';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,22 +13,38 @@ export async function GET() {
     const accessToken = String(token.access_token).trim();
 
     const response = await fetch(
-  `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`,
-  {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Accept-Language': 'en-US',
-    },
-  }
-);
+      `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Accept-Language': 'en-US',
+        },
+      }
+    );
 
-    const text = await response.text();
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      return NextResponse.json({
+        success: false,
+        status: response.status,
+        error: errorText,
+      });
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    const zip = await JSZip.loadAsync(buffer);
+
+    const fileName = Object.keys(zip.files)[0];
+
+    const xml = await zip.files[fileName].async('string');
 
     return NextResponse.json({
-      success: response.ok,
-      status: response.status,
-      preview: text.substring(0, 3000),
-      length: text.length,
+      success: true,
+      fileName,
+      xmlLength: xml.length,
+      preview: xml.substring(0, 5000),
     });
   } catch (error: any) {
     return NextResponse.json({
