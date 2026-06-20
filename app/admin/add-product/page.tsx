@@ -18,9 +18,15 @@ export default function AddProductPage() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-    const { error } = await supabase.storage
-      .from('manual-products')
-      .upload(fileName, file, {
+    if (!supabase) {
+  setStatus('Supabase client is not configured');
+  setUploading(false);
+  return;
+}
+
+const { error } = await supabase.storage
+  .from('manual-products')
+  .upload(fileName, file, {
         cacheControl: '3600',
         upsert: false,
       });
