@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const manualSku = `MANUAL-${Date.now()}`;
 
     const product = {
-      ebay_item_id: null,
+      ebay_item_id: manualSku,
       sku: manualSku,
       part_number: modelNumber,
       model_number: modelNumber,
