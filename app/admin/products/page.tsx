@@ -13,7 +13,7 @@ export default async function AdminProductsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#06111d] px-6 py-24 text-white">
+      <div className="min-h-screen bg-[#06111d] px-6 pt-40 pb-24 text-white">
         Error loading products
       </div>
     );
