@@ -25,7 +25,6 @@ function cleanTitle(title: string, brand: string) {
   let t = String(title || '');
 
   t = t
-    t = t
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
     .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
     .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
@@ -168,18 +167,32 @@ slug: slugify(`${item.itemId}-${cleanedTitle}`),
     });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .upsert(products, { onConflict: 'sku' })
-    .select();
-
+  if (!products.length) {
   return NextResponse.json({
-    success: !error,
+    success: true,
     offset,
     nextOffset: offset + LIMIT,
     fetchedFromFeed: usdItems.length,
-    imported: data?.length || 0,
-    error,
-    sample: products.slice(0, 3),
+    prepared: 0,
+    imported: 0,
+    error: null,
+    sample: [],
   });
+}
+
+const { data, error } = await supabaseAdmin
+  .from('products')
+  .upsert(products, { onConflict: 'sku' })
+  .select('id, sku');
+
+return NextResponse.json({
+  success: !error,
+  offset,
+  nextOffset: offset + LIMIT,
+  fetchedFromFeed: usdItems.length,
+  prepared: products.length,
+  imported: data?.length || 0,
+  error,
+  sample: products.slice(0, 3),
+});
 }
