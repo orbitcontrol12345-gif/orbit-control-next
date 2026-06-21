@@ -235,7 +235,7 @@ export default async function HomePage() {
                 <Link
                   key={brand.slug}
                   href={`/brands/${brand.slug}`}
-                 className="group flex h-28 items-center justify-center rounded-2xl border border-gold-500/20 bg-gradient-to-br from-[#071827] to-[#0b2238] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/50 hover:shadow-xl"
+                 className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-[#0b1825] p-5 transition-all duration-300 hover:bg-[#102033] hover:border-white/20"
                 >
                   {brand.logo ? (
                     <Image
@@ -243,7 +243,7 @@ export default async function HomePage() {
                       alt={`${brand.name} logo`}
                       width={210}
                       height={90}
-                      className="max-h-20 w-auto object-contain transition group-hover:scale-105"
+                      className="max-h-20 w-auto object-contain opacity-75 brightness-90 saturate-75 transition duration-300 group-hover:opacity-100 group-hover:saturate-100"
                     />
                   ) : (
                     <span className="text-center text-sm font-black text-white">
