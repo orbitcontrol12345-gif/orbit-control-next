@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const TASK_ID = 'task-20-27945426550787';
-const LIMIT = 100;
+const LIMIT = 10;
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 180);
@@ -144,29 +144,6 @@ export async function GET(request: Request) {
 if (!details) continue;
 
 if (details.__error) {
-  products.push({
-    ebay_item_id: item.itemId,
-    sku: item.itemId,
-    part_number: item.itemId,
-    model_number: item.itemId,
-    brand: 'UNKNOWN',
-    category: 'Industrial Automation',
-    name: `eBay Item ${item.itemId}`,
-    condition: 'Used',
-    image_url: '',
-    description: `eBay details error: ${details.status} ${details.body}`,
-    slug: slugify(`${item.itemId}-ebay-item`),
-    marketplace: 'EBAY_US',
-    seller: 'orbitcontrol',
-    source: 'ebay-feed-error',
-    quantity: item.quantity,
-    price: item.price,
-    currency: 'USD',
-    is_active: item.quantity > 0,
-    last_seen_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  });
-
   continue;
 }
 
