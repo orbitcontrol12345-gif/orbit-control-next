@@ -68,9 +68,7 @@ export default async function ProductsPage({
   defaultValue={currentPage}
   className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
 />
-        className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-gold-500"
-      />
-
+       
       <span className="text-sm text-slate-400">of {totalPages}</span>
 
       <button
