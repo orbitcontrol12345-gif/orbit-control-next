@@ -69,16 +69,16 @@ export default async function BrandPage({
   <div className="mt-10 flex justify-center">
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-navy-700 bg-navy-800 px-4 py-3">
 
-      <Link
-        href={`/brands/${brand.slug}?page=${Math.max(1, currentPage - 1)}`}
-        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-          currentPage === 1
-            ? 'pointer-events-none opacity-40 bg-navy-700 text-slate-400'
-            : 'border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-navy-950'
-        }`}
-      >
-        ← Previous
-      </Link>
+     <Link
+  href={`/brands/${params.brand}?page=${Math.max(1, currentPage - 1)}`}
+  className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+    currentPage <= 1
+      ? 'pointer-events-none opacity-40 bg-navy-700 text-slate-400'
+      : 'border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-navy-950'
+  }`}
+>
+  ← Previous
+</Link>
 
       <form
         action={`/brands/${brand.slug}`}
@@ -109,15 +109,15 @@ export default async function BrandPage({
       </form>
 
       <Link
-        href={`/brands/${brand.slug}?page=${Math.min(totalPages, currentPage + 1)}`}
-        className={`rounded-lg px-4 py-2 text-sm font-semibold ${
-          currentPage === totalPages
-            ? 'pointer-events-none opacity-40 bg-navy-700 text-slate-400'
-            : 'border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-navy-950'
-        }`}
-      >
-        Next →
-      </Link>
+  href={`/brands/${params.brand}?page=${Math.min(totalPages, currentPage + 1)}`}
+  className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+    currentPage >= totalPages
+      ? 'pointer-events-none opacity-40 bg-navy-700 text-slate-400'
+      : 'border border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-navy-950'
+  }`}
+>
+  Next →
+</Link>
 
     </div>
   </div>
