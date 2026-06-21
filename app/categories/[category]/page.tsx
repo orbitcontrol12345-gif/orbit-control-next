@@ -120,20 +120,7 @@ const { products, totalPages } = await getSupabaseProductsByCategoryTerms({
       >
         <span className="text-sm text-slate-400">Page</span>
 
-        <input
-          type="number"
-          name="page"
-          min="1"
-          max={totalPages}
-          <input
-  key={currentPage}
-  type="number"
-  name="page"
-  min="1"
-  max={totalPages}
-  defaultValue={currentPage}
-  className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
-/>
+        
           className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
         />
 
