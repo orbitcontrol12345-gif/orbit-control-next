@@ -59,9 +59,15 @@ export default async function ProductsPage({
     <form method="GET" action="/products" className="flex items-center gap-2">
       {search && <input type="hidden" name="q" value={search} />}
 
-      <span className="text-sm text-slate-400">Page</span>
-
-      <
+      <input
+  key={currentPage}
+  type="number"
+  name="page"
+  min="1"
+  max={totalPages}
+  defaultValue={currentPage}
+  className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
+/>
         className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white outline-none focus:border-gold-500"
       />
 
