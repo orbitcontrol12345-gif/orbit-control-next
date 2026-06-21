@@ -22,9 +22,9 @@ export async function GET() {
     cache: 'no-store',
   });
 
-  const result = await res.json();
+   const result = await res.json();
 
-  const nextOffset = offset + STEP;
+  const nextOffset = result.success ? offset + STEP : offset;
 
   await supabaseAdmin.from('import_state').upsert({
     id: STATE_ID,
@@ -39,6 +39,8 @@ export async function GET() {
     nextOffset,
     imported: result.imported,
     fetchedFromFeed: result.fetchedFromFeed,
+    error: result.error || null,
+    sample: result.sample || [],
     result,
   });
 }
