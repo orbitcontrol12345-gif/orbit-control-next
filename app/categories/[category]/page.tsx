@@ -125,7 +125,15 @@ const { products, totalPages } = await getSupabaseProductsByCategoryTerms({
           name="page"
           min="1"
           max={totalPages}
-          defaultValue={currentPage}
+          <input
+  key={currentPage}
+  type="number"
+  name="page"
+  min="1"
+  max={totalPages}
+  defaultValue={currentPage}
+  className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
+/>
           className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
         />
 
