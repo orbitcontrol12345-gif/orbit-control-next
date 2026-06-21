@@ -23,14 +23,16 @@ export default async function ProductsPage({
   const hasNextPage = currentPage < totalPages;
 
   const buildPageUrl = (page: number) => {
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    if (search) params.set('q', search);
-    params.set('page', String(page));
+  if (search) {
+    params.set('q', search);
+  }
 
-    return `/products?${params.toString()}`;
-  };
+  params.set('page', String(page));
 
+  return `/products?${params.toString()}`;
+};
   return (
     <div>
       <ProductsClient initialProducts={products || []} />
