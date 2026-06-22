@@ -20,26 +20,21 @@ export async function POST(req: Request) {
     const result = await resend.emails.send({
   from: 'Orbit Control RFQ <onboarding@resend.dev>',
   to: ['wael.caroomi@gmail.com'],
-  replyTo: data.email,
-  subject: `New RFQ - ${data.part_number}`,
-  attachments,
-  html: `...`
+  subject: `ORBIT TEST RFQ - ${data.part_number || 'No Part Number'}`,
+  html: `
+    <h2>Orbit Control RFQ Test</h2>
+    <p><strong>Name:</strong> ${data.name}</p>
+    <p><strong>Company:</strong> ${data.company}</p>
+    <p><strong>Email:</strong> ${data.email}</p>
+    <p><strong>Phone:</strong> ${data.phone}</p>
+    <p><strong>Country:</strong> ${data.country}</p>
+    <p><strong>Part Number:</strong> ${data.part_number}</p>
+    <p><strong>Quantity:</strong> ${data.quantity}</p>
+    <p><strong>Message:</strong> ${data.message || 'No message provided'}</p>
+  `,
 });
 
-console.log('RESEND RESULT:', result);
-        <h2>Orbit Control RFQ Test</h2>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Company:</strong> ${data.company}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Country:</strong> ${data.country}</p>
-        <p><strong>Part Number:</strong> ${data.part_number}</p>
-        <p><strong>Quantity:</strong> ${data.quantity}</p>
-        <p><strong>Message:</strong> ${data.message || 'No message provided'}</p>
-      `,
-    });
-
-    console.log('ORBIT RESEND RESULT:', result);
+console.log('ORBIT RESEND RESULT:', result);
 
     return Response.json({ success: true, result });
   } catch (error) {
