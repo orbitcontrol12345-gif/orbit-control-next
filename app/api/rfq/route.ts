@@ -28,13 +28,16 @@ export async function POST(req: Request) {
         }))
     );
 
-    await resend.emails.send({
-     from: 'Orbit Control RFQ <onboarding@resend.dev>',
-to: ['wael.caroomi@gmail.com'],
-replyTo: data.email,
-      subject: `New RFQ - ${data.part_number}`,
-      attachments,
-      html: `
+   const result = await resend.emails.send({
+  from: 'Orbit Control RFQ <onboarding@resend.dev>',
+  to: ['wael.caroomi@gmail.com'],
+  replyTo: data.email,
+  subject: `New RFQ - ${data.part_number}`,
+  attachments,
+  html: `...`,
+});
+
+console.log('ORBIT RESEND RESULT:', result);
         <h2>New RFQ Request</h2>
 
         <p><strong>Name:</strong> ${data.name}</p>
