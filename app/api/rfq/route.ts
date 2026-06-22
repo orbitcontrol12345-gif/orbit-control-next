@@ -17,58 +17,32 @@ export async function POST(req: Request) {
       message: String(formData.get('message') || ''),
     };
 
-    const files = formData.getAll('files') as File[];
-
-    const attachments = await Promise.all(
-      files
-        .filter((file) => file && file.size > 0)
-        .map(async (file) => ({
-          filename: file.name,
-          content: Buffer.from(await file.arrayBuffer()),
-        }))
-    );
-
-  const result = await resend.emails.send({
-  from: 'Orbit Control RFQ <onboarding@resend.dev>',
-  to: ['wael.caroomi@gmail.com'],
-  replyTo: data.email,
-  subject: `New RFQ - ${data.part_number}`,
-  attachments,
-  html: `
-    <h2>New RFQ Request</h2>
-
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Company:</strong> ${data.company}</p>
-    <p><strong>Email:</strong> ${data.email}</p>
-  `,
-});
-
-        <h2>New RFQ Request</h2>
-
+    const result = await resend.emails.send({
+      from: 'Orbit Control RFQ <onboarding@resend.dev>',
+      to: ['wael.caroomi@gmail.com'],
+      replyTo: data.email || 'wael.caroomi@gmail.com',
+      subject: `ORBIT TEST RFQ - ${data.part_number || 'No Part Number'}`,
+      html: `
+        <h2>Orbit Control RFQ Test</h2>
         <p><strong>Name:</strong> ${data.name}</p>
         <p><strong>Company:</strong> ${data.company}</p>
         <p><strong>Email:</strong> ${data.email}</p>
         <p><strong>Phone:</strong> ${data.phone}</p>
         <p><strong>Country:</strong> ${data.country}</p>
-
-        <hr />
-
         <p><strong>Part Number:</strong> ${data.part_number}</p>
         <p><strong>Quantity:</strong> ${data.quantity}</p>
-
-        <hr />
-
-        <p><strong>Message:</strong></p>
-        <p>${data.message || 'No message provided'}</p>
+        <p><strong>Message:</strong> ${data.message || 'No message provided'}</p>
       `,
     });
 
-    return Response.json({ success: true });
+    console.log('ORBIT RESEND RESULT:', result);
+
+    return Response.json({ success: true, result });
   } catch (error) {
     console.error('RFQ ERROR:', error);
 
     return Response.json(
-      { success: false },
+      { success: false, error: String(error) },
       { status: 500 }
     );
   }
