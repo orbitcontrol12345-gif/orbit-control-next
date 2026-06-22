@@ -43,7 +43,6 @@ export async function POST(req: Request) {
   `,
 });
 
-console.log('ORBIT RESEND RESULT:', result);
         <h2>New RFQ Request</h2>
 
         <p><strong>Name:</strong> ${data.name}</p>
