@@ -29,8 +29,8 @@ export async function POST(req: Request) {
     );
 
     await resend.emails.send({
-      from: 'Orbit comtrol RFQ <wael.caroomi@gmail.com>',
-      to: ['wael.caroomi@gmail.com'],
+      from: 'Orbit comtrol RFQ <rfq@orbit-surplus.com>',
+      to: ['rfq@orbit-surplus.com'],
       replyTo: data.email,
       subject: `New RFQ - ${data.part_number}`,
       attachments,
