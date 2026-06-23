@@ -102,6 +102,7 @@ function detectBrand(title: string) {
     'BENTLY NEVADA',
     'REXROTH',
     'DANFOSS',
+    'GREYSTONE',
   ];
 
   const upper = String(title || '').toUpperCase();
@@ -262,28 +263,28 @@ export async function GET() {
       detectBrand(title);
 
     const product = {
-      ebay_item_id: realItemId,
-      sku: realItemId,
-      part_number: finalModel,
-      model_number: finalModel,
-      brand,
-      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
-      name: cleanedName,
-      condition: item.condition || 'Used',
-      image_url: imageUrl,
-      description: title,
-      slug: slugify(`${realItemId}-${cleanedName}`),
-      marketplace: MARKETPLACE,
-      seller: SELLER,
-      source: 'ebay-browse-queue',
-      source_type: 'ebay',
-      quantity: 1,
-      price: item.price?.value ? Number(item.price.value) : null,
-      currency: item.price?.currency || 'USD',
-      is_active: true,
-      last_seen_at: now,
-      updated_at: now,
-    };
+  ebay_item_id: realItemId,
+  sku: realItemId,
+  part_number: finalModel,
+  model_number: finalModel,
+  brand,
+  category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+  name: cleanedName,
+  condition: item.condition || 'Used',
+  image_url: imageUrl,
+  description: title,
+  slug: slugify(`${realItemId}-${cleanedName}`),
+  marketplace: MARKETPLACE,
+  seller: SELLER,
+  source: 'ebay-browse-queue',
+  source_type: 'ebay',
+  quantity: 1,
+  price: item.price?.value ? Number(item.price.value) : null,
+  currency: item.price?.currency || 'USD',
+  is_active: true,
+  last_seen_at: now,
+  updated_at: now,
+};
 
     const { error: insertError } = await supabaseAdmin
       .from('products')
