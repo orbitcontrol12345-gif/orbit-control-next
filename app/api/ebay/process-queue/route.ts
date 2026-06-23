@@ -251,8 +251,7 @@ function detectBrand(title: string) {
 'DISTECH',
 'TRANE',
 'CARRIER',
-'YORK'
-  'CISCO',
+'YORK',
 'PEPPERL+FUCHS',
 'PEPPERL FUCHS',
 'JOHNSON CONTROLS',
