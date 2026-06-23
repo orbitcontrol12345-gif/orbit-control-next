@@ -213,7 +213,7 @@ export async function GET() {
       part_number: model,
       model_number: model,
       brand,
-      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+      category: item.categoryPath || item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: cleanedName,
       condition: item.condition || 'Used',
       image_url: imageUrl,
