@@ -34,8 +34,9 @@ function cleanTitle(title: string) {
 .replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
 .replace(/\bWITHOUT ACCESSORIES\b/gi, '')
 .replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+   .replace(/\s+-\s+/g, ' ')
+.replace(/\s+/g, ' ')
+.trim();
 }
 
 function extractModel(title: string) {
