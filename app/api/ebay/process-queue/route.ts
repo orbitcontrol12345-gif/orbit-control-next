@@ -18,21 +18,39 @@ function slugify(text: string) {
 function cleanTitle(title: string) {
   return String(title || '')
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
-    .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
-    .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
-    .replace(/\bNEW OPEN BOX\b/gi, '')
-    .replace(/\bOPEN BOX\b/gi, '')
-    .replace(/\bNEW\b/gi, '')
-    .replace(/\bUSED\b/gi, '')
-    .replace(/\bW\/O BOX\b/gi, '')
-    .replace(/\bWITHOUT BOX\b/gi, '')
-    .replace(/\bNO BOX\b/gi, '')
-    .replace(/\bWITH DAMAGED BOX\b/gi, '')
-    .replace(/\bWITH BROKEN BOX\b/gi, '')
-    .replace(/\bBROKEN BOX\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+.replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
+.replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
+
+.replace(/\bNEW OPEN BOX\b/gi, '')
+.replace(/\bOPEN BOX\b/gi, '')
+.replace(/\bNEW\b/gi, '')
+.replace(/\bUSED\b/gi, '')
+
+.replace(/\bW\/O BOX\b/gi, '')
+.replace(/\bWITHOUT BOX\b/gi, '')
+.replace(/\bNO BOX\b/gi, '')
+
+.replace(/\bWITH OLD BOX\b/gi, '')
+.replace(/\bOLD BOX\b/gi, '')
+
+.replace(/\bWITH FILTHY BOX\b/gi, '')
+.replace(/\bFILTHY BOX\b/gi, '')
+
+.replace(/\bWITH DAMAGED BOX\b/gi, '')
+.replace(/\bDAMAGED BOX\b/gi, '')
+
+.replace(/\bWITH BROKEN BOX\b/gi, '')
+.replace(/\bBROKEN BOX\b/gi, '')
+
+.replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
+.replace(/\bW\/O ACCESSORIES\b/gi, '')
+.replace(/\bNO ACCESSORIES\b/gi, '')
+
+.replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
+.replace(/\bTRIED AND TESTED\b/gi, '')
+
+.replace(/\s+/g, ' ')
+.trim();
 
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
