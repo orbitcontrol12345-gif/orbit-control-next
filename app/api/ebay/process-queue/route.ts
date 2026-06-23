@@ -17,7 +17,7 @@ function slugify(text: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
-    .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
+.replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
 .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
 .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
 
@@ -102,9 +102,9 @@ async function markQueue(
       status,
       error_message: errorMessage,
       processed_at: new Date().toISOString(),
-updated_at: new Date().toISOString(),
-})
-.eq('ebay_item_id', ebayItemId);
+      updated_at: new Date().toISOString(),
+    })
+    .eq('ebay_item_id', ebayItemId);
 }
 
 export async function GET() {
