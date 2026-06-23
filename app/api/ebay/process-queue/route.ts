@@ -34,6 +34,7 @@ function cleanTitle(title: string) {
 .replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
 .replace(/\bWITHOUT ACCESSORIES\b/gi, '')
 .replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
+    .replace(/\bWITH NO ORIGINAL BOX\b/gi, '')
    .replace(/\s+-\s+/g, ' ')
 .replace(/\s+/g, ' ')
 .trim();
