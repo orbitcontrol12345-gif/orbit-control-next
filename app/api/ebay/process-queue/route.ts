@@ -48,32 +48,46 @@ function cleanTitle(title: string) {
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
-  const matches =
-    upper.match(/\b[A-Z]{2,10}\d+[A-Z0-9-]{0,20}\b/g) ||
-    upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+)+\b/g) ||
-    [];
-
-  const blacklist = [
+  const ignored = new Set([
     'NEW',
     'USED',
     'BOX',
     'OPEN',
     'TESTED',
+    'TRIED',
     'INDUSTRIAL',
     'CONTROL',
     'AUTOMATION',
     'TRANSMITTER',
+    'MODULE',
+    'BOARD',
+    'PANEL',
+    'POWER',
+    'SUPPLY',
+    'WITH',
+    'WITHOUT',
+  ]);
+
+  const patterns = [
+    /\b[A-Z]{2,10}\d+[A-Z0-9]{0,12}\b/g,          // HTRC2LV, PRO42R2B, SM87
+    /\b\d+[A-Z]{1,8}\d+[A-Z0-9]{0,12}\b/g,        // 140DRA84000
+    /\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+)+\b/g,         // 6ES7-xxx, FX-PCG1611-1
+    /\b[A-Z]{1,6}\d{2,}[A-Z0-9\-\/.]*\b/g,        // CKM3936A, TSX3721001
   ];
 
-  const valid = matches.find(
-    (m) =>
-      !blacklist.includes(m) &&
-      !/^\d+$/.test(m)
-  );
+  const allMatches = patterns.flatMap((regex) => upper.match(regex) || []);
+
+  const valid = allMatches.find((m) => {
+    if (!m) return false;
+    if (ignored.has(m)) return false;
+    if (/^\d+$/.test(m)) return false;
+    if (m.length < 4) return false;
+    if (/^\d{9,}$/.test(m)) return false; // يمنع أرقام eBay الطويلة
+    return true;
+  });
 
   return valid || '';
 }
-
 function detectBrand(title: string) {
   const brands = [
     'SIEMENS',
@@ -254,8 +268,8 @@ export async function GET() {
     const extractedModel = extractModel(title);
 
     const finalModel =
-  extractedModel ||
   String(item.mpn || '').trim() ||
+  extractedModel ||
   'UNKNOWN';
 
     const brand =
