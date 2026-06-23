@@ -102,9 +102,9 @@ async function markQueue(
       status,
       error_message: errorMessage,
       processed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('ebay_item_id', ebayItemId);
+updated_at: new Date().toISOString(),
+})
+.eq('ebay_item_id', ebayItemId);
 }
 
 export async function GET() {
