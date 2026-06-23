@@ -5,37 +5,23 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const LIMIT = 50;
-const SELLER = 'orbitcontrol';
-const MARKETPLACE = 'EBAY_US';
+const LIMIT = 20;
 
 function slugify(text: string) {
-  return String(text || '')
+  return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/^-|-$/g, '')
     .slice(0, 180);
 }
 
 function cleanTitle(title: string) {
   return String(title || '')
-    .replace(/\bW\/\s*FILTHY BOX\b/gi, '')
-.replace(/\bWITH FILTHY BOX\b/gi, '')
-.replace(/\bFILTHY BOX\b/gi, '')
-.replace(/\bWITH OLD BOX\b/gi, '')
-.replace(/\bOLD BOX\b/gi, '')
-.replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
-.replace(/\bW\/O ACCESSORIES\b/gi, '')
-.replace(/\bNO ACCESSORIES\b/gi, '')
-.replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
-.replace(/\bTRIED AND TESTED\b/gi, '')
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
     .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
     .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
     .replace(/\bNEW OPEN BOX\b/gi, '')
     .replace(/\bOPEN BOX\b/gi, '')
-    .replace(/\bREFURBISHED\b/gi, '')
-    .replace(/\bTESTED\b/gi, '')
     .replace(/\bNEW\b/gi, '')
     .replace(/\bUSED\b/gi, '')
     .replace(/\bW\/O BOX\b/gi, '')
@@ -48,59 +34,24 @@ function cleanTitle(title: string) {
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
-  const ignored = new Set([
-    'NEW',
-    'USED',
-    'BOX',
-    'OPEN',
-    'TESTED',
-    'TRIED',
-    'INDUSTRIAL',
-    'CONTROL',
-    'AUTOMATION',
-    'TRANSMITTER',
-    'MODULE',
-    'BOARD',
-    'PANEL',
-    'POWER',
-    'SUPPLY',
-    'WITH',
-    'WITHOUT',
-  ]);
+  const matches =
+    upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+){1,}\b/g) ||
+    upper.match(/\b[A-Z]{1,5}\d{3,}[A-Z0-9-\/.]*\b/g) ||
+    [];
 
-  const patterns = [
-    /\b[A-Z]{2,10}\d+[A-Z0-9]{0,12}\b/g,          // HTRC2LV, PRO42R2B, SM87
-    /\b\d+[A-Z]{1,8}\d+[A-Z0-9]{0,12}\b/g,        // 140DRA84000
-    /\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+)+\b/g,         // 6ES7-xxx, FX-PCG1611-1
-    /\b[A-Z]{1,6}\d{2,}[A-Z0-9\-\/.]*\b/g,        // CKM3936A, TSX3721001
-  ];
-
-  const allMatches = patterns.flatMap((regex) => upper.match(regex) || []);
-
-  const valid = allMatches.find((m) => {
-    if (!m) return false;
-    if (ignored.has(m)) return false;
-    if (/^\d+$/.test(m)) return false;
-    if (m.length < 4) return false;
-    if (/^\d{9,}$/.test(m)) return false; // يمنع أرقام eBay الطويلة
-    return true;
-  });
-
-  return valid || '';
+  return matches[0] || '';
 }
+
 function detectBrand(title: string) {
   const brands = [
     'SIEMENS',
     'ABB',
     'SCHNEIDER',
-    'SCHNEIDER ELECTRIC',
     'ALLEN-BRADLEY',
-    'ROCKWELL',
     'OMRON',
     'HONEYWELL',
     'YOKOGAWA',
     'MITSUBISHI',
-    'GENERAL ELECTRIC',
     'GE',
     'FANUC',
     'KEYENCE',
@@ -113,10 +64,6 @@ function detectBrand(title: string) {
     'PILZ',
     'BECKHOFF',
     'HIRSCHMANN',
-    'BENTLY NEVADA',
-    'REXROTH',
-    'DANFOSS',
-    'GREYSTONE',
   ];
 
   const upper = String(title || '').toUpperCase();
@@ -150,10 +97,7 @@ export async function GET() {
     .limit(LIMIT);
 
   if (queueError) {
-    return NextResponse.json(
-      { success: false, error: queueError.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: queueError }, { status: 500 });
   }
 
   if (!queueRows || queueRows.length === 0) {
@@ -165,7 +109,7 @@ export async function GET() {
   }
 
   const token = await getEbayToken();
-  const accessToken = String(token.access_token || '').trim();
+  const accessToken = String(token.access_token).trim();
 
   let imported = 0;
   let skipped = 0;
@@ -175,12 +119,7 @@ export async function GET() {
   const results: any[] = [];
 
   for (const row of queueRows) {
-    const queueItemId = String(row.ebay_item_id || '').trim();
-
-    if (!queueItemId) {
-      failed++;
-      continue;
-    }
+    const ebayItemId = row.ebay_item_id;
 
     await supabaseAdmin
       .from('ebay_import_queue')
@@ -189,25 +128,25 @@ export async function GET() {
         attempts: Number(row.attempts || 0) + 1,
         updated_at: now,
       })
-      .eq('ebay_item_id', queueItemId);
+      .eq('ebay_item_id', ebayItemId);
 
-    const { data: existing } = await supabaseAdmin
+    const already = await supabaseAdmin
       .from('products')
       .select('id')
-      .eq('ebay_item_id', queueItemId)
+      .eq('ebay_item_id', ebayItemId)
       .maybeSingle();
 
-    if (existing?.id) {
-      await markQueue(queueItemId, 'completed', 'Already exists in products');
+    if (already.data?.id) {
+      await markQueue(ebayItemId, 'completed', 'Already exists in products');
       skipped++;
-      results.push({ ebayItemId: queueItemId, status: 'skipped_existing' });
+      results.push({ ebayItemId, status: 'skipped_existing' });
       continue;
     }
 
     const params = new URLSearchParams({
-      q: queueItemId,
+      q: ebayItemId,
       limit: '1',
-      filter: `sellers:{${SELLER}}`,
+      filter: 'sellers:{orbitcontrol}',
     });
 
     const res = await fetch(
@@ -215,114 +154,99 @@ export async function GET() {
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+          'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
           'Accept-Language': 'en-US',
         },
       }
     );
 
     if (res.status === 429) {
-      await markQueue(queueItemId, 'pending', 'EBAY_RATE_LIMIT_429');
+      await markQueue(ebayItemId, 'pending', 'EBAY_RATE_LIMIT_429');
       rateLimited = true;
-      results.push({ ebayItemId: queueItemId, status: 'rate_limited' });
+      results.push({ ebayItemId, status: 'rate_limited' });
       break;
     }
 
     const ebayData = await res.json();
 
     if (!res.ok) {
-      await markQueue(queueItemId, 'failed', JSON.stringify(ebayData).slice(0, 500));
+      await markQueue(ebayItemId, 'failed', JSON.stringify(ebayData).slice(0, 500));
       failed++;
-      results.push({ ebayItemId: queueItemId, status: 'failed_fetch' });
+      results.push({ ebayItemId, status: 'failed_fetch' });
       continue;
     }
 
     const item = ebayData.itemSummaries?.[0];
 
     if (!item) {
-      await markQueue(queueItemId, 'failed', 'No item returned from Browse API');
+      await markQueue(ebayItemId, 'failed', 'No item returned from Browse API');
       failed++;
-      results.push({ ebayItemId: queueItemId, status: 'no_item' });
+      results.push({ ebayItemId, status: 'no_item' });
       continue;
     }
 
-    const title = String(item.title || '').trim();
-    const imageUrl =
-      item.image?.imageUrl ||
-      item.thumbnailImages?.[0]?.imageUrl ||
-      '';
+    const title = item.title || '';
+    const imageUrl = item.image?.imageUrl || item.thumbnailImages?.[0]?.imageUrl || '';
+    const realItemId = item.legacyItemId || item.itemId?.split('|')?.[1] || ebayItemId;
 
-    if (!title) {
-      await markQueue(queueItemId, 'failed', 'Missing title');
+    if (!title || !imageUrl || title.includes('Orbit Control Industrial Item')) {
+      await markQueue(ebayItemId, 'failed', 'Missing title or image');
       failed++;
-      results.push({ ebayItemId: queueItemId, status: 'missing_title' });
+      results.push({ ebayItemId, status: 'failed_missing_data' });
       continue;
     }
 
-    const realItemId =
-      String(item.legacyItemId || '').trim() ||
-      String(item.itemId || '').split('|')[1] ||
-      queueItemId;
+    const cleanedName = cleanTitle(title);
+    const model = extractModel(title);
+    const brand = detectBrand(title);
 
-    const cleanedName = cleanTitle(title) || title || `eBay Item ${realItemId}`;
-    const extractedModel = extractModel(title);
+    if (!cleanedName) {
+  await markQueue(ebayItemId, 'failed', 'Missing clean name');
+  failed++;
+  results.push({ ebayItemId, status: 'failed_missing_name' });
+  continue;
+}
 
-    const finalModel =
-  String(item.mpn || '').trim() ||
-  extractedModel ||
-  'UNKNOWN';
-
-    const brand =
-      String(item.brand || '').trim() ||
-      detectBrand(title);
+const finalModel = model || 'UNKNOWN';
 
     const product = {
-  ebay_item_id: realItemId,
-  sku: realItemId,
-  part_number: finalModel,
-  model_number: finalModel,
-  brand,
-  category: item.categories?.[0]?.categoryName || 'Industrial Automation',
-  name: cleanedName,
-  condition: item.condition || 'Used',
-  image_url: imageUrl,
-  description: title,
-  slug: slugify(`${realItemId}-${cleanedName}`),
-  marketplace: MARKETPLACE,
-  seller: SELLER,
-  source: 'ebay-browse-queue',
-  source_type: 'ebay',
-  quantity: 1,
-  price: item.price?.value ? Number(item.price.value) : null,
-  currency: item.price?.currency || 'USD',
-  is_active: true,
-  last_seen_at: now,
-  updated_at: now,
-};
+      ebay_item_id: realItemId,
+      sku: realItemId,
+      part_number: finalModel,
+      model_number: finalModel,
+      brand,
+      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+      name: cleanedName,
+      condition: item.condition || 'Used',
+      image_url: imageUrl,
+      description: title,
+      slug: slugify(`${realItemId}-${cleanedName}`),
+      marketplace: 'EBAY_US',
+      seller: 'orbitcontrol',
+      source: 'ebay-browse-queue',
+      source_type: 'ebay',
+      quantity: 1,
+      price: item.price?.value ? Number(item.price.value) : null,
+      currency: item.price?.currency || 'USD',
+      is_active: true,
+      last_seen_at: now,
+      updated_at: now,
+    };
 
     const { error: insertError } = await supabaseAdmin
       .from('products')
       .upsert(product, { onConflict: 'ebay_item_id' });
 
     if (insertError) {
-      await markQueue(queueItemId, 'failed', insertError.message);
+      await markQueue(ebayItemId, 'failed', insertError.message);
       failed++;
-      results.push({
-        ebayItemId: queueItemId,
-        status: 'failed_insert',
-        error: insertError.message,
-      });
+      results.push({ ebayItemId, status: 'failed_insert', error: insertError.message });
       continue;
     }
 
-    await markQueue(queueItemId, 'completed', null);
+    await markQueue(ebayItemId, 'completed', null);
     imported++;
-    results.push({
-      ebayItemId: queueItemId,
-      status: 'imported',
-      part_number: finalModel,
-      name: cleanedName,
-    });
+    results.push({ ebayItemId, status: 'imported', name: cleanedName });
   }
 
   return NextResponse.json({
