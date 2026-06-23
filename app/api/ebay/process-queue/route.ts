@@ -35,6 +35,13 @@ function cleanTitle(title: string) {
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
+return (
+  brands.find((b) => {
+    const escaped = b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(upper);
+  }) || 'UNKNOWN'
+);
+
   const matches =
     upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+){1,}\b/g) ||
     upper.match(/\b[A-Z]{1,5}\d{3,}[A-Z0-9-\/.]*\b/g) ||
@@ -55,7 +62,6 @@ function detectBrand(title: string) {
 'HONEYWELL',
 'YOKOGAWA',
 'MITSUBISHI',
-'GE',
 'GENERAL ELECTRIC',
 'EMERSON',
 'FANUC',
@@ -246,6 +252,46 @@ function detectBrand(title: string) {
 'TRANE',
 'CARRIER',
 'YORK'
+  'CISCO',
+'PEPPERL+FUCHS',
+'PEPPERL FUCHS',
+'JOHNSON CONTROLS',
+'DYNALITE',
+'NEMIC-LAMBDA',
+'IDEC',
+'PRECISION DIGITAL',
+'ALLIED TELESIS',
+'ROSEMOUNT',
+'SYSTEM SENSOR',
+'HID',
+'AGILENT',
+'BOSCH',
+'PHILIPS',
+'ISMACONTROLLI',
+'HITACHI',
+'PANASONIC',
+'ASCO',
+'ICOM',
+'BERGHOF',
+'FRONIUS',
+'AIPHONE',
+'NATIONAL INSTRUMENTS',
+'AREVA',
+'ZEISS',
+'SELCO',
+'PROMINENT',
+'ATLAS COPCO',
+'SIMRAD',
+'TP-LINK',
+'ROCKWELL AUTOMATION',
+'EUCHNER',
+'FISHER ROSEMOUNT',
+'DET-TRONICS',
+'TDK',
+'JANITZA',
+'ELVACO',
+'LONMARK',
+'JRC'  
 ];
 
   const upper = String(title || '').toUpperCase();
