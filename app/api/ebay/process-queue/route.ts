@@ -49,11 +49,29 @@ function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
   const matches =
-    upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+){1,}\b/g) ||
-    upper.match(/\b[A-Z]{1,6}\d{2,}[A-Z0-9\-\/.]*\b/g) ||
+    upper.match(/\b[A-Z]{2,10}\d+[A-Z0-9-]{0,20}\b/g) ||
+    upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+)+\b/g) ||
     [];
 
-  return matches[0] || '';
+  const blacklist = [
+    'NEW',
+    'USED',
+    'BOX',
+    'OPEN',
+    'TESTED',
+    'INDUSTRIAL',
+    'CONTROL',
+    'AUTOMATION',
+    'TRANSMITTER',
+  ];
+
+  const valid = matches.find(
+    (m) =>
+      !blacklist.includes(m) &&
+      !/^\d+$/.test(m)
+  );
+
+  return valid || '';
 }
 
 function detectBrand(title: string) {
