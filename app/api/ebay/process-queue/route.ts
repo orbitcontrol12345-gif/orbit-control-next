@@ -35,13 +35,6 @@ function cleanTitle(title: string) {
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
-return (
-  brands.find((b) => {
-    const escaped = b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`\\b${escaped}\\b`, 'i').test(upper);
-  }) || 'UNKNOWN'
-);
-
   const matches =
     upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+){1,}\b/g) ||
     upper.match(/\b[A-Z]{1,5}\d{3,}[A-Z0-9-\/.]*\b/g) ||
