@@ -27,6 +27,9 @@ function cleanTitle(title: string) {
     .replace(/\bW\/O BOX\b/gi, '')
     .replace(/\bWITHOUT BOX\b/gi, '')
     .replace(/\bNO BOX\b/gi, '')
+    .replace(/\bWITH DAMAGED BOX\b/gi, '')
+    .replace(/\bWITH BROKEN BOX\b/gi, '')
+    .replace(/\bBROKEN BOX\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
