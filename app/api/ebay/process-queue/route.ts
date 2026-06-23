@@ -19,6 +19,16 @@ function slugify(text: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
+    .replace(/\bW\/\s*FILTHY BOX\b/gi, '')
+.replace(/\bWITH FILTHY BOX\b/gi, '')
+.replace(/\bFILTHY BOX\b/gi, '')
+.replace(/\bWITH OLD BOX\b/gi, '')
+.replace(/\bOLD BOX\b/gi, '')
+.replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
+.replace(/\bW\/O ACCESSORIES\b/gi, '')
+.replace(/\bNO ACCESSORIES\b/gi, '')
+.replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
+.replace(/\bTRIED AND TESTED\b/gi, '')
     .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
     .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
     .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
@@ -225,9 +235,9 @@ export async function GET() {
     const extractedModel = extractModel(title);
 
     const finalModel =
-      extractedModel ||
-      String(item.mpn || '').trim() ||
-      realItemId;
+  extractedModel ||
+  String(item.mpn || '').trim() ||
+  'UNKNOWN';
 
     const brand =
       String(item.brand || '').trim() ||
