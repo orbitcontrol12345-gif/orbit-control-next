@@ -200,20 +200,18 @@ export async function GET() {
     const model = extractModel(title);
     const brand = detectBrand(title);
 
-    if (!cleanedName) {
-  await markQueue(ebayItemId, 'failed', 'Missing clean name');
-  failed++;
-  results.push({ ebayItemId, status: 'failed_missing_name' });
-  continue;
-}
-
-const finalModel = model || 'UNKNOWN';
+    if (!cleanedName || !model) {
+      await markQueue(ebayItemId, 'failed', 'Missing clean name or model');
+      failed++;
+      results.push({ ebayItemId, status: 'failed_missing_model' });
+      continue;
+    }
 
     const product = {
       ebay_item_id: realItemId,
       sku: realItemId,
-      part_number: finalModel,
-      model_number: finalModel,
+      part_number: model,
+      model_number: model,
       brand,
       category: item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: cleanedName,
