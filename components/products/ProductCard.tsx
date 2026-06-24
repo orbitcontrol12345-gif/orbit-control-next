@@ -52,12 +52,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
             {product.brand}
           </span>
-
-          <span className="truncate text-xs text-slate-500">
-            {product.category}
-          </span>
         </div>
-
         {/* Part number */}
         <p className="mb-1 text-xs font-mono text-slate-400">
           PN:{' '}
