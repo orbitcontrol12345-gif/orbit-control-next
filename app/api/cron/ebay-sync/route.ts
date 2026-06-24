@@ -3,28 +3,36 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-control-next.vercel.app';
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-control-next.vercel.app';
 
 export async function GET() {
-  const secret: string | undefined = process.env.CRON_SECRET;
+  try {
+    const processRes = await fetch(
+      `${SITE_URL}/api/ebay/process-queue?limit=200`,
+      { cache: 'no-store' }
+    );
 
-  const headers: HeadersInit = {};
+    let processData: unknown = null;
 
+    try {
+      processData = await processRes.json();
+    } catch {
+      processData = await processRes.text();
+    }
 
-
-  const feed = await fetch(
-  `${BASE_URL}/api/ebay/feed-to-queue?offset=10000`,
-  { cache: 'no-store' }
-);
-
-const process = await fetch(
-  `${BASE_URL}/api/ebay/process-queue?limit=200`,
-  { cache: 'no-store' }
-);
-
-  return NextResponse.json({
-    success: true,
-    feedStatus: feed?.status || null,
-    processStatus: process?.status || null,
-  });
+    return NextResponse.json({
+      success: processRes.ok,
+      processStatus: processRes.status,
+      processData,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
 }
