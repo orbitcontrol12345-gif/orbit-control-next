@@ -79,12 +79,8 @@ export default async function ProductDetailPage({ params }: Props) {
             <span className="text-sm font-bold uppercase tracking-wider text-gold-500">
               {product.brand}
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-sm font-semibold text-slate-400">
-              {product.category}
-            </span>
+            <span className="text-slate-600">•</span> 
           </div>
-
           <h1 className="mb-3 text-4xl md:text-5xl font-bold text-white leading-tight">
             {product.name}
           </h1>
