@@ -6,21 +6,23 @@ export const runtime = 'nodejs';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-control-next.vercel.app';
 
 export async function GET() {
-  const secret = process.env.CRON_SECRET;
+  const secret: string | undefined = process.env.CRON_SECRET;
 
-  const headers: HeadersInit = secret
-    ? { Authorization: `Bearer ${secret}` }
-    : {};
+  const headers: HeadersInit = {};
 
-  const feed = await fetch(`${BASE_URL}/api/ebay/feed-to-queue?offset=10000`, {
-    headers,
-    cache: 'no-store',
-  }).catch(() => null);
+if (secret) {
+  headers.Authorization = `Bearer ${secret}`;
+}
 
-  const process = await fetch(`${BASE_URL}/api/ebay/process-queue?limit=200`, {
-    headers,
-    cache: 'no-store',
-  }).catch(() => null);
+  const feed = await fetch(
+  `${BASE_URL}/api/ebay/feed-to-queue?offset=10000`,
+  { cache: 'no-store' }
+);
+
+const process = await fetch(
+  `${BASE_URL}/api/ebay/process-queue?limit=200`,
+  { cache: 'no-store' }
+);
 
   return NextResponse.json({
     success: true,
