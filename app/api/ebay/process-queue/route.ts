@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const LIMIT = 200;
+const LIMIT = 500;
 
 function slugify(text: string) {
   return text
