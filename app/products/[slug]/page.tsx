@@ -99,7 +99,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 src={product.imageUrl}
                 alt={product.name}
                 fill
-                className="object-cover scale-110"
+                className="object-contain"
                 priority
                 sizes="(max-width: 1024px) 100vw, 40vw"
               />
