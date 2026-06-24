@@ -10,9 +10,7 @@ export async function GET() {
 
   const headers: HeadersInit = {};
 
-if (secret) {
-  headers.Authorization = `Bearer ${secret}`;
-}
+
 
   const feed = await fetch(
   `${BASE_URL}/api/ebay/feed-to-queue?offset=10000`,
