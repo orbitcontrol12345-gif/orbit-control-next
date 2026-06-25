@@ -76,16 +76,15 @@ const PROCESS_ITEMS = [
 ];
 
 const INDUSTRIES = [
-  'Oil & Gas',
-  'Marine',
-  'Manufacturing',
-  'Power Plants',
-  'Water Treatment',
-  'Food Processing',
-  'Steel Plants',
-  'Packaging Lines',
+  'PLC Systems',
+  'HMI Panels',
+  'VFD Drives',
+  'Servo Drives',
+  'Circuit Breakers',
+  'Power Supplies',
+  'Industrial Sensors',
+  'Obsolete Spare Parts',
 ];
-
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProductsSafe();
 
@@ -417,12 +416,10 @@ export default async function HomePage() {
               Industries We Serve
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
-              Built for Urgent Industrial Supply
+              Critical Automation Parts, Ready for RFQ
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400">
-              Orbit Control supports maintenance teams, buyers, factories, and industrial
-              contractors with fast sourcing for discontinued, surplus, and hard-to-find
-              automation spare parts.
+              Orbit Control supplies hard-to-find automation, electrical and obsolete spare parts for maintenance teams, factories, OEMs and industrial buyers worldwide.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
