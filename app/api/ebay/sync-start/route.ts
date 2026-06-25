@@ -18,7 +18,7 @@ export async function GET() {
     },
     body: JSON.stringify({
       feedType: 'LMS_ACTIVE_INVENTORY_REPORT',
-      schemaVersion: '1113',
+      schemaVersion: '1.0',
     }),
   });
 
