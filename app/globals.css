@@ -167,3 +167,34 @@
     transform: translateX(-50%);
   }
 }
+/* Orbit unified dark theme */
+body {
+  background: #04101b;
+}
+
+main,
+.page-bg,
+.products-page,
+.brands-page,
+.categories-page,
+.rfq-page,
+.contact-page,
+.about-page {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(34, 211, 238, 0.10), transparent 30%),
+    radial-gradient(circle at 86% 8%, rgba(245, 158, 11, 0.08), transparent 28%),
+    linear-gradient(135deg, #04101b 0%, #071827 45%, #050b13 100%) !important;
+  color: white;
+}
+
+section {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.card,
+.product-card,
+.category-card,
+.brand-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
