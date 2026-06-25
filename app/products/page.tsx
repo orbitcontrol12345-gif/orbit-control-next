@@ -34,10 +34,10 @@ export default async function ProductsPage({
   return `/products?${params.toString()}`;
 };
   return (
-  <main className="min-h-screen bg-[linear-gradient(135deg,#04101b_0%,#071827_45%,#050b13_100%)] text-white">
-    <ProductsClient initialProducts={products || []} />
+    <div>
+      <ProductsClient initialProducts={products || []} />
 
-    <div className="relative pb-16 pt-8">
+      <div className="relative pb-16">
         <div className="page-container">
           <div className="mb-5 mt-6 text-center text-sm font-semibold text-slate-300">
             Showing {products.length} products on this page · Total Products: {totalProducts} · Page {currentPage} of {totalPages}
@@ -94,9 +94,7 @@ export default async function ProductsPage({
   </div>
 
            
-           </div>
+      </div>
     </div>
-
-  </main>
-);
+  );
 }
