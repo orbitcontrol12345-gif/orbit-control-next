@@ -16,6 +16,13 @@ import {
   Battery,
   Settings,
   Archive,
+  CheckCircle,
+  Search,
+  Factory,
+  MapPin,
+  Gauge,
+  Headphones,
+  Layers,
 } from 'lucide-react';
 
 import HeroSearchBar from '@/components/shared/HeroSearchBar';
@@ -54,45 +61,92 @@ async function getFeaturedProductsSafe() {
   }
 }
 
+const TRUST_ITEMS = [
+  [Globe, 'Worldwide Supply', 'Industrial automation parts shipped globally from UAE'],
+  [ShieldCheck, 'Inspected Stock', 'Surplus, obsolete, new and refurbished inventory'],
+  [Zap, 'Fast RFQ Response', 'Urgent quotation support for production downtime'],
+  [Truck, 'DHL & FedEx', 'Export-ready international courier shipping'],
+];
+
+const PROCESS_ITEMS = [
+  ['01', Search, 'Search Part Number', 'Find PLC, HMI, VFD, sensor, relay or obsolete spare part.'],
+  ['02', FileText, 'Submit RFQ', 'Send required quantity, condition, and delivery destination.'],
+  ['03', Gauge, 'Availability Check', 'Our team checks stock, pricing, photos, and shipping time.'],
+  ['04', Truck, 'Worldwide Dispatch', 'DHL / FedEx packing and export-ready shipment support.'],
+];
+
+const INDUSTRIES = [
+  'Oil & Gas',
+  'Marine',
+  'Manufacturing',
+  'Power Plants',
+  'Water Treatment',
+  'Food Processing',
+  'Steel Plants',
+  'Packaging Lines',
+];
+
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProductsSafe();
 
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[82vh] overflow-hidden border-b border-cyan-400/10 bg-[#06111d]">
+      <section className="relative min-h-[88vh] overflow-hidden border-b border-cyan-400/10 bg-[#04101b]">
         <div
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 50%, #06111d 100%)',
+              'radial-gradient(circle at 18% 18%, rgba(34,211,238,0.18), transparent 28%), radial-gradient(circle at 82% 12%, rgba(245,158,11,0.16), transparent 30%), radial-gradient(circle at 55% 85%, rgba(14,165,233,0.10), transparent 38%), linear-gradient(135deg, #04101b 0%, #071827 42%, #050b13 100%)',
           }}
         />
 
-        <div className="page-container relative grid min-h-[82vh] items-center gap-12 py-24 lg:grid-cols-[1.1fr_0.9fr]">
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            background:
+              'linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)',
+            backgroundSize: '56px 56px',
+          }}
+        />
+
+        <div className="absolute left-[-120px] top-28 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute right-[-100px] top-20 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
+
+        <div className="page-container relative grid min-h-[88vh] items-center gap-14 py-24 lg:grid-cols-[1.12fr_0.88fr]">
           <div>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-100 shadow-lg shadow-cyan-950/30">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
               Orbit Control Automation — UAE
             </div>
 
-            <h1 className="max-w-4xl text-4xl font-black leading-tight text-white md:text-6xl">
-              Industrial Automation Parts,
-              <span className="block text-cyan-200">Delivered Worldwide.</span>
+            <h1 className="max-w-5xl text-4xl font-black leading-[1.02] tracking-tight text-white md:text-6xl lg:text-7xl">
+              Industrial Automation
+              <span className="block bg-gradient-to-r from-cyan-200 via-white to-amber-200 bg-clip-text text-transparent">
+                Parts Delivered Worldwide.
+              </span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              Source PLCs, HMIs, VFDs, sensors, relays, circuit breakers, control
-              boards, obsolete and surplus automation spare parts with fast RFQ
-              support.
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
+              Source PLCs, HMIs, VFDs, sensors, relays, circuit breakers, control boards,
+              obsolete and surplus automation spare parts with fast RFQ support.
             </p>
 
-            <div className="mt-8 max-w-2xl">
+            <div className="mt-8 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl shadow-black/30 backdrop-blur">
+              <div className="mb-3 flex flex-wrap gap-2 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">Part Number</span>
+                <span className="rounded-full bg-white/5 px-3 py-1">Manufacturer</span>
+                <span className="rounded-full bg-white/5 px-3 py-1">Model</span>
+                <span className="rounded-full bg-white/5 px-3 py-1">Obsolete Stock</span>
+              </div>
               <HeroSearchBar />
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/rfq" className="btn-gold">
+              <Link href="/rfq" className="btn-gold shadow-xl shadow-amber-950/30">
                 <FileText size={18} />
                 Request a Quote
               </Link>
@@ -103,139 +157,166 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-12 grid max-w-2xl grid-cols-3 gap-3">
+            <div className="mt-12 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                ['14,000+', 'Industrial Items'],
-                ['200+', 'Countries'],
-                ['24h', 'RFQ Target'],
-              ].map(([value, label]) => (
+                ['14,000+', 'Industrial Items', 'Live inventory'],
+                ['200+', 'Global Brands', 'Automation supply'],
+                ['24h', 'RFQ Target', 'Fast response'],
+              ].map(([value, label, note]) => (
                 <div
                   key={label}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                  className="group rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07]"
                 >
-                  <div className="text-2xl font-black text-white">{value}</div>
-                  <div className="mt-1 text-xs uppercase tracking-wider text-slate-400">
+                  <div className="text-3xl font-black text-white">{value}</div>
+                  <div className="mt-1 text-xs font-black uppercase tracking-wider text-cyan-200">
                     {label}
                   </div>
+                  <div className="mt-2 text-xs text-slate-400">{note}</div>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="hidden lg:block">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl shadow-black/30">
-              <p className="text-xs font-bold uppercase tracking-widest text-cyan-300">
-                RFQ Workflow
-              </p>
-              <h3 className="mt-2 text-2xl font-black text-white">
-                Fast Industrial Sourcing
-              </h3>
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-cyan-400/25 via-white/5 to-amber-400/25 blur-xl" />
 
-              <div className="mt-6 space-y-4">
-                {[
-                  ['1', 'Search Part Number', 'Find PLC, HMI, VFD, sensor or obsolete part'],
-                  ['2', 'Submit RFQ', 'Send quantity, condition and delivery requirement'],
-                  ['3', 'Receive Quote', 'Get price, availability and shipping time'],
-                  ['4', 'Worldwide Dispatch', 'DHL / FedEx export-ready shipping'],
-                ].map(([num, title, desc]) => (
-                  <div
-                    key={title}
-                    className="flex gap-4 rounded-2xl border border-white/10 bg-[#081827] p-4"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-300/10 font-black text-cyan-200">
-                      {num}
-                    </div>
-                    <div>
-                      <p className="font-bold text-white">{title}</p>
-                      <p className="mt-1 text-sm text-slate-400">{desc}</p>
-                    </div>
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#081827]/90 p-6 shadow-2xl shadow-black/40 backdrop-blur">
+                <div className="absolute right-[-70px] top-[-70px] h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
+
+                <div className="flex items-start justify-between gap-6">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+                      RFQ Workflow
+                    </p>
+                    <h3 className="mt-2 text-2xl font-black text-white">
+                      Fast Industrial Sourcing
+                    </h3>
                   </div>
-                ))}
-              </div>
 
-              <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-sm font-bold text-amber-200">
-                New, Used, Refurbished & Obsolete Parts Available
+                  <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-emerald-300">
+                    Online
+                  </div>
+                </div>
+
+                <div className="mt-7 space-y-4">
+                  {PROCESS_ITEMS.map(([num, Icon, title, desc]: any, index) => (
+                    <div key={title} className="relative">
+                      {index < PROCESS_ITEMS.length - 1 && (
+                        <div className="absolute left-[22px] top-12 h-8 w-px bg-gradient-to-b from-cyan-300/50 to-transparent" />
+                      )}
+
+                      <div className="group flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-all duration-300 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                          <Icon size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-amber-300">{num}</span>
+                            <p className="font-black text-white">{title}</p>
+                          </div>
+                          <p className="mt-1 text-sm leading-6 text-slate-400">{desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  {['New', 'Used', 'Refurbished', 'Obsolete'].map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-2xl border border-amber-300/15 bg-amber-300/10 px-4 py-3 text-center text-xs font-black uppercase tracking-wider text-amber-200"
+                    >
+                      {item} Parts
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* MARQUEE STRIP */}
-      <section className="overflow-hidden border-y border-cyan-500/10 bg-[#071421] py-3">
-        <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-bold uppercase tracking-wider text-cyan-200">
-          <span>✓ PLC SYSTEMS</span>
-          <span>✓ HMI PANELS</span>
-          <span>✓ VFD DRIVES</span>
-          <span>✓ CIRCUIT BREAKERS</span>
-          <span>✓ INDUSTRIAL BOARDS</span>
-          <span>✓ OBSOLETE PARTS</span>
-          <span>✓ WORLDWIDE SHIPPING</span>
-          <span>✓ FAST RFQ RESPONSE</span>
-
-          <span>✓ PLC SYSTEMS</span>
-          <span>✓ HMI PANELS</span>
-          <span>✓ VFD DRIVES</span>
-          <span>✓ CIRCUIT BREAKERS</span>
-          <span>✓ INDUSTRIAL BOARDS</span>
-          <span>✓ OBSOLETE PARTS</span>
-          <span>✓ WORLDWIDE SHIPPING</span>
-          <span>✓ FAST RFQ RESPONSE</span>
+      {/* MARQUEE */}
+      <section className="overflow-hidden border-y border-cyan-500/10 bg-[#061421] py-3">
+        <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-black uppercase tracking-wider text-cyan-100">
+          {[
+            'PLC SYSTEMS',
+            'HMI PANELS',
+            'VFD DRIVES',
+            'CIRCUIT BREAKERS',
+            'INDUSTRIAL BOARDS',
+            'OBSOLETE PARTS',
+            'WORLDWIDE SHIPPING',
+            'FAST RFQ RESPONSE',
+            'PLC SYSTEMS',
+            'HMI PANELS',
+            'VFD DRIVES',
+            'CIRCUIT BREAKERS',
+            'INDUSTRIAL BOARDS',
+            'OBSOLETE PARTS',
+            'WORLDWIDE SHIPPING',
+            'FAST RFQ RESPONSE',
+          ].map((item, index) => (
+            <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
+              <CheckCircle size={14} className="text-emerald-300" />
+              {item}
+            </span>
+          ))}
         </div>
       </section>
 
       {/* TRUST BOXES */}
-      <section className="border-b border-white/10 bg-[#081827] py-10">
-        <div className="page-container grid grid-cols-2 gap-4 md:grid-cols-4">
-          {[
-            [Globe, 'Worldwide Supply', 'Industrial parts shipped globally from UAE'],
-            [ShieldCheck, 'Inspected Stock', 'New, used, refurbished and surplus parts'],
-            [Zap, 'Fast RFQ Response', 'Quick quotations for urgent requirements'],
-            [Truck, 'DHL & FedEx', 'Fast international courier shipping'],
-          ].map(([Icon, title, desc]: any) => (
+      <section className="border-b border-white/10 bg-[#071827] py-12">
+        <div className="page-container grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {TRUST_ITEMS.map(([Icon, title, desc]: any) => (
             <div
               key={title}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5"
+              className="group rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]"
             >
-              <Icon size={22} className="mb-4 text-cyan-200" />
-              <p className="font-bold text-white">{title}</p>
-              <p className="mt-1 text-sm text-slate-400">{desc}</p>
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                <Icon size={22} />
+              </div>
+              <p className="text-lg font-black text-white">{title}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* BRANDS */}
-      <section className="relative overflow-hidden border-y border-white/10 bg-[#06111d] py-20">
+      <section className="relative overflow-hidden border-y border-white/10 bg-[#04101b] py-20">
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 opacity-[0.08]"
           style={{
             background:
-              'repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 90px), repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 90px)',
+              'linear-gradient(rgba(255,255,255,0.20) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.20) 1px, transparent 1px)',
+            backgroundSize: '72px 72px',
           }}
         />
 
         <div className="page-container relative">
-          <div className="mb-9 text-center">
-            <p className="text-xs font-black uppercase tracking-widest text-cyan-300">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
               Global Automation Brands
             </p>
-            <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
               Trusted Industrial Manufacturers We Supply
             </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-400">
-              Sourcing automation, electrical and obsolete spare parts from leading
-              global brands.
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-400">
+              Sourcing automation, electrical and obsolete spare parts from leading global brands
+              with fast RFQ support and worldwide delivery.
             </p>
           </div>
 
-          <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl shadow-black/20">
+          <div className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl shadow-black/30 backdrop-blur">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {BRANDS.slice(0, 12).map((brand) => (
                 <Link
                   key={brand.slug}
                   href={`/brands/${brand.slug}`}
-                 className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-[#0b1825] p-5 transition-all duration-300 hover:bg-[#102033] hover:border-cyan-400/30"
+                  className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-[#0b1825] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-[#102033]"
                 >
                   {brand.logo ? (
                     <Image
@@ -243,7 +324,7 @@ export default async function HomePage() {
                       alt={`${brand.name} logo`}
                       width={210}
                       height={90}
-                      className="max-h-20 w-auto object-contain opacity-60 saturate-50 transition-all duration-300 group-hover:opacity-100 group-hover:saturate-100 group-hover:scale-105"
+                      className="max-h-20 w-auto object-contain opacity-60 saturate-50 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-hover:saturate-100"
                     />
                   ) : (
                     <span className="text-center text-sm font-black text-white">
@@ -255,12 +336,12 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="mt-7 text-center">
+          <div className="mt-8 text-center">
             <Link
               href="/brands"
-              className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-6 py-2.5 text-sm font-bold text-amber-300"
+              className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-7 py-3 text-sm font-black text-amber-300 transition hover:border-amber-300/60 hover:bg-amber-300/15"
             >
-              View all brands
+              View all manufacturers
               <ArrowRight size={16} />
             </Link>
           </div>
@@ -268,15 +349,25 @@ export default async function HomePage() {
       </section>
 
       {/* CATEGORIES */}
-      <section className="border-y border-white/10 bg-[#0a1d2e] py-20">
+      <section className="border-y border-white/10 bg-[#071827] py-20">
         <div className="page-container">
-          <div className="mb-10 text-center">
-            <p className="text-xs font-black uppercase tracking-widest text-amber-300">
-              Product Categories
-            </p>
-            <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
-              Source Critical Industrial Parts
-            </h2>
+          <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+                Product Categories
+              </p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+                Source Critical Industrial Parts
+              </h2>
+            </div>
+
+            <Link
+              href="/categories"
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-black text-cyan-200 transition hover:border-cyan-300/30"
+            >
+              Browse Categories
+              <ArrowRight size={16} />
+            </Link>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -287,18 +378,26 @@ export default async function HomePage() {
                 <Link
                   key={category.slug}
                   href={`/categories/${category.slug}`}
-                  className="rounded-3xl border border-white/10 bg-white/5 p-6 transition hover:-translate-y-1 hover:border-cyan-300/30"
+                  className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]"
                 >
-                  <Icon size={24} className="mb-5 text-cyan-200" />
-                  <h3 className="text-xl font-black text-white">
-                    {category.name}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    {category.description ||
-                      'Industrial automation and electrical spare parts.'}
-                  </p>
-                  <div className="mt-5 text-sm font-bold text-amber-300">
-                    Explore Category →
+                  <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-cyan-300/10 blur-2xl transition group-hover:bg-cyan-300/20" />
+
+                  <div className="relative">
+                    <div className="mb-5 flex h-13 w-13 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                      <Icon size={24} />
+                    </div>
+
+                    <h3 className="text-xl font-black text-white">{category.name}</h3>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-400">
+                      {category.description ||
+                        'Industrial automation and electrical spare parts.'}
+                    </p>
+
+                    <div className="mt-6 inline-flex items-center gap-2 text-sm font-black text-amber-300">
+                      Explore Category
+                      <ArrowRight size={15} className="transition group-hover:translate-x-1" />
+                    </div>
                   </div>
                 </Link>
               );
@@ -307,17 +406,110 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* INDUSTRIES */}
+      <section className="relative overflow-hidden border-y border-white/10 bg-[#04101b] py-20">
+        <div className="absolute left-[-120px] top-20 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute bottom-[-140px] right-[-120px] h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
+
+        <div className="page-container relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+              Industries We Serve
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              Built for Urgent Industrial Supply
+            </h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-400">
+              Orbit Control supports maintenance teams, buyers, factories, and industrial
+              contractors with fast sourcing for discontinued, surplus, and hard-to-find
+              automation spare parts.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/rfq" className="btn-gold">
+                Submit RFQ
+                <ArrowRight size={18} />
+              </Link>
+              <Link href="/about" className="btn-outline-slate">
+                About Orbit Control
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {INDUSTRIES.map((industry) => (
+              <div
+                key={industry}
+                className="rounded-3xl border border-white/10 bg-white/[0.05] p-5 text-center transition hover:-translate-y-1 hover:border-amber-300/30 hover:bg-amber-300/[0.07]"
+              >
+                <Factory className="mx-auto mb-3 text-cyan-200" size={22} />
+                <p className="text-sm font-black text-white">{industry}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GLOBAL PROCESS */}
+      <section className="border-y border-white/10 bg-[#071827] py-20">
+        <div className="page-container">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+              Global Supply Process
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+              From UAE Stock to Worldwide Delivery
+            </h2>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-5">
+            {[
+              [MapPin, 'UAE Hub', 'Central sourcing and coordination'],
+              [Search, 'Part Check', 'Model, condition and availability'],
+              [ShieldCheck, 'Inspection', 'Photos and basic verification'],
+              [Package, 'Packing', 'Export-ready secure packaging'],
+              [Truck, 'Dispatch', 'DHL / FedEx worldwide shipping'],
+            ].map(([Icon, title, desc]: any) => (
+              <div
+                key={title}
+                className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 text-center transition hover:border-cyan-300/30"
+              >
+                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                  <Icon size={22} />
+                </div>
+                <p className="font-black text-white">{title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FEATURED PRODUCTS */}
       {featuredProducts.length > 0 && (
-        <section className="bg-[#06111d] py-20">
+        <section className="bg-[#04101b] py-20">
           <div className="page-container">
-            <div className="mb-10">
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-300">
-                Available Inventory
-              </p>
-              <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">
-                Featured Industrial Parts
-              </h2>
+            <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+                  Available Inventory
+                </p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+                  Featured Industrial Parts
+                </h2>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {['PLC', 'HMI', 'VFD', 'Breakers', 'Sensors'].map((tab) => (
+                  <Link
+                    key={tab}
+                    href={`/products?search=${encodeURIComponent(tab)}`}
+                    className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:border-cyan-300/30 hover:text-cyan-200"
+                  >
+                    {tab}
+                  </Link>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -325,9 +517,54 @@ export default async function HomePage() {
                 <ProductCard key={product.id || product.slug} product={product} />
               ))}
             </div>
+
+            <div className="mt-10 text-center">
+              <Link
+                href="/products"
+                className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-7 py-3 text-sm font-black text-amber-300 transition hover:border-amber-300/60 hover:bg-amber-300/15"
+              >
+                Browse full inventory
+                <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </section>
       )}
+
+      {/* FINAL CTA */}
+      <section className="relative overflow-hidden border-t border-white/10 bg-[#071827] py-20">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-transparent to-amber-400/10" />
+
+        <div className="page-container relative">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-8 shadow-2xl shadow-black/30 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+                  Need urgent industrial parts?
+                </p>
+                <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
+                  Send your RFQ and our team will respond quickly.
+                </h2>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400">
+                  Share part number, brand, quantity, condition preference and delivery country.
+                  Orbit Control will check availability and prepare a quotation.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <Link href="/rfq" className="btn-gold justify-center">
+                  <FileText size={18} />
+                  Request a Quote
+                </Link>
+                <Link href="/contact" className="btn-outline-slate justify-center">
+                  <Headphones size={18} />
+                  Contact Sales
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
