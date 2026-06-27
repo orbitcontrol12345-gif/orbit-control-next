@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { extractPartNumber } from '@/lib/part-number';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -67,45 +68,6 @@ function cleanTitle(title: string) {
 .replace(/\s+-\s+/g, ' ')
 .replace(/\s+/g, ' ')
 .trim();
-}
-
-function extractModel(title: string) {
-  const upper = String(title || '').toUpperCase();
-
-  const candidates =
-    upper.match(/\b[A-Z0-9][A-Z0-9\-\/.]{4,}\b/g) || [];
-
-  const blacklist = [
-    'VAC',
-    'VDC',
-    'VAC/DC',
-    'HZ',
-    'KHZ',
-    'MHZ',
-    'VA',
-    'KVA',
-    'AMP',
-    'AMPS',
-    'BAR',
-    'PSI',
-    'MM',
-    'CM',
-    'KG',
-    'W',
-    'KW',
-  ];
-
-  for (const value of candidates) {
-    if (!/[A-Z]/.test(value) || !/\d/.test(value)) continue;
-    if (/^\d+$/.test(value)) continue;
-
-    const bad = blacklist.some((u) => value.includes(u));
-    if (bad) continue;
-
-    return value;
-  }
-
-  return '';
 }
 
 function detectBrand(title: string) {
@@ -482,7 +444,7 @@ export async function GET() {
     }
 
     const cleanedName = cleanTitle(title);
-    const model = extractModel(title);
+    const model = extractPartNumber(title);
     const brand = detectBrand(title);
 
     if (!cleanedName) {
