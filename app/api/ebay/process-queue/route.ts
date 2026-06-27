@@ -72,12 +72,40 @@ function cleanTitle(title: string) {
 function extractModel(title: string) {
   const upper = String(title || '').toUpperCase();
 
-  const matches =
-    upper.match(/\b[A-Z0-9]+(?:[-\/.][A-Z0-9]+){1,}\b/g) ||
-    upper.match(/\b[A-Z]{1,5}\d{3,}[A-Z0-9-\/.]*\b/g) ||
-    [];
+  const candidates =
+    upper.match(/\b[A-Z0-9][A-Z0-9\-\/.]{4,}\b/g) || [];
 
-  return matches[0] || '';
+  const blacklist = [
+    'VAC',
+    'VDC',
+    'VAC/DC',
+    'HZ',
+    'KHZ',
+    'MHZ',
+    'VA',
+    'KVA',
+    'AMP',
+    'AMPS',
+    'BAR',
+    'PSI',
+    'MM',
+    'CM',
+    'KG',
+    'W',
+    'KW',
+  ];
+
+  for (const value of candidates) {
+    if (!/[A-Z]/.test(value) || !/\d/.test(value)) continue;
+    if (/^\d+$/.test(value)) continue;
+
+    const bad = blacklist.some((u) => value.includes(u));
+    if (bad) continue;
+
+    return value;
+  }
+
+  return '';
 }
 
 function detectBrand(title: string) {
@@ -464,7 +492,7 @@ export async function GET() {
   continue;
 }
 
-const finalModel = model || cleanedName;
+const finalModel = model || '';
 
     const product = {
       ebay_item_id: realItemId,
