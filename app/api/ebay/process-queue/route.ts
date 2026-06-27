@@ -378,8 +378,8 @@ export async function GET() {
       .eq('ebay_item_id', ebayItemId);
 
     const already = await supabaseAdmin
-      .from('products')
-      .select('id')
+  .from('products')
+  .select('id, part_number, model_number')
       .eq('ebay_item_id', ebayItemId)
       .maybeSingle();
 
@@ -455,12 +455,20 @@ export async function GET() {
 }
 
 const finalModel = model || '';
+const safePartNumber =
+  already.data?.part_number && already.data.part_number.trim()
+    ? already.data.part_number
+    : finalModel;
 
+const safeModelNumber =
+  already.data?.model_number && already.data.model_number.trim()
+    ? already.data.model_number
+    : finalModel;
     const product = {
       ebay_item_id: realItemId,
       sku: realItemId,
-      part_number: finalModel,
-      model_number: finalModel,
+      part_number: safePartNumber,
+      model_number: safeModelNumber,
       brand,
       category: item.categories?.[0]?.categoryName || 'Industrial Automation',
       name: cleanedName,
