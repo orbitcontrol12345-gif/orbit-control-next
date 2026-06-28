@@ -1,32 +1,17 @@
 import { supabaseAdmin } from '../lib/supabase-admin';
-import { extractPartNumber } from '../lib/part-number';
+import { extractIndustrialPartNumber } from '../lib/industrial-part-number';
 
 const BATCH_SIZE = 100;
 
-function pickFirstCleanPart(value: string): string {
-  const text = String(value || '').trim();
+function needsRepair(product: any) {
+  const part = String(product.part_number || '').trim();
+  const name = String(product.name || '').trim();
 
-  const parts = text
-    .split(/\s+\/\s+|,|\s+and\s+|\s+with\s+/i)
-    .map((x) => x.trim())
-    .filter(Boolean);
-
-  for (const part of parts) {
-    const extracted = extractPartNumber(part);
-    if (extracted && extracted.length <= 40) return extracted;
-
-    if (
-      part.length >= 3 &&
-      part.length <= 40 &&
-      /\d/.test(part) &&
-      !/\b(VAC|VDC|HZ|VA|KVA|AMP|AMPS|MM|CM|M|KG|BAR|PSI)\b/i.test(part)
-    ) {
-      return part;
-    }
-  }
-
-  const extracted = extractPartNumber(text);
-  return extracted && extracted.length <= 40 ? extracted : '';
+  return (
+    !part ||
+    part.length > 40 ||
+    part.toUpperCase() === name.toUpperCase()
+  );
 }
 
 async function main() {
@@ -39,7 +24,6 @@ async function main() {
     const { data: products, error } = await supabaseAdmin
       .from('products')
       .select('id,name,description,part_number,model_number')
-      .or('part_number.is.null,part_number.eq.,part_number.gt.________________________________________')
       .order('id')
       .range(from, from + BATCH_SIZE - 1);
 
@@ -49,19 +33,24 @@ async function main() {
     for (const product of products) {
       scanned++;
 
-      const current = String(product.part_number || '').trim();
-      const name = String(product.name || '').trim();
-      const description = String(product.description || '').trim();
+      if (!needsRepair(product)) {
+        skipped++;
+        continue;
+      }
 
-      const source = current || description || name;
-      const newPart = pickFirstCleanPart(source);
+      const source =
+        String(product.description || '').trim() ||
+        String(product.name || '').trim();
+
+      const newPart = extractIndustrialPartNumber(source);
+      const oldPart = String(product.part_number || '').trim();
 
       if (!newPart) {
         skipped++;
         continue;
       }
 
-      if (newPart.toUpperCase() === current.toUpperCase()) {
+      if (newPart.toUpperCase() === oldPart.toUpperCase()) {
         skipped++;
         continue;
       }
@@ -87,7 +76,7 @@ async function main() {
       }
 
       repaired++;
-      console.log(`✔ ${product.id}: ${current} => ${newPart}`);
+      console.log(`✔ ${product.id}: ${oldPart} => ${newPart}`);
     }
 
     from += BATCH_SIZE;
