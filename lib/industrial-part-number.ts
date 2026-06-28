@@ -1,3 +1,4 @@
+import { extractIndustrialPartNumber } from '@/lib/industrial-part-number';
 const BAD_UNITS =
   /\b\d+(?:\.\d+)?\s?(VAC|VDC|VAC\/DC|AC|DC|V|VOLTS?|HZ|KHZ|MHZ|VA|KVA|W|KW|A|MA|AMP|AMPS|BAR|PSI|MM|CM|M|KG|G|RPM|HP|PH|L)\b/i;
 
@@ -97,4 +98,4 @@ export function extractIndustrialPartNumber(input: string): string {
 }
 
 export const extractPartNumber = extractIndustrialPartNumber;
-export const extractPartNumberFromTitle = extractIndustrialPartNumber;
+export const extractIndustrialPartNumber = extractIndustrialPartNumber;
