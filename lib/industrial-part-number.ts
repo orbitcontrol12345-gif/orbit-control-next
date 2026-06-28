@@ -97,4 +97,4 @@ export function extractIndustrialPartNumber(input: string): string {
 }
 
 export const extractPartNumber = extractIndustrialPartNumber;
-export const extractIndustrialPartNumber = extractIndustrialPartNumber;
+export const extractPartNumberFromTitle = extractIndustrialPartNumber;
