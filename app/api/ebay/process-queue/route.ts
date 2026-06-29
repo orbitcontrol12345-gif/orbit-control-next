@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
-
+import { detectIndustrialBrand } from '@/lib/industrial-brand';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -445,7 +445,14 @@ export async function GET() {
 
     const cleanedName = cleanTitle(title);
     const model = extractPartNumber(title);
-    const brand = detectBrand(title);
+    const brand =
+  item.brand ||
+  item.localizedAspects?.find(
+    (a: any) => a.name?.toLowerCase() === 'brand'
+  )?.value ||
+  detectIndustrialBrand(
+    `${title} ${cleanedName} ${model || ''}`
+  );
 
     if (!cleanedName) {
   await markQueue(ebayItemId, 'failed', 'Missing clean name');
