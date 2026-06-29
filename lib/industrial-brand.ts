@@ -47,6 +47,15 @@ const BRAND_ALIASES: Record<string, string[]> = {
   'Elcometer': ['ELCOMETER'],
   'Keithley': ['KEITHLEY'],
   'ASCO': ['ASCO'],
+  'Rohde & Schwarz': ['ROHDE AND SCHWARZ', 'ROHDE & SCHWARZ', 'ROHDE SCHWARZ'],
+'Finder': ['FINDER'],
+'Triad': ['TRIAD'],
+'Allin': ['ALLIN'],
+'JCOM': ['JCOM'],
+'Crossmatch Technologies': ['CROSSMATCH', 'CROSSMATCH TECHNOLOGIES'],
+'Higen': ['HIGEN'],
+'Icom': ['ICOM'],
+'Endrich': ['ENDRICH'],
 };
 
 function normalize(value: string) {
