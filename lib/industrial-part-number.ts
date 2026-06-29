@@ -1,6 +1,13 @@
 const BAD_UNITS =
   /\b\d+(?:\.\d+)?\s?(VAC|VDC|VAC\/DC|AC|DC|V|VOLTS?|HZ|KHZ|MHZ|VA|KVA|W|KW|A|MA|AMP|AMPS|BAR|PSI|MM|CM|M|KG|G|RPM|HP|PH|L)\b/i;
 
+const BRAND_WORDS = new Set([
+  'ABB','SIEMENS','SCHNEIDER','HONEYWELL','PHOENIX','YOKOGAWA','OMRON',
+  'MITSUBISHI','EATON','REXROTH','BOSCH','GE','PILZ','SICK','FLUKE',
+  'CROWCON','ELCOMETER','DUCATI','ADALET','ROHDE','SCHWARZ','MATSUSHITA',
+  'REYROLLE','NEWCO','MORS','SMITT','ACTIVE','DIAMOND','NEOTRONICS',
+]);
+
 const BAD_WORDS = new Set([
   'NEW','USED','OPEN','BOX','WITHOUT','WITH','FILTHY','DAMAGED','BROKEN',
   'TESTED','TRIED','ONLY','CASE','COVER','BATTERY','SCREEN','KEYPAD',
@@ -26,11 +33,14 @@ function normalize(value: string) {
 }
 
 function isBad(value: string) {
-  if (!value) return true;
-  if (value.length < 2 || value.length > 40) return true;
-  if (BAD_UNITS.test(value)) return true;
-  if (/^\d{1,2}$/.test(value)) return true;
-  if (/^(NEW|USED|TESTED|MODULE|BOARD|RELAY|METER|CONTROLLER)$/i.test(value)) return true;
+  const v = value.toUpperCase();
+  if (!v) return true;
+  if (v.length < 2 || v.length > 40) return true;
+  if (BAD_UNITS.test(v)) return true;
+  if (BRAND_WORDS.has(v)) return true;
+  if (BAD_WORDS.has(v)) return true;
+  if (/^\d{1,2}$/.test(v)) return true;
+  if (/^(NEW|USED|TESTED|MODULE|BOARD|RELAY|METER|CONTROLLER)$/i.test(v)) return true;
   return false;
 }
 
@@ -49,7 +59,6 @@ function score(value: string) {
   if (value.length >= 4 && value.length <= 24) s += 6;
 
   if (/^(100|110|120|220|230|240|250|380|400|415|480|500|600)$/.test(value)) s -= 50;
-  if (BAD_WORDS.has(value)) s -= 50;
 
   return s;
 }
@@ -62,6 +71,7 @@ export function extractIndustrialPartNumber(input: string): string {
     .replace(/\b(140)\s+(CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\s+(\d{2,4})\s+(\d{2,4})\b/g, '$1$2$3$4')
     .replace(/\b(H46C)\s+(\d{3,5})\b/g, '$1$2')
     .replace(/\b(DSE)\s+(\d{3,5})\b/g, '$1$2')
+    .replace(/\b(TRG)\s?(\d{1,4})\b/g, '$1$2')
     .replace(/\b(TAC)\s+(XENTA)\s+(\d{3,5}[A-Z]?)\b/g, '$1$2$3')
     .replace(/\b(FL)\s+(SWITCH)\s+(SFN)\s+(\d+TX)\b/g, '$3$4')
     .replace(/\b(COUNTIS)\s+(E\d+)\b/g, '$1$2')
@@ -74,7 +84,7 @@ export function extractIndustrialPartNumber(input: string): string {
   const patterns = [
     /\b140(?:CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\d{4,8}\b/g,
     /\b7SD\d{4}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d(?:\/[A-Z]{2})?\b/g,
-    /\b[A-Z]{2,8}\d{2,12}[A-Z]?\b/g,
+    /\b[A-Z]{1,8}\d{1,12}[A-Z]?\b/g,
     /\b\d{6,14}[A-Z]?\b/g,
     /\b[A-Z0-9]+[-/][A-Z0-9][A-Z0-9-/]{2,35}\b/g,
     /\b[A-Z]{1,8}\d?\*?[A-Z]\b/g,
