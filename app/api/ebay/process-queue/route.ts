@@ -384,12 +384,31 @@ export async function GET() {
       .maybeSingle();
 
     if (already.data?.id) {
-      await markQueue(ebayItemId, 'completed', 'Already exists in products');
-      skipped++;
-      results.push({ ebayItemId, status: 'skipped_existing' });
-      continue;
-    }
+  const { error: updateExistingError } = await supabaseAdmin
+    .from('products')
+    .update({
+      last_seen_at: now,
+      updated_at: now,
+      is_active: true,
+    })
+    .eq('id', already.data.id);
 
+  if (updateExistingError) {
+    await markQueue(ebayItemId, 'failed', updateExistingError.message);
+    failed++;
+    results.push({
+      ebayItemId,
+      status: 'failed_update_existing',
+      error: updateExistingError.message,
+    });
+    continue;
+  }
+
+  await markQueue(ebayItemId, 'completed', 'Already exists - refreshed last_seen_at');
+  skipped++;
+  results.push({ ebayItemId, status: 'refreshed_existing' });
+  continue;
+}
     const params = new URLSearchParams({
       q: ebayItemId,
       limit: '1',
