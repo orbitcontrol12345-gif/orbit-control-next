@@ -454,7 +454,11 @@ export async function GET() {
   continue;
 }
 
-const finalModel = model || '';
+const extractedModel =
+  extractPartNumber(model || title || cleanedName || '');
+
+const finalModel =
+  extractedModel || model || '';
 const safePartNumber =
   already.data?.part_number && already.data.part_number.trim()
     ? already.data.part_number
