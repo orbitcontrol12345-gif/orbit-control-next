@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const taskId = 'task-20-27945426550787';
+  const taskId = 'task-20-28117945024514';
 
   try {
     const token = await getEbayToken();
