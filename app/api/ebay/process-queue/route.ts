@@ -379,7 +379,7 @@ export async function GET() {
 
     const already = await supabaseAdmin
   .from('products')
-  .select('id, part_number, model_number')
+  .select('id, part_number, model_number, brand')
       .eq('ebay_item_id', ebayItemId)
       .maybeSingle();
 
@@ -466,6 +466,7 @@ const extractedModel =
 
 const finalModel =
   extractedModel || model || '';
+
 const safePartNumber =
   already.data?.part_number && already.data.part_number.trim()
     ? already.data.part_number
@@ -475,29 +476,37 @@ const safeModelNumber =
   already.data?.model_number && already.data.model_number.trim()
     ? already.data.model_number
     : finalModel;
-    const product = {
-      ebay_item_id: realItemId,
-      sku: realItemId,
-      part_number: safePartNumber,
-      model_number: safeModelNumber,
-      brand,
-      category: item.categories?.[0]?.categoryName || 'Industrial Automation',
-      name: cleanedName,
-      condition: item.condition || 'Used',
-      image_url: imageUrl,
-      description: title,
-      slug: slugify(`${realItemId}-${cleanedName}`),
-      marketplace: 'EBAY_US',
-      seller: 'orbitcontrol',
-      source: 'ebay-browse-queue',
-      source_type: 'ebay',
-      quantity: 1,
-      price: item.price?.value ? Number(item.price.value) : null,
-      currency: item.price?.currency || 'USD',
-      is_active: true,
-      last_seen_at: now,
-      updated_at: now,
-    };
+
+const safeBrand =
+  already.data?.brand &&
+  already.data.brand.trim() &&
+  already.data.brand !== 'UNKNOWN'
+    ? already.data.brand
+    : brand;
+
+const product = {
+  ebay_item_id: realItemId,
+  sku: realItemId,
+  part_number: safePartNumber,
+  model_number: safeModelNumber,
+  brand: safeBrand,
+  category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+  name: cleanedName,
+  condition: item.condition || 'Used',
+  image_url: imageUrl,
+  description: title,
+  slug: slugify(`${realItemId}-${cleanedName}`),
+  marketplace: 'EBAY_US',
+  seller: 'orbitcontrol',
+  source: 'ebay-browse-queue',
+  source_type: 'ebay',
+  quantity: 1,
+  price: item.price?.value ? Number(item.price.value) : null,
+  currency: item.price?.currency || 'USD',
+  is_active: true,
+  last_seen_at: now,
+  updated_at: now,
+};
 
     const { error: insertError } = await supabaseAdmin
       .from('products')
