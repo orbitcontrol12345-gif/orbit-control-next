@@ -464,14 +464,21 @@ export async function GET() {
 
     const cleanedName = cleanTitle(title);
     const model = extractPartNumber(title);
-    const brand =
-  item.brand ||
-  item.localizedAspects?.find(
-    (a: any) => a.name?.toLowerCase() === 'brand'
-  )?.value ||
-  detectIndustrialBrand(
-    `${title} ${cleanedName} ${model || ''}`
-  );
+    const brand = detectIndustrialBrand(
+  [
+    item.brand,
+    item.localizedAspects
+      ?.find((a: any) => a.name?.toLowerCase() === 'brand')
+      ?.value,
+    title,
+    cleanedName,
+    model,
+    item.shortDescription,
+    item.description,
+  ]
+    .filter(Boolean)
+    .join(' ')
+);
 
     if (!cleanedName) {
   await markQueue(ebayItemId, 'failed', 'Missing clean name');
