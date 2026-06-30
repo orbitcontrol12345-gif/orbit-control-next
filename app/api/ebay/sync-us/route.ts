@@ -96,9 +96,21 @@ export async function GET(request: Request) {
     const ids = snapshotRows.map((row) => String(row.ebay_item_id));
 
     const { data: existingProducts, error: existingError } = await supabaseAdmin
-      .from('products')
-      .select('id, ebay_item_id, part_number, model_number, brand')
-      .in('ebay_item_id', ids);
+  .from('products')
+  .select(`
+    id,
+    ebay_item_id,
+    name,
+    brand,
+    part_number,
+    model_number,
+    category,
+    description,
+    image_url,
+    condition,
+    is_active
+  `)
+  .in('ebay_item_id', ids);
 
     if (existingError) throw existingError;
 
@@ -157,25 +169,54 @@ for (let i = 0; i < ids.length; i += CONCURRENCY) {
       const existing = existingMap.get(realItemId) || existingMap.get(ebayItemId);
 
       if (existing?.id) {
-        const { error: updateError } = await supabaseAdmin
-          .from('products')
-          .update({
-            last_seen_at: now,
-            is_active: true,
-            updated_at: now,
-          })
-          .eq('id', existing.id);
+  const updates: any = {
+    last_seen_at: now,
+    is_active: true,
+    updated_at: now,
+  };
 
-        if (updateError) throw updateError;
+  if (cleanedName && cleanedName !== existing.name) updates.name = cleanedName;
+  if (title && title !== existing.description) updates.description = title;
+  if (imageUrl && imageUrl !== existing.image_url) updates.image_url = imageUrl;
+  if (item.condition && item.condition !== existing.condition) updates.condition = item.condition;
+  if (item.categoryPath && item.categoryPath !== existing.category) updates.category = item.categoryPath;
 
-        updated++;
-        sample.push({
-          ebayItemId: realItemId,
-          action: 'updated',
-          title,
-        });
-        continue;
-      }
+  // لا نكتب فوق براند صحيح بـ UNKNOWN
+  if (
+    brand &&
+    brand !== 'UNKNOWN' &&
+    brand !== existing.brand
+  ) {
+    updates.brand = brand;
+  }
+
+  // لا نغير Part Number الموجود إذا كان صحيحًا
+  const currentPart = String(existing.part_number || '').trim();
+  if (
+    (!currentPart || currentPart === String(existing.name || '').trim()) &&
+    partNumber &&
+    partNumber !== realItemId
+  ) {
+    updates.part_number = partNumber;
+    updates.model_number = partNumber;
+  }
+
+  const { error: updateError } = await supabaseAdmin
+    .from('products')
+    .update(updates)
+    .eq('id', existing.id);
+
+  if (updateError) throw updateError;
+
+  updated++;
+  sample.push({
+    ebayItemId: realItemId,
+    action: Object.keys(updates).length > 3 ? 'updated_changed_fields' : 'seen',
+    title,
+  });
+
+  continue;
+}
 
       const cleanedName = cleanTitle(title);
       const detectedPart = extractPartNumber(title);
