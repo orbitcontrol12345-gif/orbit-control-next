@@ -41,24 +41,14 @@ export async function GET() {
 
     const blocks = xml.match(/<SKUDetails>[\s\S]*?<\/SKUDetails>/g) || [];
 
-    const sample = blocks.slice(0, 20).map((block) => {
-      const priceMatch = block.match(/<Price currencyID="([^"]+)">([^<]+)<\/Price>/);
-
-      return {
-        ebay_item_id: getTag(block, 'ItemID'),
-        sku: getTag(block, 'SKU'),
-        quantity: Number(getTag(block, 'Quantity') || 0),
-        price: priceMatch?.[2] ? Number(priceMatch[2]) : null,
-        currency: priceMatch?.[1] || 'USD',
-      };
-    });
+    const preview = xml.substring(0, 15000);
 
     return NextResponse.json({
       success: true,
       taskId: TASK_ID,
       fileName,
       totalItems: blocks.length,
-      sample,
+      preview,
     });
   } catch (err: any) {
     return NextResponse.json(
