@@ -75,12 +75,25 @@ export async function GET(request: Request) {
           },
         };
       })
-      .filter(Boolean);
-
+      .filter(
+  (
+    row
+  ): row is {
+    ebay_item_id: string;
+    sku: string | null;
+    price: number | null;
+    currency: string;
+    quantity: number;
+    last_seen_at: string;
+    feed_task_id: string;
+    raw: any;
+  } => row !== null
+);
+    const cleanRows = rows;
     if (rows.length) {
       const { error } = await supabaseAdmin
         .from('ebay_feed_snapshot')
-        .upsert(rows, { onConflict: 'ebay_item_id' });
+        .upsert(cleanRows, { onConflict: 'ebay_item_id' });
 
       if (error) throw error;
     }
