@@ -52,15 +52,11 @@ export async function GET(request: Request) {
 
     if (newRows.length) {
       const queueRows = newRows.map((row) => ({
-        ebay_item_id: row.ebay_item_id,
-        status: 'pending',
-        source: 'sync-engine',
-        price: row.price ?? null,
-        currency: row.currency || 'USD',
-        quantity: row.quantity ?? 0,
-        attempts: 0,
-        updated_at: now,
-      }));
+  ebay_item_id: row.ebay_item_id,
+  status: 'pending',
+  attempts: 0,
+  updated_at: now,
+}));
 
       const { error: queueError } = await supabaseAdmin
         .from('ebay_import_queue')
