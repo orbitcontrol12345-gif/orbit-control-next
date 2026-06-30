@@ -167,7 +167,26 @@ for (let i = 0; i < ids.length; i += CONCURRENCY) {
       }
 
       const existing = existingMap.get(realItemId) || existingMap.get(ebayItemId);
+const cleanedName = cleanTitle(title);
+const detectedPart = extractPartNumber(title);
+const partNumber = detectedPart || realItemId;
 
+const aspectBrand =
+  item.localizedAspects?.find(
+    (a: any) => String(a.name || '').toLowerCase() === 'brand'
+  )?.value || '';
+
+const brand = detectIndustrialBrand(
+  [item.brand, aspectBrand, title, cleanedName, partNumber]
+    .filter(Boolean)
+    .join(' ')
+);
+
+const imageUrl =
+  item.image?.imageUrl ||
+  item.thumbnailImages?.[0]?.imageUrl ||
+  item.additionalImages?.[0]?.imageUrl ||
+  null;
       if (existing?.id) {
   const updates: any = {
     last_seen_at: now,
