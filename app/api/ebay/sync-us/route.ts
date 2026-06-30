@@ -7,7 +7,8 @@ import { detectIndustrialBrand } from '@/lib/industrial-brand';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 50;
+const CONCURRENCY = 10;
 
 function slugify(text: string) {
   return String(text || '')
@@ -108,9 +109,17 @@ export async function GET(request: Request) {
       ])
     );
 
-    const results = await Promise.all(
-      ids.map((id) => fetchEbayItem(access_token, id))
-    );
+    const results: Awaited<ReturnType<typeof fetchEbayItem>>[] = [];
+
+for (let i = 0; i < ids.length; i += CONCURRENCY) {
+  const chunk = ids.slice(i, i + CONCURRENCY);
+
+  const chunkResults = await Promise.all(
+    chunk.map((id) => fetchEbayItem(access_token, id))
+  );
+
+  results.push(...chunkResults);
+}
 
     let inserted = 0;
     let updated = 0;
