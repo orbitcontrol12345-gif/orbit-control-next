@@ -1,3 +1,5 @@
+import { normalizeProductTitle } from './normalize-product-title';
+
 const BAD_UNITS =
   /\b\d+(?:\.\d+)?\s?(VAC|VDC|VAC\/DC|AC|DC|V|VOLTS?|HZ|KHZ|MHZ|VA|KVA|W|KW|A|MA|AMP|AMPS|BAR|PSI|MM|CM|M|KG|G|RPM|HP|PH|L)\b/i;
 
@@ -6,6 +8,7 @@ const BRAND_WORDS = new Set([
   'MITSUBISHI','EATON','REXROTH','BOSCH','GE','PILZ','SICK','FLUKE',
   'CROWCON','ELCOMETER','DUCATI','ADALET','ROHDE','SCHWARZ','MATSUSHITA',
   'REYROLLE','NEWCO','MORS','SMITT','ACTIVE','DIAMOND','NEOTRONICS',
+  'VERTIV','ALLEN-BRADLEY','GREYSTONE','JANITZA','LEUZE','WOODWARD','DRAGER',
 ]);
 
 const BAD_WORDS = new Set([
@@ -41,7 +44,7 @@ function isBad(value: string) {
   if (BRAND_WORDS.has(v)) return true;
   if (BAD_WORDS.has(v)) return true;
   if (/^\d{1,2}$/.test(v)) return true;
-  if (/^(NEW|USED|TESTED|MODULE|BOARD|RELAY|METER|CONTROLLER)$/i.test(v)) return true;
+  if (/^\d{10,14}$/.test(v)) return true;
   return false;
 }
 
@@ -57,6 +60,10 @@ function score(value: string) {
   if (/^[A-Z]{1,8}\d/.test(value)) s += 14;
   if (/^\d{3,14}[A-Z]?$/.test(value)) s += 7;
   if (/^\d{2,4}[A-Z]{2,6}\d{2,8}/.test(value)) s += 18;
+  if (/^\d{2}[A-Z]\d{5}[A-Z]\d{3}$/.test(value)) s += 45;
+  if (/^\d{2}[A-Z]\d{5}$/.test(value)) s += 30;
+  if (/^\d{3}-\d{5}-\d{2}[A-Z]?$/.test(value)) s += 40;
+  if (/^\d{2}H\d{5}$/.test(value)) s += 35;
   if (value.length >= 4 && value.length <= 24) s += 6;
 
   if (/^(100|110|120|220|230|240|250|380|400|415|480|500|600)$/.test(value)) s -= 50;
@@ -65,7 +72,9 @@ function score(value: string) {
 }
 
 export function extractIndustrialPartNumber(input: string): string {
-  const original = clean(input);
+  const normalizedTitle = normalizeProductTitle(input);
+  const original = clean(normalizedTitle || input);
+
   if (!original) return '';
 
   const joined = original
@@ -83,6 +92,10 @@ export function extractIndustrialPartNumber(input: string): string {
   const searchText = `${joined} ${original}`;
 
   const patterns = [
+    /\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/g,
+    /\b\d{2}[A-Z]\d{5}\b/g,
+    /\b\d{3}-\d{5}-\d{2}[A-Z]?\b/g,
+    /\b\d{2}H\d{5}\b/g,
     /\b140(?:CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\d{4,8}\b/g,
     /\b7SD\d{4}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d(?:\/[A-Z]{2})?\b/g,
     /\b[A-Z]{1,8}\d{1,12}[A-Z]?\b/g,
