@@ -11,7 +11,7 @@ console.log('CONTACT API HIT', new Date().toISOString());
 console.log(data);
     await resend.emails.send({
   from: 'Orbit Control Contact <onboarding@resend.dev>'
-subject: 'Orbit Control Contact Form'
+  to: ['Orbit Control Contact Form'],
       replyTo: data.email,
       subject: `Contact Form - ${data.subject}`,
       html: `
