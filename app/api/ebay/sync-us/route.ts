@@ -255,7 +255,45 @@ export async function GET(request: Request) {
 
         continue;
       }
+const duplicateCheck =
+  brand &&
+  brand !== 'UNKNOWN' &&
+  partNumber &&
+  partNumber !== realItemId
+    ? await supabaseAdmin
+        .from('products')
+        .select('id, ebay_item_id')
+        .eq('marketplace', 'EBAY_US')
+        .eq('is_active', true)
+        .eq('brand', brand)
+        .eq('part_number', partNumber)
+        .maybeSingle()
+    : { data: null, error: null };
 
+if (duplicateCheck.error) throw duplicateCheck.error;
+
+if (duplicateCheck.data?.id) {
+  await supabaseAdmin
+    .from('products')
+    .update({
+      last_seen_at: now,
+      updated_at: now,
+    })
+    .eq('id', duplicateCheck.data.id);
+
+  updated++;
+
+  sample.push({
+    ebayItemId: realItemId,
+    action: 'duplicate_skipped',
+    existingProductId: duplicateCheck.data.id,
+    brand,
+    partNumber,
+    title,
+  });
+
+  continue;
+}
       const product = {
         ebay_item_id: realItemId,
         sku: realItemId,
