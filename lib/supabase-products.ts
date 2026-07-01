@@ -1,7 +1,7 @@
 import type { Product } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-const PRODUCTS_TABLE = 'products_display_unique';
+const PRODUCTS_TABLE = 'products';
 
 function cleanProductName(name: string) {
   return name
