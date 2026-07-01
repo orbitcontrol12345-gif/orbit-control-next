@@ -53,7 +53,8 @@ export async function getSupabaseProductsPage({
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
-    .order('id', { ascending: true })
+    .order('updated_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(from, to);
 
   if (search) {
@@ -94,7 +95,8 @@ export async function getSupabaseProductsByCategoryTerms({
     .select('*', { count: 'exact' })
     .eq('is_active', true)
     .or(filters)
-    .order('id', { ascending: true })
+    .order('updated_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(from, to);
 
   if (error) return { products: [], totalProducts: 0, totalPages: 0 };
