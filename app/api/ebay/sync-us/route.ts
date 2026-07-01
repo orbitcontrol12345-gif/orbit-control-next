@@ -267,26 +267,29 @@ const duplicateCheck =
         .eq('is_active', true)
         .eq('brand', brand)
         .eq('part_number', partNumber)
-        .maybeSingle()
-    : { data: null, error: null };
+        .order('created_at', { ascending: false })
+        .limit(1)
+    : { data: [], error: null };
 
 if (duplicateCheck.error) throw duplicateCheck.error;
 
-if (duplicateCheck.data?.id) {
+const duplicate = duplicateCheck.data?.[0];
+
+if (duplicate?.id) {
   await supabaseAdmin
     .from('products')
     .update({
       last_seen_at: now,
       updated_at: now,
     })
-    .eq('id', duplicateCheck.data.id);
+    .eq('id', duplicate.id)
 
   updated++;
 
   sample.push({
     ebayItemId: realItemId,
     action: 'duplicate_skipped',
-    existingProductId: duplicateCheck.data.id,
+    existingProductId: duplicate.id,
     brand,
     partNumber,
     title,
