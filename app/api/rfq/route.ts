@@ -17,9 +17,9 @@ export async function POST(req: Request) {
       message: String(formData.get('message') || ''),
     };
 
-    const result = await resend.emails.send({
+   const result = await resend.emails.send({
   from: 'Orbit Control RFQ <onboarding@resend.dev>',
-  to: ['wael.caroomi@gmail.com'],
+  to: ['orbitcontrol12345@gmail.com'],
   subject: `ORBIT TEST RFQ - ${data.part_number || 'No Part Number'}`,
   html: `
     <h2>Orbit Control RFQ Test</h2>
