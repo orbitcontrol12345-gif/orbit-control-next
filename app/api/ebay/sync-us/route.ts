@@ -35,7 +35,31 @@ function cleanTitle(title: string) {
 function getRealItemId(itemId: string) {
   return String(itemId || '').split('|')[1] || String(itemId || '');
 }
+function getBestPartNumber(item: any, title: string, realItemId: string) {
+  const aspects = item.localizedAspects || [];
 
+  const aspectPart =
+    aspects.find((a: any) =>
+      ['mpn', 'model', 'model number', 'manufacturer part number'].includes(
+        String(a.name || '').toLowerCase()
+      )
+    )?.value || '';
+
+  const candidates = [
+    aspectPart,
+    extractPartNumber(title),
+    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{2,4}\b/gi) || []),
+    ...(title.match(/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/gi) || []),
+    ...(title.match(/\b[A-Z]{2,}\d{2,}[A-Z0-9\-/.]*\b/gi) || []),
+  ]
+    .map((x) => String(x || '').trim().toUpperCase())
+    .filter(Boolean)
+    .filter((x) => x !== realItemId)
+    .filter((x) => !/^\d{10,14}$/.test(x))
+    .filter((x) => !/\b(VAC|VDC|HZ|KW|AMP|AMPS|PCS|LOT)\b/i.test(x));
+
+  return candidates[0] || realItemId;
+}
 async function fetchEbayItem(accessToken: string, ebayItemId: string) {
   const res = await fetch(
     `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${ebayItemId}`,
@@ -167,8 +191,7 @@ export async function GET(request: Request) {
       }
 
       const cleanedName = cleanTitle(title);
-      const detectedPart = extractPartNumber(title);
-      const partNumber = detectedPart || realItemId;
+      const partNumber = getBestPartNumber(item, title, realItemId);
 
       const aspectBrand =
         item.localizedAspects?.find(
