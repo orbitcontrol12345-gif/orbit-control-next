@@ -83,11 +83,6 @@ export function extractIndustrialPartNumber(input: string): string {
   const searchText = `${joined} ${original}`;
 
   const patterns = [
-    // Siemens / GE / Emerson board numbers
-/\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/g,      // 15B10621G100
-/\b\d{2}[A-Z]\d{5}\b/g,                // 15C50416
-/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/g,        // 710-02821-08P
-/\b\d{2}H\d{5}\b/g,                    // 15H50607
     /\b140(?:CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\d{4,8}\b/g,
     /\b7SD\d{4}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d(?:\/[A-Z]{2})?\b/g,
     /\b[A-Z]{1,8}\d{1,12}[A-Z]?\b/g,
@@ -108,9 +103,6 @@ export function extractIndustrialPartNumber(input: string): string {
     .map((value) => ({ value, score: score(value) }))
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score);
-  if (/^\d{2}[A-Z]\d{5}[A-Z]\d{3}$/.test(value)) s += 40;
-if (/^\d{3}-\d{5}-\d{2}[A-Z]?$/.test(value)) s += 35;
-if (/^\d{2}H\d{5}$/.test(value)) s += 30;
 
   return ranked[0]?.value || '';
 }
