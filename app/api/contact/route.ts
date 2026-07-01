@@ -6,22 +6,19 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
 
-    console.log('CONTACT DATA:', data);
-console.log('CONTACT API HIT', new Date().toISOString());
-console.log(data);
-    await resend.emails.send({
-  from: 'Orbit Control Contact <onboarding@resend.dev>'
-  to: ['Orbit Control Contact Form'],
-      replyTo: data.email,
-      subject: `Contact Form - ${data.subject}`,
+    const result = await resend.emails.send({
+      from: 'Orbit Control Contact <onboarding@resend.dev>',
+      to: ['orbitcontrol12345@gmail.com'],
+      replyTo: data.email || undefined,
+      subject: `Orbit Control Contact - ${data.subject || 'New Message'}`,
       html: `
-        <h2>New Contact Message</h2>
+        <h2>New Orbit Control Contact Message</h2>
 
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Company:</strong> ${data.company}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Subject:</strong> ${data.subject}</p>
+        <p><strong>Name:</strong> ${data.name || ''}</p>
+        <p><strong>Company:</strong> ${data.company || ''}</p>
+        <p><strong>Email:</strong> ${data.email || ''}</p>
+        <p><strong>Phone:</strong> ${data.phone || ''}</p>
+        <p><strong>Subject:</strong> ${data.subject || ''}</p>
 
         <hr />
 
@@ -30,11 +27,14 @@ console.log(data);
       `,
     });
 
-    console.log('CONTACT SENT');
+    console.log('ORBIT CONTACT RESULT:', result);
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, result });
   } catch (error) {
     console.error('CONTACT ERROR:', error);
-    return Response.json({ success: false }, { status: 500 });
+    return Response.json(
+      { success: false, error: String(error) },
+      { status: 500 }
+    );
   }
 }
