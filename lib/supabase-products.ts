@@ -53,6 +53,7 @@ export async function getSupabaseProductsPage({
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
+    .neq('catalog_visible', false)
     .order('id', { ascending: true })
     .range(from, to);
 
@@ -93,6 +94,7 @@ export async function getSupabaseProductsByCategoryTerms({
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
+    .neq('catalog_visible', false)
     .or(filters)
    .order('id', { ascending: true })
     .range(from, to);
@@ -114,6 +116,7 @@ export async function getSupabaseProductBySlug(slug: string): Promise<Product | 
     .select('*')
     .eq('slug', decodedSlug)
     .eq('is_active', true)
+    .neq('catalog_visible', false)
     .maybeSingle();
 
   if (!data) {
@@ -121,6 +124,7 @@ export async function getSupabaseProductBySlug(slug: string): Promise<Product | 
       .from(PRODUCTS_TABLE)
       .select('*')
       .eq('is_active', true)
+      .neq('catalog_visible', false)
       .or(
         `slug.eq.${decodedSlug},sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug},model_number.eq.${decodedSlug}`
       )
@@ -140,6 +144,7 @@ export async function getSupabaseRelatedProducts(product: Product): Promise<Prod
     .from(PRODUCTS_TABLE)
     .select('*')
     .eq('is_active', true)
+    .neq('catalog_visible', false)
     .or(`brand.eq.${product.brand},category.eq.${product.category}`)
     .neq('sku', product.sku)
     .limit(4);
