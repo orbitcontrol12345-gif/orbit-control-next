@@ -37,6 +37,16 @@ function mapSupabaseProduct(item: any): Product {
   };
 }
 
+function getDedupKey(item: any) {
+  const brand = String(item.brand || '').trim().toUpperCase();
+  const part = String(item.part_number || item.model_number || item.sku || '').trim().toUpperCase();
+  const condition = String(item.condition || '').trim().toUpperCase();
+
+  if (!part) return `ID:${item.id}`;
+
+  return `${brand || 'UNKNOWN'}::${part}::${condition || 'UNKNOWN'}`;
+}
+
 export async function getSupabaseProductsPage({
   search = '',
   page = 1,
@@ -46,15 +56,11 @@ export async function getSupabaseProductsPage({
   page?: number;
   perPage?: number;
 }) {
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
-
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
-    .select('*', { count: 'exact' })
+    .select('*')
     .eq('is_active', true)
-    .order('id', { ascending: true })
-    .range(from, to);
+    .order('created_at', { ascending: false });
 
   if (search) {
     query = query.or(
@@ -62,14 +68,34 @@ export async function getSupabaseProductsPage({
     );
   }
 
-  const { data, count, error } = await query;
+  const { data, error } = await query;
 
-  if (error) return { products: [], totalProducts: 0, totalPages: 0 };
+  if (error) {
+    return { products: [], totalProducts: 0, totalPages: 0 };
+  }
+
+  const seen = new Set<string>();
+  const uniqueProducts: any[] = [];
+
+  for (const item of data || []) {
+    const key = getDedupKey(item);
+
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    uniqueProducts.push(item);
+  }
+
+  const totalProducts = uniqueProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / perPage));
+
+  const from = (page - 1) * perPage;
+  const pagedProducts = uniqueProducts.slice(from, from + perPage);
 
   return {
-    products: (data || []).map(mapSupabaseProduct),
-    totalProducts: count || 0,
-    totalPages: Math.max(1, Math.ceil((count || 0) / perPage)),
+    products: pagedProducts.map(mapSupabaseProduct),
+    totalProducts,
+    totalPages,
   };
 }
 
