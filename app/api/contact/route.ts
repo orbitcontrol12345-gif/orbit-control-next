@@ -10,8 +10,8 @@ export async function POST(req: Request) {
 console.log('CONTACT API HIT', new Date().toISOString());
 console.log(data);
     await resend.emails.send({
-  from: 'Xeltronic Contact <quote@xeltronic.com>',
-  to: ['quote@xeltronic.com'],
+  from: 'Orbit Control Contact <onboarding@resend.dev>'
+subject: 'Orbit Control Contact Form'
       replyTo: data.email,
       subject: `Contact Form - ${data.subject}`,
       html: `
