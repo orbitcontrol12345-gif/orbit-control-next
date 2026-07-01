@@ -51,6 +51,7 @@ function getBestPartNumber(item: any, title: string, realItemId: string) {
     ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{2,4}\b/gi) || []),
     ...(title.match(/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/gi) || []),
     ...(title.match(/\b[A-Z]{2,}\d{2,}[A-Z0-9\-/.]*\b/gi) || []),
+    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/gi) || []),
   ]
     .map((x) => String(x || '').trim().toUpperCase())
     .filter(Boolean)
