@@ -67,6 +67,28 @@ for (let from = 0; from < 20000; from += 1000) {
   const groups = new Map<string, any[]>();
 
   for (const item of all) {
+    if (badParts.has(String(item.part_number).trim().toUpperCase())) {
+  continue;
+}
+    const badParts = new Set([
+  'UNKNOWN',
+  'W/O',
+  'I/O',
+  'SHUNT-DIODE',
+  '50/60HZ',
+  'SHUNT',
+  'INPUT',
+  'OUTPUT',
+  'BOARD',
+  'MODULE',
+  'POWER',
+  'SUPPLY',
+  'SYSTEM',
+]);
+
+if (badParts.has(String(item.part_number).trim().toUpperCase())) {
+  continue;
+}
     if (!item.part_number || !item.image_url) continue;
 
     const key = groupKey(item);
