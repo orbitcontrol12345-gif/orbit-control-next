@@ -60,6 +60,8 @@ if (/^A\d{2}B-\d{4}-\d{4}$/.test(v)) s += 230;
 
 // لا نفضل أرقام ريفيجن طويلة لوحدها
 if (/^\d{7,9}$/.test(v)) s -= 80;
+  if (/^17\d{2}[A-Z0-9]{2,8}\/[A-Z]$/.test(v)) s += 280;
+if (/^17\d{2}-?[A-Z0-9]{2,8}$/.test(v)) s += 260;
   return s;
 }
 
@@ -79,6 +81,8 @@ export function extractIndustrialPartNumberV2(input: string): string {
 /\bIC\d{3}[A-Z]{2,}\d{2,4}\b/g,                 // IC693CPU374
 /\b6ES\d[\dA-Z-]+\b/g,                           // Siemens 6ES...
 /\bA\d{2}B-\d{4}-\d{4}\b/g,                      // Fanuc A06B...
+    /\b17\d{2}[A-Z0-9]{2,8}\/[A-Z]\b/g,      // 1784KT/B
+/\b17\d{2}-?[A-Z0-9]{2,8}\b/g,           // 1794-IB32 أو 1794IB32
   ];
 
   const candidates: string[] = [];
