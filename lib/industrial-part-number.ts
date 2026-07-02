@@ -17,7 +17,7 @@ const BAD_WORDS = new Set([
   'MODULE','CONTROLLER','BOARD','RELAY','METER','POWER','SUPPLY','DETECTOR',
   'APPLIANCE','SYSTEM','PANEL','SWITCH','CARD','UNIT','INPUT','OUTPUT',
   'CIRCUIT','PCB','PRINTED','ELECTRIC','ELECTRONICS','AUTOMATION','INDUSTRIAL',
-  'SERIES','TYPE','MODEL','REV','ISSUE','VER','VERSION',
+  'SERIES','TYPE','MODEL','REV','ISSUE','VER','VERSION','RELAYS',
   'BASIC','GUEST','STATIC','DIGITAL','SIGNAL','MONITOR','INTERFACE','APC1','PHB',
 ]);
 
@@ -67,7 +67,12 @@ function score(value: string) {
   if (value.length >= 4 && value.length <= 24) s += 6;
 
   if (/^(100|110|120|220|230|240|250|380|400|415|480|500|600)$/.test(value)) s -= 50;
-
+if (/^[A-Z]+\d+[A-Z0-9-]*$/.test(value)) s += 35;
+if (/^\d{3}-\d{5}-\d{2}[A-Z]?$/.test(value)) s += 80;
+if (/^[A-Z]\d{3}-\d{2}$/.test(value)) s += 70;
+if (/^[A-Z]{2,}-\d{2,}$/.test(value)) s += 70;
+if (/^\d{2}H\d{5}$/.test(value)) s -= 20;
+if (/^(RELAY|RELAYS)$/.test(value)) s -= 200;
   return s;
 }
 
