@@ -4,73 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function normalizeName(name: string) {
-  return String(name || '')
-    .toUpperCase()
-    .replace(/\bLOT OF\b/g, ' ')
-    .replace(/\bLOT\b/g, ' ')
-    .replace(/\bPIECES\b/g, ' ')
-    .replace(/\bPIECE\b/g, ' ')
-    .replace(/\bPCS\b/g, ' ')
-    .replace(/\b3PCS\b/g, ' ')
-    .replace(/\b3 PCS\b/g, ' ')
-    .replace(/\bRELAYS\b/g, 'RELAY')
-    .replace(/\bHEAVY[- ]?DUTY\b/g, ' ')
-    .replace(/[.,()/_-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function groupKey(item: any) {
-  return [
-    String(item.brand || '').trim().toUpperCase(),
-    String(item.part_number || '').trim().toUpperCase(),
-    String(item.condition || '').trim().toUpperCase(),
-  ].join('::');
-}
-
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const dryRun = url.searchParams.get('dryRun') !== 'false';
-
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select('id, ebay_item_id, brand, part_number, condition, image_url, name, catalog_visible')
-    .eq('is_active', true)
-    .neq('catalog_visible', false)
-    .not('part_number', 'is', null)
-    .order('id', { ascending: false })
-    const all: any[] = [];
-
-for (let from = 0; from < 20000; from += 1000) {
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select('id, ebay_item_id, brand, part_number, condition, image_url, name, catalog_visible')
-    .eq('is_active', true)
-    .neq('catalog_visible', false)
-    .not('part_number', 'is', null)
-    .range(from, from + 999);
-
-  if (error) throw error;
-
-  if (!data || data.length === 0) break;
-
-  all.push(...data);
-
-  if (data.length < 1000) break;
-}
-
-  if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-
-  const groups = new Map<string, any[]>();
-
-  for (const item of all) {
-    if (badParts.has(String(item.part_number).trim().toUpperCase())) {
-  continue;
-}
-    const badParts = new Set([
+const badParts = new Set([
   'UNKNOWN',
   'W/O',
   'I/O',
@@ -86,57 +20,97 @@ for (let from = 0; from < 20000; from += 1000) {
   'SYSTEM',
 ]);
 
-if (badParts.has(String(item.part_number).trim().toUpperCase())) {
-  continue;
+function groupKey(item: any) {
+  return [
+    String(item.brand || '').trim().toUpperCase(),
+    String(item.part_number || '').trim().toUpperCase(),
+    String(item.condition || '').trim().toUpperCase(),
+  ].join('::');
 }
-    if (!item.part_number || !item.image_url) continue;
 
-    const key = groupKey(item);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(item);
-  }
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const dryRun = url.searchParams.get('dryRun') !== 'false';
 
-  const toHide: any[] = [];
+    const all: any[] = [];
 
-  for (const items of groups.values()) {
-    if (items.length <= 1) continue;
+    for (let from = 0; from < 20000; from += 1000) {
+      const { data, error } = await supabaseAdmin
+        .from('products')
+        .select('id, ebay_item_id, brand, part_number, condition, image_url, name, catalog_visible')
+        .eq('is_active', true)
+        .neq('catalog_visible', false)
+        .not('part_number', 'is', null)
+        .order('id', { ascending: false })
+        .range(from, from + 999);
 
-    const sorted = [...items].sort((a, b) => Number(b.id) - Number(a.id));
-    const keep = sorted[0];
-    const hide = sorted.slice(1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
 
-    for (const item of hide) {
-      toHide.push({
-        id: item.id,
-        ebay_item_id: item.ebay_item_id,
-        part_number: item.part_number,
-        keep_id: keep.id,
-        name: item.name,
-      });
+      all.push(...data);
+
+      if (data.length < 1000) break;
     }
-  }
 
-  if (!dryRun && toHide.length > 0) {
-    const ids = toHide.map((x) => x.id);
+    const groups = new Map<string, any[]>();
 
-    const { error: updateError } = await supabaseAdmin
-      .from('products')
-      .update({
-        catalog_visible: false,
-        updated_at: new Date().toISOString(),
-      })
-      .in('id', ids);
+    for (const item of all) {
+      const part = String(item.part_number || '').trim().toUpperCase();
 
-    if (updateError) {
-      return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+      if (!part) continue;
+      if (badParts.has(part)) continue;
+
+      const key = groupKey(item);
+
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
     }
-  }
 
-  return NextResponse.json({
-    success: true,
-    dryRun,
-    checked: all.length,
-    duplicatesFound: toHide.length,
-    sample: toHide.slice(0, 50),
-  });
+    const toHide: any[] = [];
+
+    for (const items of groups.values()) {
+      if (items.length <= 1) continue;
+
+      const sorted = [...items].sort((a, b) => Number(b.id) - Number(a.id));
+      const keep = sorted[0];
+
+      for (const item of sorted.slice(1)) {
+        toHide.push({
+          id: item.id,
+          ebay_item_id: item.ebay_item_id,
+          part_number: item.part_number,
+          keep_id: keep.id,
+          name: item.name,
+        });
+      }
+    }
+
+    if (!dryRun && toHide.length > 0) {
+      const ids = toHide.map((x) => x.id);
+
+      const { error: updateError } = await supabaseAdmin
+        .from('products')
+        .update({
+          catalog_visible: false,
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', ids);
+
+      if (updateError) throw updateError;
+    }
+
+    return NextResponse.json({
+      success: true,
+      dryRun,
+      checked: all.length,
+      duplicatesFound: toHide.length,
+      sample: toHide.slice(0, 50),
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message || String(error) },
+      { status: 500 }
+    );
+  }
 }
