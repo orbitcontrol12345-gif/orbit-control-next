@@ -46,6 +46,16 @@ function isBetterPart(current: string, next: string) {
   if (n.startsWith(c) && n.length > c.length && /\d/.test(n)) return true;
 
   // 15B10903G1 REV.2 / 15H50581 -> 15B10903G1
+  // إذا كان الرقم الحالي أطول ويحتوي الرقم الجديد، لا تستبدله
+// إلا إذا كانت حالة REV المعروفة
+if (
+  c.includes(n) &&
+  c.length > n.length &&
+  (c.includes('-') || c.includes('/') || c.includes('.')) &&
+  !c.includes('REV')
+) {
+  return false;
+}
   if (c.includes(n) && n.length >= 6 && /\d/.test(n)) return true;
 
   return false;
