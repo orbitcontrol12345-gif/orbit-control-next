@@ -35,7 +35,33 @@ function isBadCurrentPart(current: string, brand?: string) {
 function isBetterPart(current: string, next: string) {
   const c = clean(current);
   const n = clean(next);
-
+// إذا الرقم الحالي يبدو Part Number صناعي صحيح، لا نغيره
+if (
+  c &&
+  /[A-Z]/.test(c) &&
+  /\d/.test(c) &&
+  c.length >= 5 &&
+  !/^\d{10,14}$/.test(c) &&
+  !c.includes('REV') &&
+  ![
+    'UNKNOWN',
+    'VERTIV',
+    'SIEMENS',
+    'EMERSON',
+    'ABB',
+    'ALLEN-BRADLEY',
+    'MORS',
+    'SMITT',
+    'MODULE',
+    'BOARD',
+    'POWER',
+    'RELAY',
+    'SWITCH',
+    'STARTER'
+  ].includes(c)
+) {
+  return false;
+}
   if (!n) return false;
   if (!c) return true;
 // إذا الرقم الحالي يبدو موديل صناعي كامل، لا نستبدله بجزء أقصر
