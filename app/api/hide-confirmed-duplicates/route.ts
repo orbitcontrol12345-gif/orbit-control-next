@@ -42,7 +42,25 @@ export async function GET(req: Request) {
     .neq('catalog_visible', false)
     .not('part_number', 'is', null)
     .order('id', { ascending: false })
-    .limit(20000);
+    const all: any[] = [];
+
+for (let from = 0; from < 20000; from += 1000) {
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('id, ebay_item_id, brand, part_number, condition, image_url, name, catalog_visible')
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .not('part_number', 'is', null)
+    .range(from, from + 999);
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) break;
+
+  all.push(...data);
+
+  if (data.length < 1000) break;
+}
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -50,7 +68,7 @@ export async function GET(req: Request) {
 
   const groups = new Map<string, any[]>();
 
-  for (const item of data || []) {
+  for (const item of all) {
     if (!item.part_number || !item.image_url) continue;
 
     const key = groupKey(item);
@@ -97,7 +115,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
     dryRun,
-    checked: data?.length || 0,
+    checked: all.length,
     duplicatesFound: toHide.length,
     sample: toHide.slice(0, 50),
   });
