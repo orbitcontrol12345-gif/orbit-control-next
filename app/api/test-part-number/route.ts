@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { extractPartNumber } from '@/lib/part-number';
+import { extractIndustrialPartNumberV2 } from '@/lib/industrial-part-number-v2';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export async function GET() {
   return NextResponse.json(
     samples.map((title) => ({
       title,
-      extracted: extractPartNumber(title),
+      extracted: extractIndustrialPartNumberV2(title),
     }))
   );
 }
