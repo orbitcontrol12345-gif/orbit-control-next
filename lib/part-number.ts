@@ -1,4 +1,4 @@
 export {
-  extractIndustrialPartNumber as extractPartNumber,
-  extractIndustrialPartNumber as extractPartNumberFromTitle,
-} from './industrial-part-number';
+  extractIndustrialPartNumberV2 as extractPartNumber,
+  extractIndustrialPartNumberV2 as extractPartNumberFromTitle,
+} from './industrial-part-number-v2';
