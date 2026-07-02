@@ -53,7 +53,13 @@ function scorePart(value: string) {
 
   if (/^\d{2}H\d{5}$/.test(v)) s -= 40;
   if (/^\d{2}C\d{5}$/.test(v)) s -= 30;
+if (/^17\d{2}-[A-Z0-9]{2,8}(?:\/[A-Z])?$/.test(v)) s += 250;
+if (/^IC\d{3}[A-Z]{2,}\d{2,4}$/.test(v)) s += 230;
+if (/^6ES\d[\dA-Z-]+$/.test(v)) s += 230;
+if (/^A\d{2}B-\d{4}-\d{4}$/.test(v)) s += 230;
 
+// لا نفضل أرقام ريفيجن طويلة لوحدها
+if (/^\d{7,9}$/.test(v)) s -= 80;
   return s;
 }
 
@@ -69,6 +75,10 @@ export function extractIndustrialPartNumberV2(input: string): string {
     /\b\d{2}[A-Z]\d{5}\b/g,
     /\b[A-Z]{1,8}\d{2,}[A-Z0-9\-/.]*\b/g,
     /\b\d{5,14}[A-Z]?\b/g,
+    /\b17\d{2}-[A-Z0-9]{2,8}(?:\/[A-Z])?\b/g,       // 1784-KT/B, 1794-IB32, 1756...
+/\bIC\d{3}[A-Z]{2,}\d{2,4}\b/g,                 // IC693CPU374
+/\b6ES\d[\dA-Z-]+\b/g,                           // Siemens 6ES...
+/\bA\d{2}B-\d{4}-\d{4}\b/g,                      // Fanuc A06B...
   ];
 
   const candidates: string[] = [];
