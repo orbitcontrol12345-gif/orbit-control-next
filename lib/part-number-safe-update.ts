@@ -1,5 +1,5 @@
 import { extractIndustrialPartNumberV2 } from './industrial-part-number-v2';
-
+import { preferBrandPart } from './brand-part-preferences';
 const BAD_PARTS = new Set([
   'UNKNOWN',
   'VERTIV',
@@ -108,7 +108,14 @@ export function getSafePartNumber({
   currentPartNumber?: string;
   brand?: string;
 }) {
-  const extracted = extractIndustrialPartNumberV2(title);
+  const rawExtracted = extractIndustrialPartNumberV2(title);
+
+const extracted = preferBrandPart({
+  brand,
+  current: currentPartNumber,
+  extracted: rawExtracted,
+  title,
+});
   const current = currentPartNumber || '';
 
   if (!extracted) return current;
