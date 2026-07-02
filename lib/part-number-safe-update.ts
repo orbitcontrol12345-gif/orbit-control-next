@@ -38,7 +38,19 @@ function isBetterPart(current: string, next: string) {
 
   if (!n) return false;
   if (!c) return true;
-
+// إذا الرقم الحالي يبدو موديل صناعي كامل، لا نستبدله بجزء أقصر
+if (
+  c &&
+  n &&
+  c.length > n.length &&
+  /[A-Z]/.test(c) &&
+  /\d/.test(c) &&
+  !/^\d{10,14}$/.test(c) &&
+  !c.includes('REV') &&
+  !['UNKNOWN','VERTIV','SIEMENS','EMERSON','ABB','ALLEN-BRADLEY'].includes(c)
+) {
+  return false;
+}
   // R643 -> R643-15
   if (n.startsWith(c) && n.length > c.length && n.includes('-')) return true;
 
