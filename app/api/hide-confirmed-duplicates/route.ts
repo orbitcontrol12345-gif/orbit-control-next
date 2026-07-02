@@ -23,11 +23,9 @@ function normalizeName(name: string) {
 
 function groupKey(item: any) {
   return [
-    String(item.brand || 'UNKNOWN').trim().toUpperCase(),
+    String(item.brand || '').trim().toUpperCase(),
     String(item.part_number || '').trim().toUpperCase(),
-    String(item.condition || 'UNKNOWN').trim().toUpperCase(),
-    String(item.image_url || '').trim(),
-    normalizeName(item.name || ''),
+    String(item.condition || '').trim().toUpperCase(),
   ].join('::');
 }
 
