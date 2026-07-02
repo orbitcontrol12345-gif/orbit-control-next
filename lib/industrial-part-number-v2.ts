@@ -62,6 +62,7 @@ if (/^A\d{2}B-\d{4}-\d{4}$/.test(v)) s += 230;
 if (/^\d{7,9}$/.test(v)) s -= 80;
   if (/^17\d{2}[A-Z0-9]{2,8}\/[A-Z]$/.test(v)) s += 280;
 if (/^17\d{2}-?[A-Z0-9]{2,8}$/.test(v)) s += 260;
+  if (/^\d{3}-[A-Z]{2,}\d+$/.test(v)) s += 240;
   return s;
 }
 
@@ -83,6 +84,7 @@ export function extractIndustrialPartNumberV2(input: string): string {
 /\bA\d{2}B-\d{4}-\d{4}\b/g,                      // Fanuc A06B...
     /\b17\d{2}[A-Z0-9]{2,8}\/[A-Z]\b/g,      // 1784KT/B
 /\b17\d{2}-?[A-Z0-9]{2,8}\b/g,           // 1794-IB32 أو 1794IB32
+    /\b\d{3}-[A-Z]{2,}\d+\b/g,   // 825-MCM180
   ];
 
   const candidates: string[] = [];
