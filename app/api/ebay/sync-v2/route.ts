@@ -58,7 +58,14 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
     aspectPart,
     extractPartNumber(title),
   ]
-    .map((x) => String(x || '').trim().toUpperCase())
+    .map((x) =>
+  String(x || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s*-\s*/g, '-')
+    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s+/g, ' ')
+)
     .filter(Boolean)
     .filter((x) => x !== ebayItemId)
     .filter((x) => !isEbayId(x));
