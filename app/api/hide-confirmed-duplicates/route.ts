@@ -19,7 +19,22 @@ const badParts = new Set([
   'SUPPLY',
   'SYSTEM',
 ]);
-
+function normalizeName(name: string) {
+  return String(name || '')
+    .toUpperCase()
+    .replace(/\bLOT OF\b/g, ' ')
+    .replace(/\bLOT\b/g, ' ')
+    .replace(/\bPIECES\b/g, ' ')
+    .replace(/\bPIECE\b/g, ' ')
+    .replace(/\bPCS\b/g, ' ')
+    .replace(/\b3PCS\b/g, ' ')
+    .replace(/\b3 PCS\b/g, ' ')
+    .replace(/\bRELAYS\b/g, 'RELAY')
+    .replace(/\bHEAVY[- ]?DUTY\b/g, ' ')
+    .replace(/[.,()/_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 function groupKey(item: any) {
   return [
     String(item.brand || '').trim().toUpperCase(),
