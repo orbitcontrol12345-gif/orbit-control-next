@@ -182,4 +182,8 @@ export const BRAND_ALIASES: Record<string, string[]> = {
   'Kongsberg': ['KONGSBERG'],
   'Axis': ['AXIS'],
   'Alstom': ['ALSTOM'],
+  'CARLO GAVAZZI': [
+  'CARLO GAVAZZI',
+  'GAVAZZI',
+],
 };
