@@ -267,7 +267,7 @@ const isBadCurrentPart =
   /^\d{12,13}$/.test(currentPart) ||
   currentPart.toUpperCase() === 'UNKNOWN';
 
-if (isBadCurrentPart && partNumber && partNumber !== 'UNKNOWN') {
+if (isBadCurrentPart && partNumber) {
   updates.part_number = partNumber;
   updates.model_number = partNumber;
 }
