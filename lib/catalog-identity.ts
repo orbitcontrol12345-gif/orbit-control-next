@@ -5,6 +5,38 @@ function clean(value: any) {
     .replace(/\s+/g, ' ');
 }
 
+function normalizeCompact(value: any) {
+  return clean(value).replace(/[^A-Z0-9]/g, '');
+}
+
+const BAD_PARTS = new Set([
+  '',
+  'UNKNOWN',
+  'PN',
+  'P/N',
+  'P N',
+  'I/O',
+  'IO',
+  'W/O',
+  'WO',
+  'N/A',
+  'NA',
+  'NONE',
+  'NULL',
+  'MODULE',
+  'BOARD',
+  'RELAY',
+  'POWER',
+  'SUPPLY',
+  'SYSTEM',
+  'INPUT',
+  'OUTPUT',
+  'SWITCH',
+  'SENSOR',
+  'CARD',
+  'UNIT',
+]);
+
 export function getConditionGroup(condition: any, name?: any) {
   const text = `${clean(condition)} ${clean(name)}`;
 
@@ -16,10 +48,7 @@ export function getConditionGroup(condition: any, name?: any) {
     return 'FOR_PARTS';
   }
 
-  if (
-    text.includes('REFURBISHED') ||
-    text.includes('SELLER REFURBISHED')
-  ) {
+  if (text.includes('REFURBISHED') || text.includes('SELLER REFURBISHED')) {
     return 'REFURBISHED';
   }
 
@@ -45,19 +74,21 @@ export function getConditionGroup(condition: any, name?: any) {
 }
 
 export function isBadPartNumber(value: any) {
-  const v = clean(value);
+  const raw = clean(value);
+  const compact = normalizeCompact(value);
 
-  return (
-    !v ||
-    v === 'UNKNOWN' ||
-    /^27\d{10}$/.test(v) ||
-    /^\d{12,13}$/.test(v)
-  );
+  if (BAD_PARTS.has(raw) || BAD_PARTS.has(compact)) return true;
+
+  if (/^27\d{10}$/.test(compact)) return true;
+  if (/^\d{12,13}$/.test(compact)) return true;
+
+  if (compact.length < 3) return true;
+
+  return false;
 }
 
 export function normalizeCatalogPart(value: any) {
-  return clean(value)
-    .replace(/[^A-Z0-9]/g, '');
+  return normalizeCompact(value);
 }
 
 export function makeCatalogIdentity(input: {
@@ -70,11 +101,11 @@ export function makeCatalogIdentity(input: {
   if (!isBadPartNumber(input.partNumber)) {
     return {
       conditionGroup,
-      catalogKey: `${normalizeCatalogPart(input.partNumber)}::${conditionGroup}`,
+      catalogKey: `PN-${normalizeCatalogPart(input.partNumber)}::${conditionGroup}`,
     };
   }
 
-  const nameKey = clean(input.name).replace(/[^A-Z0-9]/g, '');
+  const nameKey = normalizeCompact(input.name);
 
   return {
     conditionGroup,
