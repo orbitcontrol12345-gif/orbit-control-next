@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { makeCatalogKey } from '@/lib/catalog-key';
-
+import { makeCatalogIdentity } from '@/lib/catalog-identity';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -65,13 +65,13 @@ while (true) {
     const groups = new Map<string, any[]>();
 
     for (const row of rows) {
-      const key =
-        row.catalog_key ||
-        makeCatalogKey({
-          brand: row.brand,
-          partNumber: row.part_number,
-          name: row.name,
-        });
+      const identity = makeCatalogIdentity({
+  partNumber: row.part_number,
+  name: row.name,
+  condition: row.condition,
+});
+
+const key = identity.catalogKey;
 
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(row);
@@ -89,16 +89,17 @@ while (true) {
           ids: items.map((x) => x.id),
           visibleIds: visibleItems.map((x) => x.id),
           sample: items.slice(0, 5).map((x) => ({
-            id: x.id,
-            ebay_item_id: x.ebay_item_id,
-            sku: x.sku,
-            brand: x.brand,
-            part_number: x.part_number,
-            name: x.name,
-            marketplace: x.marketplace,
-            catalog_visible: x.catalog_visible,
-            duplicate_of: x.duplicate_of,
-          })),
+  id: x.id,
+  ebay_item_id: x.ebay_item_id,
+  sku: x.sku,
+  brand: x.brand,
+  part_number: x.part_number,
+  name: x.name,
+  condition: x.condition,
+  marketplace: x.marketplace,
+  catalog_visible: x.catalog_visible,
+  duplicate_of: x.duplicate_of,
+})),
         };
       })
       .sort((a, b) => b.visibleCount - a.visibleCount || b.count - a.count);
