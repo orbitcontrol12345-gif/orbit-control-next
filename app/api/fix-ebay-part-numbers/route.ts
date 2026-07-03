@@ -17,10 +17,9 @@ export async function GET(request: Request) {
     const dryRun = url.searchParams.get('dryRun') !== 'false';
 
     const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('id, name, brand, part_number, model_number')
-      .or('part_number.like.27%,model_number.like.27%')
-      .range(offset, offset + limit - 1);
+  .from('products')
+  .select('id, name, brand, part_number, model_number')
+  .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
