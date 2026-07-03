@@ -24,16 +24,16 @@ export function preferBrandPart({
       if (match?.[0]) return match[0];
     }
   }
-// Philips: فضّل أرقام التصنيع الطويلة مثل LBB1363/30 بدل SM40
+// Philips
 if (b.includes('PHILIPS') || t.includes('PHILIPS')) {
+  const lbb = t.match(/\bLBB\s*\d{3,5}\/\d{1,4}\b/i);
+  if (lbb?.[0]) return lbb[0].replace(/\s+/g, '');
+
   const spaced = t.match(/\b\d{4}\s+\d{3}\s+\d{5}\b/);
   if (spaced?.[0]) return spaced[0].replace(/\s+/g, '');
 
   const longNumber = t.match(/\b\d{10,14}\b/);
   if (longNumber?.[0]) return longNumber[0];
-
-  const lbb = t.match(/\bLBB\s*\d{3,5}\/\d{1,4}\b/);
-  if (lbb?.[0]) return lbb[0].replace(/\s+/g, '');
 }
   // Allen-Bradley: فضّل Catalog Numbers
   if (b.includes('ALLEN') || t.includes('ALLEN-BRADLEY')) {
