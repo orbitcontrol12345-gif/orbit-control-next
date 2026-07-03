@@ -18,6 +18,7 @@ const badParts = new Set([
   'POWER',
   'SUPPLY',
   'SYSTEM',
+  'RELAY-NEW',
 ]);
 function normalizeName(name: string) {
   return String(name || '')
