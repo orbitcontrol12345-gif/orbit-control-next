@@ -24,7 +24,7 @@ export function preferBrandPart({
       if (match?.[0]) return match[0];
     }
   }
-// Philips: فضّل أرقام التصنيع الطويلة مثل 8900 136 33001 بدل SM40
+// Philips: فضّل أرقام التصنيع الطويلة مثل LBB1363/30 بدل SM40
 if (b.includes('PHILIPS') || t.includes('PHILIPS')) {
   const spaced = t.match(/\b\d{4}\s+\d{3}\s+\d{5}\b/);
   if (spaced?.[0]) return spaced[0].replace(/\s+/g, '');
