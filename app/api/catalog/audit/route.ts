@@ -23,32 +23,44 @@ function isBadPartNumber(value: any) {
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select(`
-        id,
-        ebay_item_id,
-        sku,
-        brand,
-        part_number,
-        model_number,
-        name,
-        condition,
-        image_url,
-        marketplace,
-        catalog_key,
-        catalog_visible,
-        duplicate_of,
-        is_active,
-        created_at,
-        updated_at
-      `)
-      .eq('is_active', true)
-      .limit(LIMIT);
+    let rows: any[] = [];
+let from = 0;
+const batchSize = 1000;
 
-    if (error) throw error;
+while (true) {
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select(`
+      id,
+      ebay_item_id,
+      sku,
+      brand,
+      part_number,
+      model_number,
+      name,
+      condition,
+      image_url,
+      marketplace,
+      catalog_key,
+      catalog_visible,
+      duplicate_of,
+      is_active,
+      created_at,
+      updated_at
+    `)
+    .eq('is_active', true)
+    .range(from, from + batchSize - 1);
 
-    const rows = data || [];
+  if (error) throw error;
+
+  if (!data || data.length === 0) break;
+
+  rows.push(...data);
+
+  if (data.length < batchSize) break;
+
+  from += batchSize;
+}
 
     const groups = new Map<string, any[]>();
 
