@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { extractPartNumber } from '@/lib/part-number';
+import { extractIndustrialPartNumberV2 } from '@/lib/industrial-part-number-v2';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
-import { makeCatalogKey } from '@/lib/catalog-key';
+import { makeCatalogIdentity } from '@/lib/catalog-identity';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -56,7 +56,7 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
 
   const candidates = [
     aspectPart,
-    extractPartNumber(title),
+    extractIndustrialPartNumberV2(title),
   ]
     .map((x) =>
   String(x || '')
@@ -128,11 +128,12 @@ function normalizeEbayProduct(item: any, fallbackItemId: string, now: string) {
   const category = item.categoryPath || 'Industrial Automation';
   const condition = item.condition || 'Used';
 
-  const catalogKey = makeCatalogKey({
-    brand,
-    partNumber,
-    name,
-  });
+ const { catalogKey } = makeCatalogIdentity({
+  brand,
+  partNumber,
+  name,
+  condition,
+});
 
   return {
     ebay_item_id: realItemId,
