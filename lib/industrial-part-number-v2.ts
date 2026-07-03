@@ -21,7 +21,7 @@ function cleanTitle(input: string) {
 function normalizePart(value: string) {
   return String(value || '')
     .toUpperCase()
-    .replace(/\s+/g, '')
+    .replace(/\s+/g, '-')
     .replace(/[^A-Z0-9\-/.]/g, '')
     .trim();
 }
@@ -33,7 +33,11 @@ function isBadPart(value: string) {
   if (v.length < 4 || v.length > 35) return true;
   if (BAD.has(v)) return true;
   if (/^\d{10,14}$/.test(v)) return true;
-
+if (/^\d+\/\d+HZ$/i.test(v)) return true;
+if (/^\d+\/\d+(VAC|VDC|AC|DC|V|HZ)$/i.test(v)) return true;
+if (/^\d+(\.\d+)?(VAC|VDC|AC|DC|V|HZ|KW|W|A|MA|BAR|PSI|MM|CM|KG)$/i.test(v)) return true;
+if (/^\d+-\d+(VAC|VDC|AC|DC|V)$/i.test(v)) return true;
+if (/^\d{2,4}V$/i.test(v)) return true;
   if (/^(P\/N|PN|W\/O|I\/O|S\/W|REV|VER|MODEL|TYPE)$/i.test(v)) return true;
   if (/^\d+\s*\/\s*\d+\s*HZ$/i.test(v)) return true;
   if (/^\d+\-\d+\s*VAC$/i.test(v)) return true;
@@ -99,6 +103,7 @@ export function extractIndustrialPartNumberV2(input: string): string {
     /\b[A-Z]\d{3}-\d{2}\b/g,
     /\b\d{2}[A-Z]\d{5}[A-Z]\d{1,4}\b/g,
     /\b\d{2}[A-Z]\d{5}\b/g,
+    /\b[A-Z]{2,5}\s+[A-Z]?\d{2,5}\s+\d{2,6}\b/g,
     /\b[A-Z]{1,8}\d{2,}[A-Z0-9\-/.]*\b/g,
     /\b\d{5,14}[A-Z]?\b/g,
   ];
