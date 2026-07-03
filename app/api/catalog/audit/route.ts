@@ -66,6 +66,7 @@ while (true) {
 
     for (const row of rows) {
       const identity = makeCatalogIdentity({
+  brand: row.brand,
   partNumber: row.part_number,
   name: row.name,
   condition: row.condition,
