@@ -40,6 +40,5 @@ export function normalizeProductTitle(title: string) {
   .replace(/\b\d+\s*PCS\b/gi, '')
   .replace(/\bLOT\b/gi, '')
   .replace(/\s+/g, ' ')
-  .trim();
     .trim();
 }
