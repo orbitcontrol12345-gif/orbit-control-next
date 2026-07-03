@@ -25,6 +25,7 @@ function groupKey(item: any) {
     String(item.brand || '').trim().toUpperCase(),
     String(item.part_number || '').trim().toUpperCase(),
     String(item.condition || '').trim().toUpperCase(),
+    normalizeName(item.name),
   ].join('::');
 }
 
