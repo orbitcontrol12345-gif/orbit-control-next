@@ -56,10 +56,20 @@ function getBestPartNumber(item: any, title: string, realItemId: string) {
     .map((x) => String(x || '').trim().toUpperCase())
     .filter(Boolean)
     .filter((x) => x !== realItemId)
-    .filter((x) => !/^\d{10,14}$/.test(x))
+    .filter((x) => {
+  if (/^27\d{10}$/.test(x)) return false;
+  if (/^\d{12,13}$/.test(x)) return false;
+  return true;
+})
     .filter((x) => !/\b(VAC|VDC|HZ|KW|AMP|AMPS|PCS|LOT)\b/i.test(x));
 
-  return candidates[0] || realItemId;
+  const best = candidates[0];
+
+if (!best) {
+  return 'UNKNOWN';
+}
+
+return best;
 }
 async function fetchEbayItem(accessToken: string, ebayItemId: string) {
   const res = await fetch(
