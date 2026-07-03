@@ -14,15 +14,13 @@ const BAD_PARTS = new Set([
   'UNKNOWN',
   'PN',
   'P/N',
-  'P N',
+  'PNR',
   'I/O',
   'IO',
   'W/O',
   'WO',
   'N/A',
   'NA',
-  'NONE',
-  'NULL',
   'MODULE',
   'BOARD',
   'RELAY',
@@ -40,11 +38,7 @@ const BAD_PARTS = new Set([
 export function getConditionGroup(condition: any, name?: any) {
   const text = `${clean(condition)} ${clean(name)}`;
 
-  if (
-    text.includes('FOR PARTS') ||
-    text.includes('NOT WORKING') ||
-    text.includes('PARTS ONLY')
-  ) {
+  if (text.includes('FOR PARTS') || text.includes('NOT WORKING') || text.includes('PARTS ONLY')) {
     return 'FOR_PARTS';
   }
 
@@ -62,13 +56,8 @@ export function getConditionGroup(condition: any, name?: any) {
     return 'NEW_OTHER';
   }
 
-  if (text.includes('NEW')) {
-    return 'NEW';
-  }
-
-  if (text.includes('USED') || text.includes('PRE-OWNED')) {
-    return 'USED';
-  }
+  if (text.includes('NEW')) return 'NEW';
+  if (text.includes('USED') || text.includes('PRE-OWNED')) return 'USED';
 
   return 'UNKNOWN';
 }
@@ -78,37 +67,44 @@ export function isBadPartNumber(value: any) {
   const compact = normalizeCompact(value);
 
   if (BAD_PARTS.has(raw) || BAD_PARTS.has(compact)) return true;
-
   if (/^27\d{10}$/.test(compact)) return true;
   if (/^\d{12,13}$/.test(compact)) return true;
-
-  if (compact.length < 3) return true;
+  if (compact.length < 4) return true;
 
   return false;
 }
 
-export function normalizeCatalogPart(value: any) {
-  return normalizeCompact(value);
+function isWeakPartNumber(value: any) {
+  const compact = normalizeCompact(value);
+
+  if (isBadPartNumber(value)) return true;
+
+  // ضعيف إذا قصير جدًا أو عام: R001 / 560HZ / SA/S / C-BUS ...
+  if (compact.length <= 5) return true;
+
+  return false;
 }
 
 export function makeCatalogIdentity(input: {
+  brand?: any;
   partNumber?: any;
   name?: any;
   condition?: any;
 }) {
   const conditionGroup = getConditionGroup(input.condition, input.name);
+  const brandKey = normalizeCompact(input.brand || 'UNKNOWN');
+  const partKey = normalizeCompact(input.partNumber);
+  const nameKey = normalizeCompact(input.name);
 
-  if (!isBadPartNumber(input.partNumber)) {
+  if (!isWeakPartNumber(input.partNumber)) {
     return {
       conditionGroup,
-      catalogKey: `PN-${normalizeCatalogPart(input.partNumber)}::${conditionGroup}`,
+      catalogKey: `PN-${brandKey}-${partKey}::${conditionGroup}`,
     };
   }
 
-  const nameKey = normalizeCompact(input.name);
-
   return {
     conditionGroup,
-    catalogKey: `NAME-${nameKey}::${conditionGroup}`,
+    catalogKey: `NAME-${brandKey}-${nameKey}::${conditionGroup}`,
   };
 }
