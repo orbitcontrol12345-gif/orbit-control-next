@@ -24,7 +24,7 @@ function mapSupabaseProduct(item: any): Product {
     id: String(item.id),
     sku: item.sku || '',
     brand: item.brand || 'Unknown',
-    partNumber: item.part_number || item.sku || '',
+    partNumber: item.part_number || 'UNKNOWN',
     name: cleanProductName(item.name || ''),
     category: item.category || 'Industrial Parts',
     condition: item.condition || 'Used',
@@ -54,7 +54,7 @@ export async function getSupabaseProductsPage({
     .select('*', { count: 'exact' })
     .eq('is_active', true)
     .neq('catalog_visible', false)
-    .order('id', { ascending: true })
+    .order('id', { ascending: false })
     .range(from, to);
 
   if (search) {
