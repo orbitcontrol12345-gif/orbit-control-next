@@ -63,7 +63,6 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
     .trim()
     .toUpperCase()
     .replace(/\s*-\s*/g, '-')
-    .replace(/\s*\/\s*/g, '/')
     .replace(/\s+/g, ' ')
 )
     .filter(Boolean)
