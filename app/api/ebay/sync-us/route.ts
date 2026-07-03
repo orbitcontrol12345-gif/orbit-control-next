@@ -260,15 +260,17 @@ export async function GET(request: Request) {
 
         const currentPart = String(existing.part_number || '').trim();
 
-        if (
-          (!currentPart || currentPart === String(existing.name || '').trim()) &&
-          partNumber &&
-          partNumber !== realItemId
-        ) {
-          updates.part_number = partNumber;
-          updates.model_number = partNumber;
-        }
+const isBadCurrentPart =
+  !currentPart ||
+  currentPart === String(existing.name || '').trim() ||
+  /^27\d{10}$/.test(currentPart) ||
+  /^\d{12,13}$/.test(currentPart) ||
+  currentPart.toUpperCase() === 'UNKNOWN';
 
+if (isBadCurrentPart && partNumber && partNumber !== 'UNKNOWN') {
+  updates.part_number = partNumber;
+  updates.model_number = partNumber;
+}
         const { error: updateError } = await supabaseAdmin
           .from('products')
           .update(updates)
