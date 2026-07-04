@@ -54,10 +54,12 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
       )
     )?.value || '';
 
-  const candidates = [
-    aspectPart,
-    extractIndustrialPartNumberV2(title),
-  ]
+  const extracted = extractIndustrialPartNumberV2(title);
+
+const candidates = [
+  extracted,
+  aspectPart,
+]
     .map((x) =>
   String(x || '')
     .trim()
@@ -68,6 +70,8 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
     .filter(Boolean)
     .filter((x) => x !== ebayItemId)
     .filter((x) => !isEbayId(x));
+    .filter((x) => !/^\d+\/\d+HZ$/i.test(x))
+    .filter((x) => !/^\d+(\.\d+)?(VAC|VDC|AC|DC|V|HZ|KW|W|A|MA)$/i.test(x))
 
   return candidates[0] || 'UNKNOWN';
 }
