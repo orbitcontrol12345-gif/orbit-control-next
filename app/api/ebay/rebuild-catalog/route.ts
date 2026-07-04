@@ -8,7 +8,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-control-next.vercel.app';
 
 const JOB_ID = 'ebay-rebuild';
-const MAX_BATCHES_PER_RUN = 10;
+const MAX_BATCHES_PER_RUN = 40;
 
 export async function GET() {
   try {
