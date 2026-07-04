@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/ebay/sync-start",
-      "schedule": "0 */12 * * *"
-    },
-    {
-      "path": "/api/cron/sync-feed",
-      "schedule": "30 */12 * * *"
-    },
-    {
-      "path": "/api/cron/process-ebay",
-      "schedule": "*/15 * * * *"
+      "path": "/api/ebay/rebuild-catalog",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
