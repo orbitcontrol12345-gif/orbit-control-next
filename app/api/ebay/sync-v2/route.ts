@@ -54,26 +54,23 @@ function safePartNumber(item: any, title: string, ebayItemId: string) {
       )
     )?.value || '';
 
- const extracted = extractIndustrialPartNumberV2(title);
+  const extracted = extractIndustrialPartNumberV2(title);
 
-const candidates = [
-  extracted,
-  aspectPart,
-]
-  .map((x) =>
-    String(x || '')
-      .trim()
-      .toUpperCase()
-      .replace(/\s*-\s*/g, '-')
-      .replace(/\s+/g, ' ')
-  )
-  .filter(Boolean)
-  .filter((x) => x !== ebayItemId)
-  .filter((x) => !isEbayId(x))
-  .filter((x) => !/^\d+\/\d+HZ$/i.test(x))
-  .filter((x) => !/^\d+(\.\d+)?(VAC|VDC|AC|DC|V|HZ|KW|W|A|MA)$/i.test(x));
+  const candidates = [extracted, aspectPart]
+    .map((x) =>
+      String(x || '')
+        .trim()
+        .toUpperCase()
+        .replace(/\s*-\s*/g, '-')
+        .replace(/\s+/g, ' ')
+    )
+    .filter(Boolean)
+    .filter((x) => x !== ebayItemId)
+    .filter((x) => !isEbayId(x))
+    .filter((x) => !/^\d+\/\d+HZ$/i.test(x))
+    .filter((x) => !/^\d+(\.\d+)?(VAC|VDC|AC|DC|V|HZ|KW|W|A|MA)$/i.test(x));
 
-return candidates[0] || 'UNKNOWN';
+  return candidates[0] || 'UNKNOWN';
 }
 
 async function fetchEbayItem(accessToken: string, ebayItemId: string) {
