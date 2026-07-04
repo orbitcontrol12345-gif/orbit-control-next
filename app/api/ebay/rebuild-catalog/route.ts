@@ -23,6 +23,13 @@ export async function GET() {
     if (jobError) throw jobError;
 
     if (!job) {
+      if (job.status === 'finished') {
+  return NextResponse.json({
+    success: true,
+    message: 'Catalog rebuild already completed.',
+    nextOffset: null,
+  });
+}
       return NextResponse.json(
         { success: false, error: 'sync_jobs row not found' },
         { status: 500 }
@@ -51,7 +58,33 @@ export async function GET() {
       );
 
       const data = await res.json().catch(() => null);
-
+if (data?.nextOffset == null) {
+  await supabaseAdmin
+    .from('sync_jobs')
+    .update({
+      status: 'finished',
+      finished_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', JOB_ID);
+await supabaseAdmin
+  .from('sync_jobs')
+  .update({
+    offset_value: offset,
+    status: 'running',
+    updated_at: new Date().toISOString(),
+  })
+  .eq('id', JOB_ID);
+  
+  return NextResponse.json({
+    success: true,
+    status: 'finished',
+    message: 'Catalog rebuild completed.',
+    processedBatches: i + 1,
+    results,
+    nextOffset: null,
+  });
+}
       results.push({
         step: i + 1,
         offset,
