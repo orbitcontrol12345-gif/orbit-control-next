@@ -6,14 +6,31 @@ export const runtime = 'nodejs';
 
 const JOB_ID = 'catalog-deduplicate';
 
+function normalize(value: any) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function isSafeCatalogKey(key: any) {
+  const v = normalize(key);
+
+  if (!v) return false;
+  if (!v.startsWith('PN-')) return false;
+  if (v.includes('UNKNOWN')) return false;
+  if (!v.includes('::')) return false;
+
+  return true;
+}
+
 function scoreProduct(row: any) {
   let score = 0;
+
   if (row.catalog_visible !== false) score += 20;
   if (row.is_active !== false) score += 20;
-  if (row.brand && row.brand !== 'UNKNOWN') score += 20;
-  if (row.part_number && row.part_number !== 'UNKNOWN') score += 20;
+  if (row.brand && normalize(row.brand) !== 'UNKNOWN') score += 20;
+  if (row.part_number && normalize(row.part_number) !== 'UNKNOWN') score += 20;
   if (row.image_url) score += 10;
   if (row.description) score += 5;
+
   return score;
 }
 
@@ -77,6 +94,7 @@ export async function GET() {
         status: 'finished',
         processed: 0,
         hidden: 0,
+        skippedUnsafe: 0,
         nextOffset: null,
       });
     }
@@ -85,9 +103,15 @@ export async function GET() {
 
     let groupsProcessed = 0;
     let hidden = 0;
+    let skippedUnsafe = 0;
     const sample: any[] = [];
 
     for (const catalogKey of uniqueKeys) {
+      if (!isSafeCatalogKey(catalogKey)) {
+        skippedUnsafe++;
+        continue;
+      }
+
       const { data: items, error: itemsError } = await supabaseAdmin
         .from('products')
         .select(`
@@ -109,6 +133,15 @@ export async function GET() {
 
       if (itemsError) throw itemsError;
       if (!items || items.length <= 1) continue;
+
+      const conditions = new Set(items.map((x) => normalize(x.condition)));
+      const partNumbers = new Set(items.map((x) => normalize(x.part_number)));
+      const catalogKeys = new Set(items.map((x) => String(x.catalog_key || '')));
+
+      if (conditions.size !== 1 || partNumbers.size !== 1 || catalogKeys.size !== 1) {
+        skippedUnsafe++;
+        continue;
+      }
 
       const sorted = [...items].sort((a, b) => {
         const scoreDiff = scoreProduct(b) - scoreProduct(a);
@@ -160,6 +193,7 @@ export async function GET() {
         processed: Number(job.processed || 0) + groups.length,
         updated: Number(job.updated || 0) + groupsProcessed,
         hidden_duplicates: Number(job.hidden_duplicates || 0) + hidden,
+        failed: Number(job.failed || 0) + skippedUnsafe,
         status: nextOffset ? 'running' : 'finished',
         updated_at: now,
         finished_at: nextOffset ? null : now,
@@ -175,6 +209,7 @@ export async function GET() {
       uniqueKeys: uniqueKeys.length,
       groupsProcessed,
       hidden,
+      skippedUnsafe,
       nextOffset,
       sample,
     });
