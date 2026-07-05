@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/catalog/maintenance",
+      "path": "/api/catalog/deduplicate-apply",
       "schedule": "*/5 * * * *"
     }
   ]
