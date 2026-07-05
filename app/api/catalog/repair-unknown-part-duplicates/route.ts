@@ -35,7 +35,18 @@ function nameContainsPart(name: any, part: any) {
   if (!n || !p || p.length < 4) return false;
   return n.includes(p);
 }
+function isBrandAsPart(brand: any, part: any) {
+  const b = compact(brand);
+  const p = compact(part);
 
+  if (!b || !p) return false;
+
+  return (
+    p === b ||
+    p.includes(b) ||
+    b.includes(p)
+  );
+}
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -89,8 +100,9 @@ export async function GET(request: Request) {
       if (possibleError) throw possibleError;
 
       const match = (possible || []).find((row) => {
-        if (String(row.id) === String(bad.id)) return false;
-        if (isBadPart(row.part_number)) return false;
+    if (String(row.id) === String(bad.id)) return false;
+    if (isBadPart(row.part_number)) return false;
+    if (isBrandAsPart(row.brand, row.part_number)) return false;
 
         const sameCondition =
           norm(row.condition) === norm(bad.condition);
