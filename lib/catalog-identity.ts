@@ -83,7 +83,12 @@ export function makeCatalogIdentity(input: {
   const partKey = normalizePart(input.partNumber);
   const conditionGroup = getConditionGroup(input.condition, input.name);
 
-  if (partKey && partKey !== 'UNKNOWN') {
+  const isBrandAsPart =
+    partKey === brandKey ||
+    partKey.includes(brandKey) ||
+    brandKey.includes(partKey);
+
+  if (partKey && partKey !== 'UNKNOWN' && !isBrandAsPart) {
     return {
       conditionGroup,
       catalogKey: `PN-${brandKey}-${partKey}::${conditionGroup}`,
