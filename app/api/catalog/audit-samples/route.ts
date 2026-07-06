@@ -29,7 +29,7 @@ export async function GET() {
     const groups = new Map<string, any[]>();
 
     for (const row of rows || []) {
-      const key = `${row.brand || ''}|${row.part_number || ''}`;
+      const key = row.catalog_key || `${row.brand || ''}|${row.part_number || ''}|${row.condition || ''}`;
 
       if (!groups.has(key)) {
         groups.set(key, []);
