@@ -217,38 +217,7 @@ export default function ProductGallery({
               )}
             </div>
 
-            {images.length > 1 && (
-              <div className="h-28 shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-3">
-                <div className="flex h-full items-center justify-center gap-3 overflow-x-auto">
-                  {images.map((image, index) => {
-                    const active = index === activeIndex;
-
-                    return (
-                      <button
-                        key={`modal-${image}-${index}`}
-                        type="button"
-                        onClick={() => setActiveIndex(index)}
-                        className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
-                          active
-                            ? 'border-gold-500 ring-2 ring-gold-500/50'
-                            : 'border-slate-300 hover:border-slate-500'
-                        }`}
-                        aria-label={`View image ${index + 1}`}
-                      >
-                        <Image
-                          src={image}
-                          alt={`${alt} ${index + 1}`}
-                          fill
-                          sizes="96px"
-                          className="object-contain p-1"
-                          unoptimized
-                        />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+           
           </div>
         </div>
       )}
