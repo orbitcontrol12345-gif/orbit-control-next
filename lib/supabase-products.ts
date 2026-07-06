@@ -31,7 +31,17 @@ function mapSupabaseProduct(item: any): Product {
     inStock: item.is_active !== false,
     description: item.description || item.name || '',
     technicalSpecs: {},
-    imageUrl: item.image_url || '/placeholder-product.jpg',
+    imageUrl:
+  item.r2_image_url ||
+  item.ebay_image_url ||
+  item.image_url ||
+  '/placeholder-product.jpg',
+
+r2ImageUrl: item.r2_image_url || null,
+
+r2GalleryUrls: item.r2_gallery_urls || [],
+
+ebayGalleryUrls: item.ebay_gallery_urls || [],
     tags: [item.sku, item.part_number, item.brand, item.category, item.name].filter(Boolean),
     slug: item.slug || item.sku || item.ebay_item_id || String(item.id),
   };
