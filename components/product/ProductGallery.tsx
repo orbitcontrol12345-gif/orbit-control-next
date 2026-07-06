@@ -40,11 +40,19 @@ export default function ProductGallery({
     return gallery.length > 0 ? gallery : [fallbackImageUrl];
   }, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [open, setOpen] = useState(false);
+  const imagesKey = images.join('|');
 
-  const activeImage = images[activeIndex] || images[0];
+const [activeIndex, setActiveIndex] = useState(0);
+const [open, setOpen] = useState(false);
 
+useEffect(() => {
+  setActiveIndex(0);
+}, [imagesKey]);
+
+const activeImage = images[activeIndex] || images[0];
+useEffect(() => {
+  setActiveIndex(0);
+}, [images]);
   const goNext = () => {
     setActiveIndex((current) => (current + 1) % images.length);
   };
