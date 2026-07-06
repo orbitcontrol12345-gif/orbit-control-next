@@ -1,6 +1,6 @@
 'use client';
 
-
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -88,12 +88,15 @@ export default function ProductGallery({
             className="group relative block h-[360px] w-full overflow-hidden rounded-2xl bg-white sm:h-[470px]"
             aria-label="Open product image gallery"
           >
-            <img
-  src={activeImage}
-  alt={alt}
-  className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-[1.03]"
-  loading="eager"
-/>
+            <Image
+              src={activeImage}
+              alt={alt}
+              fill
+              className="object-contain p-3 transition duration-300 group-hover:scale-[1.03]"
+              sizes="(max-width: 1024px) 100vw, 45vw"
+              priority
+              unoptimized
+            />
 
             <span className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg transition hover:scale-105">
               <Maximize2 size={19} />
@@ -183,12 +186,14 @@ export default function ProductGallery({
                 </button>
               )}
 
-              <img
-  src={activeImage}
-  alt={alt}
-  className="h-full w-full object-contain p-10"
-  loading="eager"
-/>
+              <Image
+                src={activeImage}
+                alt={alt}
+                fill
+                className="object-contain p-10"
+                sizes="90vw"
+                unoptimized
+              />
 
               {images.length > 1 && (
                 <button
