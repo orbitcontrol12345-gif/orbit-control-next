@@ -31,14 +31,16 @@ export default function ProductGallery({
   alt = 'Product image',
 }: ProductGalleryProps) {
   const images = useMemo(() => {
-    const gallery = cleanImages([
-      ...(r2GalleryUrls ?? []),
-      ...(ebayGalleryUrls ?? []),
-      mainImageUrl,
-    ]);
-console.log('Gallery Images:', gallery);
-    return gallery.length > 0 ? gallery : [fallbackImageUrl];
-  }, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
+  const gallery = cleanImages([
+    ...(r2GalleryUrls ?? []),
+    ...(ebayGalleryUrls ?? []),
+    mainImageUrl,
+  ]);
+
+  console.log('Gallery Images:', gallery);
+
+  return gallery.length > 0 ? gallery : [fallbackImageUrl];
+}, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
 
   const imagesKey = images.join('|');
   const [activeIndex, setActiveIndex] = useState(0);
