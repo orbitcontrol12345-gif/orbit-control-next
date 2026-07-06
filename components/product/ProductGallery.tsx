@@ -36,7 +36,7 @@ export default function ProductGallery({
       ...(ebayGalleryUrls ?? []),
       mainImageUrl,
     ]);
-
+console.log('Gallery Images:', gallery);
     return gallery.length > 0 ? gallery : [fallbackImageUrl];
   }, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
 
