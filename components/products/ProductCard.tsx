@@ -20,6 +20,7 @@ function ConditionBadge({ condition }: { condition: Product['condition'] }) {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  console.log(product);
   const productUrl = `/products/${product.slug}`;
 
   return (
