@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -42,6 +43,7 @@ export default function ProductGallery({
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const activeImage = images[activeIndex] || images[0];
 
@@ -54,6 +56,10 @@ export default function ProductGallery({
   function goNext() {
     setActiveIndex((current) => (current + 1) % images.length);
   }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -76,6 +82,97 @@ export default function ProductGallery({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, images.length]);
+
+  const lightbox =
+    isOpen && mounted
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-4"
+            onClick={() => setIsOpen(false)}
+          >
+            <div
+              className="relative flex h-[88vh] w-[92vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="absolute right-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
+                aria-label="Close image"
+              >
+                <X size={26} />
+              </button>
+
+              <div className="relative min-h-0 flex-1 bg-white">
+                <Image
+                  src={activeImage}
+                  alt={alt}
+                  fill
+                  sizes="92vw"
+                  className="object-contain p-8"
+                  unoptimized
+                />
+
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goPrev}
+                      className="absolute left-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={30} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="absolute right-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={30} />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {images.length > 1 && (
+                <div className="h-28 shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-3">
+                  <div className="flex h-full items-center justify-center gap-3 overflow-x-auto">
+                    {images.map((image, index) => {
+                      const active = index === activeIndex;
+
+                      return (
+                        <button
+                          key={`modal-${image}-${index}`}
+                          type="button"
+                          onClick={() => setActiveIndex(index)}
+                          className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
+                            active
+                              ? 'border-gold-500 ring-2 ring-gold-500/50'
+                              : 'border-slate-300 hover:border-slate-500'
+                          }`}
+                          aria-label={`View image ${index + 1}`}
+                        >
+                          <Image
+                            src={image}
+                            alt={`${alt} ${index + 1}`}
+                            fill
+                            sizes="96px"
+                            className="object-contain p-1"
+                            unoptimized
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <>
@@ -166,61 +263,7 @@ export default function ProductGallery({
         )}
       </div>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/95 p-4"
-          onClick={() => setIsOpen(false)}
-        >
-          <div
-            className="relative flex h-[88vh] w-[92vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="absolute right-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
-              aria-label="Close image"
-            >
-              <X size={26} />
-            </button>
-
-            <div className="relative min-h-0 flex-1 bg-white">
-              <Image
-                src={activeImage}
-                alt={alt}
-                fill
-                sizes="92vw"
-                className="object-contain p-8"
-                unoptimized
-              />
-
-              {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={goPrev}
-                    className="absolute left-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft size={30} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={goNext}
-                    className="absolute right-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight size={30} />
-                  </button>
-                </>
-              )}
-            </div>
-
-           
-          </div>
-        </div>
-      )}
+      {lightbox}
     </>
   );
 }
