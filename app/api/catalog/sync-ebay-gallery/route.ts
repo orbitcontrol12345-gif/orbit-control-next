@@ -56,11 +56,12 @@ export async function GET() {
     const token = await getEbayAccessToken();
 
     const { data: products, error } = await supabaseAdmin
-      .from('products')
-      .select('id, ebay_item_id, image_url, ebay_gallery_urls')
-      .not('ebay_item_id', 'is', null)
-      .or('ebay_gallery_urls.is.null,ebay_gallery_urls.eq.[]')
-      .limit(10);
+  .from('products')
+  .select('id, ebay_item_id, image_url, ebay_gallery_urls, image_status')
+  .not('ebay_item_id', 'is', null)
+  .not('image_status', 'eq', 'gallery_failed')
+  .or('ebay_gallery_urls.is.null,ebay_gallery_urls.eq.[]')
+  .limit(10);
 
     if (error) throw error;
 
