@@ -4,7 +4,8 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const EBAY_ITEM_API_URL = 'https://api.ebay.com/buy/browse/v1/item';
+const EBAY_SEARCH_API_URL =
+  'https://api.ebay.com/buy/browse/v1/item_summary/search';
 
 async function getEbayAccessToken() {
   const clientId = process.env.EBAY_CLIENT_ID;
@@ -71,7 +72,11 @@ export async function GET() {
       try {
         const ebayItemId = String(product.ebay_item_id);
 
-        const ebayRes = await fetch(`${EBAY_ITEM_API_URL}/${ebayItemId}`, {
+        const searchUrl = new URL(EBAY_SEARCH_API_URL);
+        searchUrl.searchParams.set('q', ebayItemId);
+        searchUrl.searchParams.set('limit', '1');
+
+        const ebayRes = await fetch(searchUrl.toString(), {
           headers: {
             Authorization: `Bearer ${token}`,
             'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
@@ -84,13 +89,23 @@ export async function GET() {
           throw new Error(JSON.stringify(ebayData));
         }
 
-        const mainImage = ebayData?.image?.imageUrl || product.image_url || null;
+        const item = ebayData?.itemSummaries?.[0];
+
+        if (!item) {
+          throw new Error('No eBay item found from search');
+        }
+
+        const mainImage = item?.image?.imageUrl || product.image_url || null;
+
+        const thumbnailImages =
+          item?.thumbnailImages?.map((img: any) => img.imageUrl) ?? [];
 
         const additionalImages =
-          ebayData?.additionalImages?.map((img: any) => img.imageUrl) ?? [];
+          item?.additionalImages?.map((img: any) => img.imageUrl) ?? [];
 
         const gallery = cleanImageUrls([
           mainImage,
+          ...thumbnailImages,
           ...additionalImages,
         ]);
 
@@ -109,10 +124,19 @@ export async function GET() {
         results.push({
           id: product.id,
           ebay_item_id: ebayItemId,
+          ebay_rest_item_id: item.itemId,
           image_count: gallery.length,
         });
       } catch (err) {
         failed++;
+
+        await supabaseAdmin
+          .from('products')
+          .update({
+            image_status: 'gallery_failed',
+            images_sync_error: String(err),
+          })
+          .eq('id', product.id);
 
         results.push({
           id: product.id,
