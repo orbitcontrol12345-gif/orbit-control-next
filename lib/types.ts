@@ -19,17 +19,19 @@ export interface Product {
   brand: string;
   partNumber: string;
   name: string;
-  category: ProductCategory;
-  condition: ProductCondition;
+  category: string;
+  condition: string;
   inStock: boolean;
   description: string;
   technicalSpecs: Record<string, string>;
-  datasheetUrl?: string;
   imageUrl: string;
+
+  r2ImageUrl?: string | null;
+  r2GalleryUrls?: string[];
+  ebayGalleryUrls?: string[];
+
   tags: string[];
   slug: string;
-  weight?: string;
-  dimensions?: string;
 }
 
 export interface RFQRequest {
