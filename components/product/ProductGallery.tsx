@@ -158,17 +158,17 @@ export default function ProductGallery({
     )}
 
     <div
-      className="relative h-[85vh] w-[90vw]"
+  className="relative flex h-[85vh] w-[90vw] items-center justify-center"
       onClick={(e) => e.stopPropagation()}
     >
       <Image
-        src={activeImage}
-        alt={alt}
-        fill
-        className="object-contain"
-        sizes="90vw"
-        unoptimized
-      />
+  src={activeImage}
+  alt={alt}
+  fill
+  className="object-contain p-16"
+  sizes="90vw"
+  unoptimized
+/>
     </div>
 
     {images.length > 1 && (
