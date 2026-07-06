@@ -22,12 +22,13 @@ function getPublicR2Url(key: string) {
 export async function GET() {
   try {
     const { data: products, error } = await supabaseAdmin
-      .from('products')
-      .select('id, ebay_item_id, ebay_gallery_urls, r2_gallery_urls')
-      .not('ebay_item_id', 'is', null)
-      .not('ebay_gallery_urls', 'is', null)
-      .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
-      .limit(5);
+  .from('products')
+  .select('id, ebay_item_id, ebay_gallery_urls, r2_gallery_urls, image_status')
+  .not('ebay_item_id', 'is', null)
+  .not('ebay_gallery_urls', 'is', null)
+  .not('image_status', 'eq', 'r2_failed')
+  .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
+  .limit(5);
 
     if (error) throw error;
 
