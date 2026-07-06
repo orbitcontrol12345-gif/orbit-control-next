@@ -160,54 +160,84 @@ export default function ProductGallery({
         >
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }}
             className="fixed right-5 top-5 z-[100000] flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-xl transition hover:bg-red-700"
             aria-label="Close image preview"
           >
             <X size={28} />
           </button>
 
-          {images.length > 1 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                goPrev();
-              }}
-              className="fixed left-5 top-1/2 z-[100000] flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white shadow-xl transition hover:bg-white/25"
-              aria-label="Previous image"
-            >
-              <ChevronLeft size={30} />
-            </button>
-          )}
-
           <div
-            className="relative h-[78vh] w-[82vw] max-w-6xl rounded-2xl bg-white p-4 shadow-2xl"
+            className="relative flex h-[88vh] w-[88vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={activeImage}
-              alt={alt}
-              fill
-              className="object-contain p-6"
-              sizes="82vw"
-              unoptimized
-            />
-          </div>
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={goPrev}
+                className="absolute left-6 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl backdrop-blur transition hover:bg-black/80"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={30} />
+              </button>
+            )}
 
-          {images.length > 1 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                goNext();
-              }}
-              className="fixed right-5 top-1/2 z-[100000] flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white shadow-xl transition hover:bg-white/25"
-              aria-label="Next image"
-            >
-              <ChevronRight size={30} />
-            </button>
-          )}
+            <div className="relative min-h-0 flex-1">
+              <Image
+                src={activeImage}
+                alt={alt}
+                fill
+                className="object-contain"
+                sizes="88vw"
+                unoptimized
+              />
+            </div>
+
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={goNext}
+                className="absolute right-6 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl backdrop-blur transition hover:bg-black/80"
+                aria-label="Next image"
+              >
+                <ChevronRight size={30} />
+              </button>
+            )}
+
+            {images.length > 1 && (
+              <div className="mt-4 flex justify-center gap-3 overflow-x-auto border-t border-slate-200 pt-4">
+                {images.map((image, index) => {
+                  const isActive = index === activeIndex;
+
+                  return (
+                    <button
+                      key={`lightbox-${image}-${index}`}
+                      type="button"
+                      onClick={() => setActiveIndex(index)}
+                      className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
+                        isActive
+                          ? 'border-gold-500 ring-2 ring-gold-500/50'
+                          : 'border-slate-300 hover:border-slate-500'
+                      }`}
+                      aria-label={`View product image ${index + 1}`}
+                    >
+                      <Image
+                        src={image}
+                        alt={`${alt} ${index + 1}`}
+                        fill
+                        className="object-contain p-1"
+                        sizes="96px"
+                        unoptimized
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>
