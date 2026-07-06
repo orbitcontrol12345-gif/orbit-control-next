@@ -122,48 +122,69 @@ export default function ProductGallery({
         )}
       </div>
 
-      {open && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="absolute right-5 top-5 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
-          >
-            <X size={24} />
-          </button>
+     {open && (
+  <div
+    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4"
+    onClick={() => setOpen(false)}
+  >
+    <button
+      type="button"
+      onClick={() => setOpen(false)}
+      className="absolute right-5 top-5 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+      aria-label="Close image preview"
+    >
+      <X size={24} />
+    </button>
 
-          {images.length > 1 && (
-            <button
-              type="button"
-              onClick={goPrev}
-              className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
-            >
-              <ChevronLeft size={30} />
-            </button>
-          )}
+    <button
+      type="button"
+      onClick={() => setOpen(false)}
+      className="absolute left-5 top-5 z-20 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
+    >
+      Back to product
+    </button>
 
-          <div className="relative h-[85vh] w-[90vw]">
-            <Image
-              src={activeImage}
-              alt={alt}
-              fill
-              className="object-contain"
-              sizes="90vw"
-              unoptimized
-            />
-          </div>
+    {images.length > 1 && (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          goPrev();
+        }}
+        className="absolute left-5 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+      >
+        <ChevronLeft size={30} />
+      </button>
+    )}
 
-          {images.length > 1 && (
-            <button
-              type="button"
-              onClick={goNext}
-              className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
-            >
-              <ChevronRight size={30} />
-            </button>
-          )}
-        </div>
-      )}
+    <div
+      className="relative h-[85vh] w-[90vw]"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Image
+        src={activeImage}
+        alt={alt}
+        fill
+        className="object-contain"
+        sizes="90vw"
+        unoptimized
+      />
+    </div>
+
+    {images.length > 1 && (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          goNext();
+        }}
+        className="absolute right-5 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+      >
+        <ChevronRight size={30} />
+      </button>
+    )}
+  </div>
+)}
     </>
   );
 }
