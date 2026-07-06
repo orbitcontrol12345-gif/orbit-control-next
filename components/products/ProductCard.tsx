@@ -23,37 +23,35 @@ export default function ProductCard({ product }: ProductCardProps) {
   const productUrl = `/products/${product.slug}`;
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
-      {/* Image */}
+    <div className="group relative z-0 flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
       <Link
         href={productUrl}
         aria-label={`View details for ${product.name}`}
-        className="relative block h-44 overflow-hidden bg-white"
+        className="relative z-0 block h-44 overflow-hidden bg-white"
       >
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="z-0 object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          unoptimized
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/20 to-transparent" />
 
-        <div className="absolute left-2 top-2">
+        <div className="absolute left-2 top-2 z-20">
           <ConditionBadge condition={product.condition} />
         </div>
       </Link>
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-4">
-        {/* Brand + category */}
+      <div className="relative z-10 flex flex-1 flex-col p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
           <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
             {product.brand}
           </span>
         </div>
-        {/* Part number */}
+
         <p className="mb-1 text-xs font-mono text-slate-400">
           PN:{' '}
           <span className="font-semibold text-slate-300">
@@ -61,14 +59,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </p>
 
-        {/* Name */}
         <Link href={productUrl} className="mb-3 block flex-1">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100 transition-colors group-hover:text-gold-400">
             {product.name}
           </h3>
         </Link>
 
-        {/* Stock */}
         <div className="mb-4 flex items-center gap-1.5">
           {product.inStock ? (
             <>
@@ -87,7 +83,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Actions */}
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={productUrl}
