@@ -1,6 +1,6 @@
+import ProductGallery from '@/components/product/ProductGallery';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   CheckCircle,
@@ -94,16 +94,14 @@ export default async function ProductDetailPage({ params }: Props) {
       <div className="page-container py-10">
         <div className="grid lg:grid-cols-5 gap-8 mb-14">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl overflow-hidden relative shadow-xl sticky top-24 h-[450px]">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-contain"
-                priority
-                sizes="(max-width: 1024px) 100vw, 40vw"
-              />
-            </div>
+           <div className="sticky top-24">
+  <ProductGallery
+    r2GalleryUrls={product.r2GalleryUrls}
+    ebayGalleryUrls={product.ebayGalleryUrls}
+    mainImageUrl={product.r2ImageUrl || product.imageUrl}
+    alt={product.name}
+  />
+</div>
           </div>
 
           <div className="lg:col-span-3">
