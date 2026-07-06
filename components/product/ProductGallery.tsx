@@ -128,21 +128,21 @@ export default function ProductGallery({
     onClick={() => setOpen(false)}
   >
     <button
-      type="button"
-      onClick={() => setOpen(false)}
-      className="absolute right-5 top-5 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
-      aria-label="Close image preview"
-    >
-      <X size={24} />
-    </button>
+  type="button"
+  onClick={() => setOpen(false)}
+  className="fixed right-6 top-24 z-[10000] flex h-12 w-12 items-center justify-center rounded-full bg-red-600 text-white shadow-xl hover:bg-red-700"
+  aria-label="Close image preview"
+>
+  <X size={28} />
+</button>
 
-    <button
-      type="button"
-      onClick={() => setOpen(false)}
-      className="absolute left-5 top-5 z-20 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20"
-    >
-      Back to product
-    </button>
+   <button
+  type="button"
+  onClick={() => setOpen(false)}
+  className="fixed left-6 top-24 z-[10000] rounded-full bg-white px-5 py-3 text-sm font-bold text-black shadow-xl hover:bg-slate-200"
+>
+  Back to product
+</button>
 
     {images.length > 1 && (
       <button
