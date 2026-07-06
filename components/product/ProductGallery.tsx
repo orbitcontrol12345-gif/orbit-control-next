@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 type ProductGalleryProps = {
   r2GalleryUrls?: string[] | null;
@@ -16,7 +18,7 @@ function cleanImages(images: Array<string | null | undefined>) {
       images
         .filter(Boolean)
         .map((url) => String(url).trim())
-        .filter((url) => url.startsWith('http'))
+        .filter((url) => url.startsWith('http') || url.startsWith('/'))
     )
   );
 }
@@ -25,7 +27,7 @@ export default function ProductGallery({
   r2GalleryUrls,
   ebayGalleryUrls,
   mainImageUrl,
-  fallbackImageUrl = '/placeholder-product.png',
+  fallbackImageUrl = '/placeholder-product.jpg',
   alt = 'Product image',
 }: ProductGalleryProps) {
   const images = useMemo(() => {
@@ -38,46 +40,130 @@ export default function ProductGallery({
     return gallery.length > 0 ? gallery : [fallbackImageUrl];
   }, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
 
-  const [activeImage, setActiveImage] = useState(images[0]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const activeImage = images[activeIndex] || images[0];
+
+  function goNext() {
+    setActiveIndex((current) => (current + 1) % images.length);
+  }
+
+  function goPrev() {
+    setActiveIndex((current) =>
+      current === 0 ? images.length - 1 : current - 1
+    );
+  }
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, images.length]);
 
   return (
-    <div className="w-full">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <img
-          src={activeImage}
-          alt={alt}
-          className="h-[360px] w-full object-contain p-4 sm:h-[460px]"
-          loading="eager"
-        />
+    <>
+      <div className="w-full">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="group relative h-[360px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:h-[460px]"
+        >
+          <Image
+            src={activeImage}
+            alt={alt}
+            fill
+            className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 1024px) 100vw, 40vw"
+            priority
+            unoptimized
+          />
+
+          <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
+            Click to enlarge
+          </span>
+        </button>
+
+        {images.length > 1 && (
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+            {images.map((image, index) => {
+              const isActive = index === activeIndex;
+
+              return (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
+                    isActive
+                      ? 'border-[#C9A227] ring-2 ring-[#C9A227]/40'
+                      : 'border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`${alt} ${index + 1}`}
+                    fill
+                    className="object-contain p-1"
+                    sizes="80px"
+                    unoptimized
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {images.length > 1 && (
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-          {images.map((image, index) => {
-            const isActive = image === activeImage;
+      {open && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute right-5 top-5 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+          >
+            <X size={24} />
+          </button>
 
-            return (
-              <button
-                key={`${image}-${index}`}
-                type="button"
-                onClick={() => setActiveImage(image)}
-                className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
-                  isActive
-                    ? 'border-[#C9A227] ring-2 ring-[#C9A227]/30'
-                    : 'border-slate-200 hover:border-slate-400'
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`${alt} ${index + 1}`}
-                  className="h-full w-full object-contain p-1"
-                  loading="lazy"
-                />
-              </button>
-            );
-          })}
+          {images.length > 1 && (
+            <button
+              type="button"
+              onClick={goPrev}
+              className="absolute left-5 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+            >
+              <ChevronLeft size={30} />
+            </button>
+          )}
+
+          <div className="relative h-[85vh] w-[90vw]">
+            <Image
+              src={activeImage}
+              alt={alt}
+              fill
+              className="object-contain"
+              sizes="90vw"
+              unoptimized
+            />
+          </div>
+
+          {images.length > 1 && (
+            <button
+              type="button"
+              onClick={goNext}
+              className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+            >
+              <ChevronRight size={30} />
+            </button>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 }
