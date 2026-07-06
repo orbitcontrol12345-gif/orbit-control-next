@@ -83,7 +83,7 @@ export default function ProductGallery({
   return (
     <>
       <div className="w-full">
-        <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white p-3 shadow-2xl shadow-black/30">
+        <div className="relative z-20 h-28 shrink-0 border-t border-slate-200 bg-white px-5 py-3">
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -160,13 +160,13 @@ export default function ProductGallery({
 
       {open && (
         <div
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 p-4"
-          onClick={() => setOpen(false)}
-        >
+  className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-4 isolate"
+  onClick={() => setOpen(false)}
+>
           <div
-            className="relative flex h-[88vh] w-[90vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+  className="relative z-[2147483647] flex h-[88vh] w-[90vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+  onClick={(e) => e.stopPropagation()}
+>
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -176,7 +176,7 @@ export default function ProductGallery({
               <X size={26} />
             </button>
 
-            <div className="relative min-h-0 flex-1 bg-white p-5">
+           <div className="relative min-h-0 flex-1 bg-white">
               {images.length > 1 && (
                 <button
                   type="button"
