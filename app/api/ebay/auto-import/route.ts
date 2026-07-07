@@ -394,7 +394,7 @@ export async function GET(req: NextRequest) {
 
           const { error } = await supabaseAdmin
             .from('products')
-            .upsert(product, { onConflict: 'sku' });
+            .upsert(product, { onConflict: 'ebay_item_id' });
 
           if (error) throw error;
 
