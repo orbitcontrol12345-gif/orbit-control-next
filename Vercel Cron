@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/download-images?limit=100",
+      "path": "/api/download-images?limit=100",
       "schedule": "*/10 * * * *"
     }
   ]
