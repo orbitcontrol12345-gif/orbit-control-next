@@ -1,8 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/catalog/deduplicate-apply",
-      "schedule": "*/5 * * * *"
+      "path": "/api/ebay/auto-import?limit=200",
+      "schedule": "0 */12 * * *"
+    },
+    {
+      "path": "/api/download-images?limit=500",
+      "schedule": "30 */12 * * *"
     }
   ]
 }
