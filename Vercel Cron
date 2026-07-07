@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/download-images?limit=100",
-      "schedule": "*/10 * * * *"
-    }
-  ]
-}
+0
