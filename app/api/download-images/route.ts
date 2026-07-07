@@ -6,26 +6,46 @@ import { r2 } from '@/lib/r2';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function publicUrl(key: string) {
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+function getPublicUrl(key: string) {
+  const baseUrl = process.env.R2_PUBLIC_URL;
+
+  if (!baseUrl) {
+    throw new Error('Missing R2_PUBLIC_URL');
+  }
+
+  return `${baseUrl.replace(/\/$/, '')}/${key}`;
 }
 
-async function uploadImageToR2({
+async function uploadToR2({
   imageUrl,
   ebayItemId,
 }: {
   imageUrl: string;
   ebayItemId: string;
 }) {
-  const response = await fetch(imageUrl);
+  const res = await fetch(imageUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+    },
+  });
 
-  if (!response.ok) {
-    throw new Error(`Image download failed ${response.status}`);
+  if (!res.ok) {
+    throw new Error(`Image download failed: ${res.status}`);
   }
 
-  const contentType = response.headers.get('content-type') || 'image/jpeg';
-  const ext = contentType.includes('png') ? 'png' : 'jpg';
-  const buffer = Buffer.from(await response.arrayBuffer());
+  const contentType = res.headers.get('content-type') || 'image/jpeg';
+
+  if (!contentType.startsWith('image/')) {
+    throw new Error(`Invalid image content type: ${contentType}`);
+  }
+
+  const buffer = Buffer.from(await res.arrayBuffer());
+
+  const ext = contentType.includes('webp')
+    ? 'webp'
+    : contentType.includes('png')
+      ? 'png'
+      : 'jpg';
 
   const key = `orbit-control/products/${ebayItemId}/main.${ext}`;
 
@@ -38,11 +58,14 @@ async function uploadImageToR2({
     })
   );
 
-  return publicUrl(key);
+  return getPublicUrl(key);
 }
 
 export async function GET(req: NextRequest) {
-  const limit = Number(req.nextUrl.searchParams.get('limit') ?? 50);
+  const limit = Math.min(
+    Number(req.nextUrl.searchParams.get('limit') ?? 30),
+    100
+  );
 
   const { data: products, error } = await supabaseAdmin
     .from('products')
@@ -52,7 +75,10 @@ export async function GET(req: NextRequest) {
     .limit(limit);
 
   if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 
   let updated = 0;
@@ -61,11 +87,15 @@ export async function GET(req: NextRequest) {
   for (const product of products ?? []) {
     try {
       const sourceImage = product.ebay_image_url || product.image_url;
+
+      if (!sourceImage) {
+        failed++;
+        continue;
+      }
+
       const ebayItemId = String(product.ebay_item_id || product.id);
 
-      if (!sourceImage) continue;
-
-      const r2Url = await uploadImageToR2({
+      const r2Url = await uploadToR2({
         imageUrl: sourceImage,
         ebayItemId,
       });
