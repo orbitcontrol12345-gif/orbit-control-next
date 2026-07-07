@@ -112,16 +112,19 @@ export async function GET(req: NextRequest) {
 
       updated++;
     } catch (err) {
-      failed++;
+  console.error(err);
 
-      await supabaseAdmin
-        .from('products')
-        .update({
-          image_status: 'failed',
-          images_sync_error: String(err),
-        })
-        .eq('id', product.id);
-    }
+  failed++;
+
+  await supabaseAdmin
+    .from('products')
+    .update({
+      image_status: 'failed',
+      images_sync_error:
+        err instanceof Error ? err.message : String(err),
+    })
+    .eq('id', product.id);
+}
   }
 
   return NextResponse.json({
