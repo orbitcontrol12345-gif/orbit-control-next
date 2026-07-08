@@ -91,7 +91,7 @@ export default function ProductGallery({
             onClick={() => setIsOpen(false)}
           >
             <div
-              className="relative flex h-[88vh] w-[94vw] max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative flex h-[86vh] w-[94vw] max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
               onClick={(event) => event.stopPropagation()}
             >
               <button
@@ -109,7 +109,7 @@ export default function ProductGallery({
                   alt={alt}
                   fill
                   sizes="94vw"
-                  className="object-contain p-4 sm:p-8"
+                  className="object-contain p-3 sm:p-6"
                   unoptimized
                 />
 
@@ -119,7 +119,6 @@ export default function ProductGallery({
                       type="button"
                       onClick={goPrev}
                       className="absolute left-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                      aria-label="Previous image"
                     >
                       <ChevronLeft size={26} />
                     </button>
@@ -128,7 +127,6 @@ export default function ProductGallery({
                       type="button"
                       onClick={goNext}
                       className="absolute right-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                      aria-label="Next image"
                     >
                       <ChevronRight size={26} />
                     </button>
@@ -137,7 +135,7 @@ export default function ProductGallery({
               </div>
 
               {images.length > 1 && (
-                <div className="h-24 shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2">
+                <div className="h-20 shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 sm:h-24">
                   <div className="flex h-full gap-2 overflow-x-auto">
                     {images.map((image, index) => {
                       const active = index === activeIndex;
@@ -147,7 +145,7 @@ export default function ProductGallery({
                           key={`modal-${image}-${index}`}
                           type="button"
                           onClick={() => setActiveIndex(index)}
-                          className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-white transition ${
+                          className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-20 ${
                             active
                               ? 'border-gold-500 ring-2 ring-gold-500/50'
                               : 'border-slate-300'
@@ -176,8 +174,8 @@ export default function ProductGallery({
   return (
     <>
       <div className="w-full">
-        <div className="rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl sm:p-3">
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white sm:rounded-2xl lg:aspect-[4/5]">
+        <div className="rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl">
+          <div className="relative h-[250px] w-full overflow-hidden rounded-xl bg-white sm:h-[300px] lg:h-[340px]">
             <button
               type="button"
               onClick={() => setIsOpen(true)}
@@ -190,7 +188,7 @@ export default function ProductGallery({
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-contain p-3 sm:p-4"
+                className="object-contain p-2 sm:p-3"
                 unoptimized
               />
             </button>
@@ -198,7 +196,7 @@ export default function ProductGallery({
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100 sm:h-11 sm:w-11"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
               aria-label="Enlarge image"
             >
               <Maximize2 size={18} />
@@ -209,8 +207,7 @@ export default function ProductGallery({
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white sm:h-11 sm:w-11"
-                  aria-label="Previous image"
+                  className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
                 >
                   <ChevronLeft size={23} />
                 </button>
@@ -218,8 +215,7 @@ export default function ProductGallery({
                 <button
                   type="button"
                   onClick={goNext}
-                  className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white sm:h-11 sm:w-11"
-                  aria-label="Next image"
+                  className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
                 >
                   <ChevronRight size={23} />
                 </button>
@@ -229,8 +225,8 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mt-3 rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:mt-4 sm:rounded-2xl sm:p-3">
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:gap-3">
+          <div className="mt-3 rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((image, index) => {
                 const active = index === activeIndex;
 
@@ -239,18 +235,17 @@ export default function ProductGallery({
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setActiveIndex(index)}
-                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-24 sm:rounded-xl ${
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-16 sm:w-20 ${
                       active
                         ? 'border-gold-500 ring-2 ring-gold-500/50'
                         : 'border-white/30 opacity-80 hover:opacity-100'
                     }`}
-                    aria-label={`View image ${index + 1}`}
                   >
                     <Image
                       src={image}
                       alt={`${alt} ${index + 1}`}
                       fill
-                      sizes="96px"
+                      sizes="80px"
                       className="object-contain p-1"
                       unoptimized
                     />
