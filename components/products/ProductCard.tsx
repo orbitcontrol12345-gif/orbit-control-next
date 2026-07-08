@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, ExternalLink, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
 
@@ -10,9 +10,10 @@ interface ProductCardProps {
   product: Product;
 }
 
+const FALLBACK_IMAGE = '/placeholder-product.jpg';
+
 function ConditionBadge({ condition }: { condition: Product['condition'] }) {
   const text = String(condition || '');
-
   const label =
     text.toLowerCase().includes('open box') ||
     text.toLowerCase().includes('without box')
@@ -24,9 +25,12 @@ function ConditionBadge({ condition }: { condition: Product['condition'] }) {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const productUrl = `/products/${product.slug}`;
-  const [imageSrc, setImageSrc] = useState(
-    product.imageUrl || '/placeholder-product.jpg'
-  );
+  const safeImage = product.imageUrl || FALLBACK_IMAGE;
+  const [imageSrc, setImageSrc] = useState(safeImage);
+
+  useEffect(() => {
+    setImageSrc(safeImage);
+  }, [safeImage]);
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
@@ -42,7 +46,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
           unoptimized
-          onError={() => setImageSrc('/placeholder-product.jpg')}
+          onError={() => {
+            if (imageSrc !== FALLBACK_IMAGE) {
+              setImageSrc(FALLBACK_IMAGE);
+            }
+          }}
         />
 
         <div className="absolute left-2 top-2">
@@ -58,10 +66,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <p className="mb-1 text-xs font-mono text-slate-400">
-          PN:{' '}
-          <span className="font-semibold text-slate-300">
-            {product.partNumber}
-          </span>
+          PN: <span className="font-semibold text-slate-300">{product.partNumber}</span>
         </p>
 
         <Link href={productUrl} className="mb-3 block flex-1">
@@ -74,9 +79,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.inStock ? (
             <>
               <CheckCircle size={13} className="text-emerald-400" />
-              <span className="text-xs font-medium text-emerald-400">
-                In Stock
-              </span>
+              <span className="text-xs font-medium text-emerald-400">In Stock</span>
             </>
           ) : (
             <>
@@ -87,18 +90,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Link
-            href={productUrl}
-            className="flex items-center justify-center gap-1.5 rounded border border-navy-600 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
-          >
+          <Link href={productUrl} className="flex items-center justify-center gap-1.5 rounded border border-navy-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white">
             <ExternalLink size={12} />
             Details
           </Link>
 
-          <Link
-            href={`/rfq?part=${encodeURIComponent(product.partNumber)}`}
-            className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 transition-colors hover:bg-gold-400"
-          >
+          <Link href={`/rfq?part=${encodeURIComponent(product.partNumber)}`} className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 hover:bg-gold-400">
             <FileText size={12} />
             Get Quote
           </Link>
