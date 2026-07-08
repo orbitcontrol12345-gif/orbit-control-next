@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { CheckCircle, XCircle, ExternalLink, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
 
@@ -20,33 +23,34 @@ function ConditionBadge({ condition }: { condition: Product['condition'] }) {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  console.log(product);
   const productUrl = `/products/${product.slug}`;
+  const [imageSrc, setImageSrc] = useState(
+    product.imageUrl || '/placeholder-product.jpg'
+  );
 
   return (
-    <div className="group relative z-0 flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
+    <div className="group flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
       <Link
         href={productUrl}
         aria-label={`View details for ${product.name}`}
-        className="relative z-0 block h-44 overflow-hidden bg-white"
+        className="relative block h-44 overflow-hidden bg-white"
       >
         <Image
-          src={product.imageUrl}
+          src={imageSrc}
           alt={product.name}
           fill
-          className="z-0 object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
           unoptimized
+          onError={() => setImageSrc('/placeholder-product.jpg')}
         />
 
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-black/20 to-transparent" />
-
-        <div className="absolute left-2 top-2 z-20">
+        <div className="absolute left-2 top-2">
           <ConditionBadge condition={product.condition} />
         </div>
       </Link>
 
-      <div className="relative z-10 flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
           <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
             {product.brand}
@@ -77,9 +81,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : (
             <>
               <XCircle size={13} className="text-slate-500" />
-              <span className="text-xs text-slate-500">
-                Check Availability
-              </span>
+              <span className="text-xs text-slate-500">Check Availability</span>
             </>
           )}
         </div>
