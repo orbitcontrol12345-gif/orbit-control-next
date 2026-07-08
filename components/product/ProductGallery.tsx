@@ -86,87 +86,76 @@ export default function ProductGallery({
   const lightbox =
     isOpen && mounted
       ? createPortal(
-          <div
-            className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-3"
-            onClick={() => setIsOpen(false)}
+         <div
+  className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-2"
+  onClick={() => setIsOpen(false)}
+>
+  <div
+    className="relative inline-flex flex-col items-center"
+    onClick={(e) => e.stopPropagation()}
+  >
+    <button
+      type="button"
+      onClick={() => setIsOpen(false)}
+      className="absolute -top-2 -right-2 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-xl"
+    >
+      <X size={24} />
+    </button>
+
+    <div className="relative">
+      <Image
+        src={activeImage}
+        alt={alt}
+        width={1400}
+        height={1400}
+        className="max-h-[82vh] w-auto max-w-[95vw] rounded-xl object-contain"
+        unoptimized
+      />
+
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={goPrev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white"
           >
-            <div
-              className="relative flex h-[86vh] w-[94vw] max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="absolute right-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
-                aria-label="Close image"
-              >
-                <X size={24} />
-              </button>
+            <ChevronLeft size={28} />
+          </button>
 
-              <div className="relative min-h-0 flex-1 bg-white">
-                <Image
-                  src={activeImage}
-                  alt={alt}
-                  fill
-                  sizes="94vw"
-                  className="object-contain p-3 sm:p-6"
-                  unoptimized
-                />
+          <button
+            onClick={goNext}
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white"
+          >
+            <ChevronRight size={28} />
+          </button>
+        </>
+      )}
+    </div>
 
-                {images.length > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={goPrev}
-                      className="absolute left-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                    >
-                      <ChevronLeft size={26} />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={goNext}
-                      className="absolute right-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
-                    >
-                      <ChevronRight size={26} />
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {images.length > 1 && (
-                <div className="h-20 shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 sm:h-24">
-                  <div className="flex h-full gap-2 overflow-x-auto">
-                    {images.map((image, index) => {
-                      const active = index === activeIndex;
-
-                      return (
-                        <button
-                          key={`modal-${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveIndex(index)}
-                          className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-20 ${
-                            active
-                              ? 'border-gold-500 ring-2 ring-gold-500/50'
-                              : 'border-slate-300'
-                          }`}
-                        >
-                          <Image
-                            src={image}
-                            alt={`${alt} ${index + 1}`}
-                            fill
-                            sizes="80px"
-                            className="object-contain p-1"
-                            unoptimized
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>,
+    {images.length > 1 && (
+      <div className="mt-4 flex max-w-[95vw] gap-2 overflow-x-auto">
+        {images.map((image, index) => (
+          <button
+            key={index}
+            onClick={() => setActiveIndex(index)}
+            className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border ${
+              index === activeIndex
+                ? 'border-gold-500 ring-2 ring-gold-500/50'
+                : 'border-white/20'
+            }`}
+          >
+            <Image
+              src={image}
+              alt=""
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
           document.body
         )
       : null;
