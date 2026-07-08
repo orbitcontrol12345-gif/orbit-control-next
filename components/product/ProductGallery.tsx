@@ -90,26 +90,26 @@ export default function ProductGallery({
             className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-3"
             onClick={() => setIsOpen(false)}
           >
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="fixed right-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-xl hover:bg-red-700"
+              aria-label="Close image"
+            >
+              <X size={26} />
+            </button>
+
             <div
-              className="relative flex h-[86vh] w-[94vw] max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative flex max-h-[90vh] max-w-[96vw] flex-col items-center justify-center"
               onClick={(event) => event.stopPropagation()}
             >
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="absolute right-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
-                aria-label="Close image"
-              >
-                <X size={24} />
-              </button>
-
-              <div className="relative min-h-0 flex-1 bg-white">
+              <div className="relative flex items-center justify-center">
                 <Image
                   src={activeImage}
                   alt={alt}
-                  fill
-                  sizes="94vw"
-                  className="object-contain p-3 sm:p-6"
+                  width={1400}
+                  height={1400}
+                  className="max-h-[72vh] w-auto max-w-[94vw] rounded-xl object-contain shadow-2xl"
                   unoptimized
                 />
 
@@ -118,51 +118,52 @@ export default function ProductGallery({
                     <button
                       type="button"
                       onClick={goPrev}
-                      className="absolute left-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:-left-16"
+                      aria-label="Previous image"
                     >
-                      <ChevronLeft size={26} />
+                      <ChevronLeft size={28} />
                     </button>
 
                     <button
                       type="button"
                       onClick={goNext}
-                      className="absolute right-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:-right-16"
+                      aria-label="Next image"
                     >
-                      <ChevronRight size={26} />
+                      <ChevronRight size={28} />
                     </button>
                   </>
                 )}
               </div>
 
               {images.length > 1 && (
-                <div className="h-20 shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 sm:h-24">
-                  <div className="flex h-full gap-2 overflow-x-auto">
-                    {images.map((image, index) => {
-                      const active = index === activeIndex;
+                <div className="mt-4 flex max-w-[94vw] gap-2 overflow-x-auto rounded-xl bg-black/50 p-2">
+                  {images.map((image, index) => {
+                    const active = index === activeIndex;
 
-                      return (
-                        <button
-                          key={`modal-${image}-${index}`}
-                          type="button"
-                          onClick={() => setActiveIndex(index)}
-                          className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-20 ${
-                            active
-                              ? 'border-gold-500 ring-2 ring-gold-500/50'
-                              : 'border-slate-300'
-                          }`}
-                        >
-                          <Image
-                            src={image}
-                            alt={`${alt} ${index + 1}`}
-                            fill
-                            sizes="80px"
-                            className="object-contain p-1"
-                            unoptimized
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
+                    return (
+                      <button
+                        key={`modal-${image}-${index}`}
+                        type="button"
+                        onClick={() => setActiveIndex(index)}
+                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-20 ${
+                          active
+                            ? 'border-gold-500 ring-2 ring-gold-500/60'
+                            : 'border-white/30 opacity-80 hover:opacity-100'
+                        }`}
+                        aria-label={`View image ${index + 1}`}
+                      >
+                        <Image
+                          src={image}
+                          alt={`${alt} ${index + 1}`}
+                          fill
+                          sizes="80px"
+                          className="object-contain p-1"
+                          unoptimized
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -208,6 +209,7 @@ export default function ProductGallery({
                   type="button"
                   onClick={goPrev}
                   className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                  aria-label="Previous image"
                 >
                   <ChevronLeft size={23} />
                 </button>
@@ -216,6 +218,7 @@ export default function ProductGallery({
                   type="button"
                   onClick={goNext}
                   className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                  aria-label="Next image"
                 >
                   <ChevronRight size={23} />
                 </button>
@@ -225,7 +228,7 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mt-3 rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
+          <div className="mx-auto mt-3 w-full max-w-[430px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((image, index) => {
                 const active = index === activeIndex;
@@ -240,6 +243,7 @@ export default function ProductGallery({
                         ? 'border-gold-500 ring-2 ring-gold-500/50'
                         : 'border-white/30 opacity-80 hover:opacity-100'
                     }`}
+                    aria-label={`View image ${index + 1}`}
                   >
                     <Image
                       src={image}
