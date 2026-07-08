@@ -156,9 +156,6 @@ export default function ProductGallery({
     )}
   </div>
 </div>
-          document.body
-        )
-      : null;
 
   return (
     <>
