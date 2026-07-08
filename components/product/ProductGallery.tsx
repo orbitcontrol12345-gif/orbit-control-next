@@ -174,8 +174,8 @@ export default function ProductGallery({
   return (
     <>
       <div className="w-full">
-        <div className="rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl">
-          <div className="relative mx-auto h-[250px] w-full max-w-[420px] overflow-hidden rounded-xl bg-white sm:h-[300px] lg:h-[340px]">
+        <div className="mx-auto w-full max-w-[430px] rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl">
+          <div className="relative h-[250px] w-full overflow-hidden rounded-xl bg-white sm:h-[300px] lg:h-[340px]">
             <button
               type="button"
               onClick={() => setIsOpen(true)}
@@ -225,7 +225,7 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mx-auto mt-3 w-full max-w-[420px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
+          <div className="mx-auto mt-3 w-full max-w-[430px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((image, index) => {
                 const active = index === activeIndex;
