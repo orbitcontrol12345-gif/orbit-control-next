@@ -155,6 +155,7 @@ export async function getSupabaseRelatedProducts(product: Product): Promise<Prod
     .select('*')
     .eq('is_active', true)
     .neq('catalog_visible', false)
+    .not('r2_image_url', 'is', null)
     .or(`brand.eq.${product.brand},category.eq.${product.category}`)
     .neq('sku', product.sku)
     .limit(4);
