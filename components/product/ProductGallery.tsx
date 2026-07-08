@@ -87,20 +87,20 @@ export default function ProductGallery({
     isOpen && mounted
       ? createPortal(
           <div
-            className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-4"
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-3"
             onClick={() => setIsOpen(false)}
           >
             <div
-              className="relative flex h-[88vh] w-[92vw] max-w-7xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+              className="relative flex h-[88vh] w-[94vw] max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
               onClick={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="absolute right-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
+                className="absolute right-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700"
                 aria-label="Close image"
               >
-                <X size={26} />
+                <X size={24} />
               </button>
 
               <div className="relative min-h-0 flex-1 bg-white">
@@ -108,8 +108,8 @@ export default function ProductGallery({
                   src={activeImage}
                   alt={alt}
                   fill
-                  sizes="92vw"
-                  className="object-contain p-8"
+                  sizes="94vw"
+                  className="object-contain p-4 sm:p-8"
                   unoptimized
                 />
 
@@ -118,27 +118,27 @@ export default function ProductGallery({
                     <button
                       type="button"
                       onClick={goPrev}
-                      className="absolute left-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      className="absolute left-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
                       aria-label="Previous image"
                     >
-                      <ChevronLeft size={30} />
+                      <ChevronLeft size={26} />
                     </button>
 
                     <button
                       type="button"
                       onClick={goNext}
-                      className="absolute right-5 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
+                      className="absolute right-3 top-1/2 z-40 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80"
                       aria-label="Next image"
                     >
-                      <ChevronRight size={30} />
+                      <ChevronRight size={26} />
                     </button>
                   </>
                 )}
               </div>
 
               {images.length > 1 && (
-                <div className="h-28 shrink-0 border-t border-slate-200 bg-slate-50 px-5 py-3">
-                  <div className="flex h-full items-center justify-center gap-3 overflow-x-auto">
+                <div className="h-24 shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="flex h-full gap-2 overflow-x-auto">
                     {images.map((image, index) => {
                       const active = index === activeIndex;
 
@@ -147,18 +147,17 @@ export default function ProductGallery({
                           key={`modal-${image}-${index}`}
                           type="button"
                           onClick={() => setActiveIndex(index)}
-                          className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
+                          className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-white transition ${
                             active
                               ? 'border-gold-500 ring-2 ring-gold-500/50'
-                              : 'border-slate-300 hover:border-slate-500'
+                              : 'border-slate-300'
                           }`}
-                          aria-label={`View image ${index + 1}`}
                         >
                           <Image
                             src={image}
                             alt={`${alt} ${index + 1}`}
                             fill
-                            sizes="96px"
+                            sizes="80px"
                             className="object-contain p-1"
                             unoptimized
                           />
@@ -177,8 +176,8 @@ export default function ProductGallery({
   return (
     <>
       <div className="w-full">
-        <div className="rounded-3xl border border-white/10 bg-white p-3 shadow-2xl shadow-black/30">
-          <div className="relative h-[380px] overflow-hidden rounded-2xl bg-white sm:h-[470px]">
+        <div className="rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl sm:p-3">
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-white sm:rounded-2xl lg:aspect-[4/5]">
             <button
               type="button"
               onClick={() => setIsOpen(true)}
@@ -191,7 +190,7 @@ export default function ProductGallery({
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-contain p-4"
+                className="object-contain p-3 sm:p-4"
                 unoptimized
               />
             </button>
@@ -199,10 +198,10 @@ export default function ProductGallery({
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="absolute right-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100 sm:h-11 sm:w-11"
               aria-label="Enlarge image"
             >
-              <Maximize2 size={19} />
+              <Maximize2 size={18} />
             </button>
 
             {images.length > 1 && (
@@ -210,19 +209,19 @@ export default function ProductGallery({
                 <button
                   type="button"
                   onClick={goPrev}
-                  className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                  className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white sm:h-11 sm:w-11"
                   aria-label="Previous image"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={23} />
                 </button>
 
                 <button
                   type="button"
                   onClick={goNext}
-                  className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                  className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white sm:h-11 sm:w-11"
                   aria-label="Next image"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={23} />
                 </button>
               </>
             )}
@@ -230,8 +229,8 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mt-4 rounded-2xl border border-navy-700 bg-navy-800/80 p-3">
-            <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="mt-3 rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:mt-4 sm:rounded-2xl sm:p-3">
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:gap-3">
               {images.map((image, index) => {
                 const active = index === activeIndex;
 
@@ -240,7 +239,7 @@ export default function ProductGallery({
                     key={`${image}-${index}`}
                     type="button"
                     onClick={() => setActiveIndex(index)}
-                    className={`relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border bg-white transition ${
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-24 sm:rounded-xl ${
                       active
                         ? 'border-gold-500 ring-2 ring-gold-500/50'
                         : 'border-white/30 opacity-80 hover:opacity-100'
