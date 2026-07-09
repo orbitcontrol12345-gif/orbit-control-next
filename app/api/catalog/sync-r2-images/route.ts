@@ -26,6 +26,7 @@ export async function GET() {
   .select('id, ebay_item_id, ebay_gallery_urls, r2_gallery_urls, image_status')
   .not('ebay_item_id', 'is', null)
   .not('ebay_gallery_urls', 'is', null)
+  .neq('ebay_gallery_urls', '[]')
   .not('image_status', 'eq', 'r2_failed')
   .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
   .limit(50);
@@ -109,11 +110,15 @@ export async function GET() {
 const { count: uploadedCount } = await supabaseAdmin
   .from('products')
   .select('*', { count: 'exact', head: true })
-  .not('r2_gallery_urls', 'is', null);
+  .not('r2_gallery_urls', 'is', null)
+  .neq('r2_gallery_urls', '[]');
 
 const { count: remainingCount } = await supabaseAdmin
   .from('products')
   .select('*', { count: 'exact', head: true })
+  .not('ebay_item_id', 'is', null)
+  .not('ebay_gallery_urls', 'is', null)
+  .neq('ebay_gallery_urls', '[]')
   .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]');
    return NextResponse.json({
   success: true,
