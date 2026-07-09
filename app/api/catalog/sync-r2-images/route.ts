@@ -30,7 +30,7 @@ export async function GET() {
   .neq('ebay_gallery_urls', '[]')
   .not('image_status', 'eq', 'r2_failed')
   .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
-  .limit(50);
+  .limit(25);
 
     if (error) throw error;
 
