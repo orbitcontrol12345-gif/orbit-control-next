@@ -21,16 +21,16 @@ function cleanProductName(name: string) {
 
 function mapSupabaseProduct(item: any): Product {
   const bestImage =
-  item.r2_image_url ||
-  (Array.isArray(item.r2_gallery_urls) && item.r2_gallery_urls.length > 0
-    ? item.r2_gallery_urls[0]
-    : null) ||
-  item.ebay_image_url ||
-  item.image_url ||
-  (Array.isArray(item.ebay_gallery_urls) && item.ebay_gallery_urls.length > 0
-    ? item.ebay_gallery_urls[0]
-    : null) ||
-  '/placeholder-product.jpg';
+    (Array.isArray(item.r2_gallery_urls) && item.r2_gallery_urls.length > 0
+      ? item.r2_gallery_urls[0]
+      : null) ||
+    item.r2_image_url ||
+    (Array.isArray(item.ebay_gallery_urls) && item.ebay_gallery_urls.length > 0
+      ? item.ebay_gallery_urls[0]
+      : null) ||
+    item.ebay_image_url ||
+    item.image_url ||
+    '/placeholder-product.jpg';
 
   return {
     id: String(item.id),
@@ -43,7 +43,7 @@ function mapSupabaseProduct(item: any): Product {
     inStock: item.is_active !== false,
     description: item.description || item.name || '',
     technicalSpecs: {},
-      imageUrl: bestImage,
+    imageUrl: bestImage,
     r2ImageUrl: item.r2_image_url || null,
     r2GalleryUrls: item.r2_gallery_urls || [],
     ebayGalleryUrls: item.ebay_gallery_urls || [],
@@ -51,7 +51,6 @@ function mapSupabaseProduct(item: any): Product {
     slug: item.slug || item.sku || item.ebay_item_id || String(item.id),
   };
 }
-
 export async function getSupabaseProductsPage({
   search = '',
   page = 1,
@@ -168,11 +167,6 @@ export async function getSupabaseRelatedProducts(product: Product): Promise<Prod
 
   return (data || [])
     .map(mapSupabaseProduct)
-    .filter((item) => {
-      return (
-        item.imageUrl &&
-        item.imageUrl !== '/placeholder-product.jpg'
-      );
-    })
+    .filter((p) => p.imageUrl && p.imageUrl !== '/placeholder-product.jpg')
     .slice(0, 4);
 }
