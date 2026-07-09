@@ -28,7 +28,7 @@ export async function GET() {
   .not('ebay_gallery_urls', 'is', null)
   .not('image_status', 'eq', 'r2_failed')
   .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
-  .limit(5);
+  .limit(50);
 
     if (error) throw error;
 
@@ -106,14 +106,29 @@ export async function GET() {
         });
       }
     }
+const { count: uploadedCount } = await supabaseAdmin
+  .from('products')
+  .select('*', { count: 'exact', head: true })
+  .not('r2_gallery_urls', 'is', null);
 
-    return NextResponse.json({
-      success: true,
-      processed: products?.length ?? 0,
-      updated,
-      failed,
-      results,
-    });
+const { count: remainingCount } = await supabaseAdmin
+  .from('products')
+  .select('*', { count: 'exact', head: true })
+  .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]');
+   return NextResponse.json({
+  success: true,
+
+  processed: products?.length ?? 0,
+  updated,
+  failed,
+
+  uploadedProducts: uploadedCount ?? 0,
+  remainingProducts: remainingCount ?? 0,
+  totalProducts:
+    (uploadedCount ?? 0) + (remainingCount ?? 0),
+
+  results,
+});
   } catch (error) {
     return NextResponse.json(
       {
