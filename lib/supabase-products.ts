@@ -21,16 +21,16 @@ function cleanProductName(name: string) {
 
 function mapSupabaseProduct(item: any): Product {
   const bestImage =
-    item.r2_image_url ||
-    (Array.isArray(item.r2_gallery_urls) && item.r2_gallery_urls.length > 0
-      ? item.r2_gallery_urls[0]
-      : null) ||
-    item.ebay_image_url ||
-    item.image_url ||
-    (Array.isArray(item.ebay_gallery_urls) && item.ebay_gallery_urls.length > 0
-      ? item.ebay_gallery_urls[0]
-      : null) ||
-    '/placeholder-product.jpg';
+  item.r2_image_url ||
+  (Array.isArray(item.r2_gallery_urls) && item.r2_gallery_urls.length > 0
+    ? item.r2_gallery_urls[0]
+    : null) ||
+  item.ebay_image_url ||
+  item.image_url ||
+  (Array.isArray(item.ebay_gallery_urls) && item.ebay_gallery_urls.length > 0
+    ? item.ebay_gallery_urls[0]
+    : null) ||
+  '/placeholder-product.jpg';
 
   return {
     id: String(item.id),
@@ -160,12 +160,19 @@ export async function getSupabaseRelatedProducts(product: Product): Promise<Prod
     .select('*')
     .eq('is_active', true)
     .neq('catalog_visible', false)
-    .not('r2_image_url', 'is', null)
     .or(`brand.eq.${product.brand},category.eq.${product.category}`)
     .neq('sku', product.sku)
-    .limit(4);
+    .limit(12);
 
   if (error) return [];
 
-  return (data || []).map(mapSupabaseProduct);
+  return (data || [])
+    .map(mapSupabaseProduct)
+    .filter((item) => {
+      return (
+        item.imageUrl &&
+        item.imageUrl !== '/placeholder-product.jpg'
+      );
+    })
+    .slice(0, 4);
 }
