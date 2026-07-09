@@ -20,6 +20,13 @@ function cleanProductName(name: string) {
 }
 
 function mapSupabaseProduct(item: any): Product {
+  const bestImage =
+  item.r2_image_url ||
+  (Array.isArray(item.r2_gallery_urls) ? item.r2_gallery_urls[0] : null) ||
+  item.ebay_image_url ||
+  item.image_url ||
+  (Array.isArray(item.ebay_gallery_urls) ? item.ebay_gallery_urls[0] : null) ||
+  '/placeholder-product.jpg';
   return {
     id: String(item.id),
     sku: item.sku || '',
@@ -31,11 +38,7 @@ function mapSupabaseProduct(item: any): Product {
     inStock: item.is_active !== false,
     description: item.description || item.name || '',
     technicalSpecs: {},
-    imageUrl:
-  item.r2_image_url ||
-  item.ebay_image_url ||
-  item.image_url ||
-  '/placeholder-product.jpg',
+   imageUrl: bestImage,
 
 r2ImageUrl: item.r2_image_url || null,
 
