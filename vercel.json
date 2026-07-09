@@ -5,7 +5,7 @@
       "schedule": "0 */2 * * *"
     },
     {
-      "path": "/api/download-images?limit=200",
+      "path": "/api/catalog/sync-r2-images",
       "schedule": "*/10 * * * *"
     }
   ]
