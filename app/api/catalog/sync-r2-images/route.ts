@@ -24,6 +24,7 @@ export async function GET() {
     const { data: products, error } = await supabaseAdmin
   .from('products')
   .select('id, ebay_item_id, ebay_gallery_urls, r2_gallery_urls, image_status')
+  .eq('marketplace', 'EBAY_US')
   .not('ebay_item_id', 'is', null)
   .not('ebay_gallery_urls', 'is', null)
   .neq('ebay_gallery_urls', '[]')
@@ -110,12 +111,14 @@ export async function GET() {
 const { count: uploadedCount } = await supabaseAdmin
   .from('products')
   .select('*', { count: 'exact', head: true })
+  .eq('marketplace', 'EBAY_US')
   .not('r2_gallery_urls', 'is', null)
   .neq('r2_gallery_urls', '[]');
 
 const { count: remainingCount } = await supabaseAdmin
   .from('products')
   .select('*', { count: 'exact', head: true })
+  .eq('marketplace', 'EBAY_US')
   .not('ebay_item_id', 'is', null)
   .not('ebay_gallery_urls', 'is', null)
   .neq('ebay_gallery_urls', '[]')
