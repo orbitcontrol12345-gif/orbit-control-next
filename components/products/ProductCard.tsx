@@ -25,7 +25,12 @@ function ConditionBadge({ condition }: { condition: Product['condition'] }) {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const productUrl = `/products/${product.slug}`;
-  const safeImage = product.imageUrl || FALLBACK_IMAGE;
+  const safeImage =
+  product.imageUrl ||
+  product.r2ImageUrl ||
+  product.r2GalleryUrls?.[0] ||
+  product.ebayGalleryUrls?.[0] ||
+  FALLBACK_IMAGE;
   const [imageSrc, setImageSrc] = useState(safeImage);
 
   useEffect(() => {
