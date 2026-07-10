@@ -3,325 +3,250 @@ import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const LIMIT = 250;
+const MARKETPLACE = 'EBAY_US';
+const SELLER = 'orbitcontrol';
 
-function slugify(text: string) {
-  return text
+function slugify(text: string): string {
+  return String(text || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 180);
 }
 
-function cleanTitle(title: string) {
+function cleanTitle(title: string): string {
   return String(title || '')
-    .replace(/^\s*LOT\s+\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)?\s+/i, '')
-    .replace(/^\s*\d+\s*(PCS|PC|PIECES|PCS\.|PC\.)\s+/i, '')
-    .replace(/^\s*LOT\s+OF\s+\d+\s+/i, '')
-    .replace(/\bNEW OPEN BOX\b/gi, '')
-    .replace(/\bOPEN BOX\b/gi, '')
+    // Remove quantity/lot prefixes and suffixes without touching real part numbers.
+    .replace(/^\s*LOT\s+(?:OF\s+)?\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)?\s*/i, '')
+    .replace(/^\s*\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\s*/i, '')
+    .replace(/\bLOT\s*#?\s*(?:OF\s+)?\d+(?:\.\d+)?\b/gi, '')
+    .replace(/\bQTY\s*[:#-]?\s*\d+(?:\.\d+)?\b/gi, '')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\b/gi, '')
+    .replace(/\b(?:PCS?|PIECES?)\s*\d+(?:\.\d+)?\b/gi, '')
+
+    // Condition and packaging noise.
+    .replace(/\bNEW\s+OPEN\s+BOX\b/gi, '')
+    .replace(/\bOPEN\s+BOX\b/gi, '')
+    .replace(/\bNEW\s+OLD\s+STOCK\b/gi, '')
+    .replace(/\bNEW\s+SEALED\b/gi, '')
+    .replace(/\bREFURBISHED\b/gi, '')
     .replace(/\bNEW\b/gi, '')
     .replace(/\bUSED\b/gi, '')
-    .replace(/\bW\/O BOX\b/gi, '')
-    .replace(/\bWITHOUT BOX\b/gi, '')
-    .replace(/\bNO BOX\b/gi, '')
-    .replace(/\bWITH DAMAGED BOX\b/gi, '')
-    .replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
-    .replace(/\bNO BOX\b/gi, '')
-.replace(/\bWITH DAMAGED BOX\b/gi, '')
-.replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
-.replace(/\bWITHOUT ACCESSORIES\b/gi, '')
-.replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
-    .replace(/\bWITH NO ORIGINAL BOX\b/gi, '')
-    .replace(/\bTRIED\s*&\s*TESTED\b/gi, '')
-.replace(/\bTRIED AND TESTED\b/gi, '')
-.replace(/\bWITH DAMAGED BOX\b/gi, '')
-.replace(/\bDAMAGED BOX\b/gi, '')
-.replace(/\bWITH BROKEN BOX\b/gi, '')
-.replace(/\bBROKEN BOX\b/gi, '')
-.replace(/\bWITHOUT ANY ACCESSORIES\b/gi, '')
-.replace(/\bWITHOUT ACCESSORIES\b/gi, '')
-.replace(/\bW\/O ACCESSORIES\b/gi, '')
-.replace(/\bNO ACCESSORIES\b/gi, '')
-.replace(/\bNO ORIGINAL BOX\b/gi, '')
-.replace(/\bWITH OLD BOX\b/gi, '')
-.replace(/\bOLD BOX\b/gi, '')
-.replace(/\bFOR PARTS\b/gi, '')
-.replace(/\bPARTS ONLY\b/gi, '')
-.replace(/\bWITH OLD PACKAGING\b/gi, '')
-.replace(/\bOLD PACKAGING\b/gi, '')
-.replace(/\bWITH BROKEN PARTS\b/gi, '')
-.replace(/\bWITH BROKEN PART\b/gi, '')
-.replace(/\bBROKEN PARTS\b/gi, '')
-.replace(/\bBROKEN PART\b/gi, '')
-.replace(/\bW\/ BROKEN PART\b/gi, '')
-.replace(/\bWITH MISSING PART\b/gi, '')
-.replace(/\bMISSING PART\b/gi, '')
-.replace(/\bWITHOUT COVER FOR BATTERY\b/gi, '')
-.replace(/\(WITHOUT COVER FOR BATTERY\)/gi, '')
-.replace(/\bWITH BROKEN BACK PLATE\b/gi, '')
-.replace(/\bBROKEN BACK PLATE\b/gi, '')
-.replace(/\s+-\s*$/g, '')
-.replace(/\s+-\s+/g, ' ')
-.replace(/\s+/g, ' ')
-.trim();
+    .replace(/\bW\/O\s+BOX\b/gi, '')
+    .replace(/\bWITHOUT\s+BOX\b/gi, '')
+    .replace(/\bNO\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+NO\s+ORIGINAL\s+BOX\b/gi, '')
+    .replace(/\bNO\s+ORIGINAL\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+DAMAGED\s+BOX\b/gi, '')
+    .replace(/\bDAMAGED\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+BROKEN\s+BOX\b/gi, '')
+    .replace(/\bBROKEN\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+OLD\s+BOX\b/gi, '')
+    .replace(/\bOLD\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+OLD\s+PACKAGING\b/gi, '')
+    .replace(/\bOLD\s+PACKAGING\b/gi, '')
+
+    // Accessory/parts noise.
+    .replace(/\bWITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
+    .replace(/\bW\/O\s+ACCESSORIES\b/gi, '')
+    .replace(/\bNO\s+ACCESSORIES\b/gi, '')
+    .replace(/\bTRIED\s*(?:&|AND)\s*TESTED\b/gi, '')
+    .replace(/\bFOR\s+PARTS\b/gi, '')
+    .replace(/\bPARTS\s+ONLY\b/gi, '')
+    .replace(/\bWITH\s+BROKEN\s+PARTS?\b/gi, '')
+    .replace(/\bBROKEN\s+PARTS?\b/gi, '')
+    .replace(/\bW\/\s*BROKEN\s+PART\b/gi, '')
+    .replace(/\bWITH\s+MISSING\s+PART\b/gi, '')
+    .replace(/\bMISSING\s+PART\b/gi, '')
+    .replace(/\(?\bWITHOUT\s+COVER\s+FOR\s+BATTERY\b\)?/gi, '')
+    .replace(/\bWITH\s+BROKEN\s+BACK\s+PLATE\b/gi, '')
+    .replace(/\bBROKEN\s+BACK\s+PLATE\b/gi, '')
+
+    // Final whitespace/punctuation normalization.
+    .replace(/\s+-\s*$/g, '')
+    .replace(/\s+-\s+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-function detectBrand(title: string) {
-  const brands = [
-'SIEMENS',
-'ABB',
-'SCHNEIDER',
-'SCHNEIDER ELECTRIC',
-'ALLEN-BRADLEY',
-'ROCKWELL',
-'OMRON',
-'HONEYWELL',
-'YOKOGAWA',
-'MITSUBISHI',
-'GENERAL ELECTRIC',
-'EMERSON',
-'FANUC',
-'KEYENCE',
-'PHOENIX CONTACT',
-'TURCK',
-'SICK',
-'IFM',
-'FESTO',
-'EATON',
-'PILZ',
-'BECKHOFF',
-'HIRSCHMANN',
-'REXROTH',
-'BOSCH',
-'BOSCH REXROTH',
-'DANFOSS',
-'GREYSTONE',
-'LENZE',
-'SEW',
-'SEW EURODRIVE',
-'B&R',
-'BAUMULLER',
-'MOELLER',
-'KLOCKNER MOELLER',
-'TELEMECANIQUE',
-'SQUARE D',
-'CUTLER HAMMER',
-'WESTINGHOUSE',
-'FUJI',
-'FUJI ELECTRIC',
-'TOSHIBA',
-'HITACHI',
-'LG',
-'LS',
-'LS INDUSTRIAL',
-'LSIS',
-'AUTONICS',
-'IDEC',
-'PROFACE',
-'WEIDMULLER',
-'WAGO',
-'BALLUFF',
-'PEPPERL FUCHS',
-'PEPPERL+FUCHS',
-'BANNER',
-'BANNER ENGINEERING',
-'PARKER',
-'PARKER HANNIFIN',
-'SMC',
-'NORGREN',
-'ASCO',
-'BURKERT',
-'MAC VALVES',
-'NUMATICS',
-'VICKERS',
-'ATOS',
-'MOOG',
-'KOLLMORGEN',
-'YASKAWA',
-'MAGNETEK',
-'CONTROL TECHNIQUES',
-'KEB',
-'EUCHNER',
-'LEUZE',
-'OPTEX',
-'COGNEX',
-'ACCU SORT',
-'BENTLY NEVADA',
-'ENDRESS HAUSER',
-'ENDRESS+HAUSER',
-'ROSEMOUNT',
-'FISHER',
-'FOXBORO',
-'YAMATAKE',
-'AZBIL',
-'VEGA',
-'KROHNE',
-'E H',
-'METTLER TOLEDO',
-'TOLEDO',
-'APPLIED MATERIALS',
-'LAM RESEARCH',
-'NOVELLUS',
-'AMAT',
-'VACON',
-'TECO',
-'DELTA',
-'INVT',
-'INOVANCE',
-'PANASONIC',
-'NATIONAL INSTRUMENTS',
-'NI',
-'ADVANTECH',
-'MOXA',
-'RED LION',
-'BLACK BOX',
-'BELDEN',
-'LUTZE',
-'HELUKABEL',
-'LAPP',
-'RITTAL',
-'HOFFMAN',
-'PANDUIT',
-'THOMAS BETTS',
-'T&B',
-'CARLO GAVAZZI',
-'DOLD',
-'ELAU',
-'TRICONEX',
-'HIMA',
-'WOODWARD',
-'BACHMANN',
-'VIPA',
-'SAIA',
-'SAIA BURGESS',
-'UNITRONICS',
-'KUKA',
-'ABB ROBOTICS',
-'STAUBLI',
-'ADEPT',
-'UNIVERSAL ROBOTS',
-'SCHUNK',
-'SOCOMEC',
-'LEGRAND',
-'MERLIN GERIN',
-'CHINT',
-'DELIXI',
-'MURRELEKTRONIK',
-'RKC',
-'SHINKO',
-'OMEGA',
-'WATLOW',
-'EUROTHERM',
-'LOVE CONTROLS',
-'P+F',
-'MICRO MOTION',
-'DRUCK',
-'FLUKE',
-'AGILENT',
-'HP',
-'HEWLETT PACKARD',
-'TEKTRONIX',
-'ANRITSU',
-'R&S',
-'ROHDE SCHWARZ',
-'KEITHLEY',
-'EXTECH',
-'BRUEL KJAER',
-'BRUKER',
-'MEDTRONIC',
-'PHILIPS',
-'DRAGER',
-'GE HEALTHCARE',
-'SIEMENS HEALTHINEERS',
-'ALOKA',
-'SHIMADZU',
-'NIKON',
-'OLYMPUS',
-'ZEISS',
-'COHU',
-'JUKI',
-'ASM',
-'NORTEL',
-'CISCO',
-'JUNIPER',
-'ALCATEL',
-'LUCENT',
-'ERICSSON',
-'NOKIA',
-'MOTOROLA',
-'RAD',
-'DIGI',
-'TELTONIKA',
-'GREYSTONE',
-'CLIPSAL',
-'ECKELMANN',
-'AMSCO',
-'SOCOMEC',
-'CAREL',
-'DIXELL',
-'ELIWELL',
-'JOHNSON CONTROLS',
-'PENN',
-'HONEYWELL BUILDING',
-'TREND',
-'DISTECH',
-'TRANE',
-'CARRIER',
-'YORK',
-'PEPPERL+FUCHS',
-'PEPPERL FUCHS',
-'JOHNSON CONTROLS',
-'DYNALITE',
-'NEMIC-LAMBDA',
-'IDEC',
-'PRECISION DIGITAL',
-'ALLIED TELESIS',
-'ROSEMOUNT',
-'SYSTEM SENSOR',
-'HID',
-'AGILENT',
-'BOSCH',
-'PHILIPS',
-'ISMACONTROLLI',
-'HITACHI',
-'PANASONIC',
-'ASCO',
-'ICOM',
-'BERGHOF',
-'FRONIUS',
-'AIPHONE',
-'NATIONAL INSTRUMENTS',
-'AREVA',
-'ZEISS',
-'SELCO',
-'PROMINENT',
-'ATLAS COPCO',
-'SIMRAD',
-'TP-LINK',
-'ROCKWELL AUTOMATION',
-'EUCHNER',
-'FISHER ROSEMOUNT',
-'DET-TRONICS',
-'TDK',
-'JANITZA',
-'ELVACO',
-'LONMARK',
-'JRC'  
-];
+function getAspectValue(item: any, names: string[]): string {
+  const aspects = Array.isArray(item?.localizedAspects)
+    ? item.localizedAspects
+    : [];
 
-  const upper = String(title || '').toUpperCase();
-  return brands.find((b) => new RegExp(`\\b${b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(title)) || 'UNKNOWN';
+  for (const expectedName of names) {
+    const found = aspects.find(
+      (aspect: any) =>
+        String(aspect?.name || '').trim().toLowerCase() ===
+        expectedName.toLowerCase()
+    );
+
+    const value = String(found?.value || '').trim();
+    if (value) return value;
+  }
+
+  return '';
+}
+
+function normalizePartNumber(value: string): string {
+  return String(value || '')
+    .toUpperCase()
+    .trim()
+    .replace(/\bLOT\s*#?\s*(?:OF\s+)?\d+(?:\.\d+)?\b/gi, '')
+    .replace(/\bQTY\s*[:#-]?\s*\d+(?:\.\d+)?\b/gi, '')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?|SETS?|PACKS?)\b/gi, '')
+    .replace(/\b(?:PCS?|PIECES?|SETS?|PACKS?)\s*\d+(?:\.\d+)?\b/gi, '')
+    .replace(/\b(?:LOT|LOT#|QTY|PCS?|PIECES?|SETS?|PACKS?)\b/gi, '')
+    .replace(/\s*-\s*/g, '-')
+    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Z0-9./-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^[./-]+|[./-]+$/g, '');
+}
+
+function isElectricalRating(value: string): boolean {
+  const v = normalizePartNumber(value);
+
+  return (
+    /^\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|AMP|AMPS|KW|W)$/i.test(v) ||
+    /^\d+(?:\.\d+)?-\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA)$/i.test(v) ||
+    /^\d+X\d+(?:V|VAC|VDC|A|MA)$/i.test(v)
+  );
+}
+
+function isWeakFamilyModel(value: string): boolean {
+  const v = normalizePartNumber(value);
+
+  return /^(?:EM|CPU|CP|FM|SM|PS|IM|PM|PLC|HMI|VFD|AI|AO|DI|DO|IO)-?\d{1,4}$/i.test(
+    v
+  );
+}
+
+function isValidPartNumber(
+  value: string,
+  ebayItemId: string,
+  realItemId: string
+): boolean {
+  const v = normalizePartNumber(value);
+
+  if (!v || v.length < 4 || v.length > 50) return false;
+  if (v === String(ebayItemId).toUpperCase()) return false;
+  if (v === String(realItemId).toUpperCase()) return false;
+  if (/^\d{10,14}$/.test(v)) return false;
+  if (/^(?:LOT|QTY|PCS?|PIECES?|SETS?|PACKS?)$/i.test(v)) return false;
+  if (isElectricalRating(v)) return false;
+  if (isWeakFamilyModel(v)) return false;
+
+  return /[A-Z]/.test(v) && /\d/.test(v);
+}
+
+function scorePartNumber(value: string): number {
+  const v = normalizePartNumber(value);
+  let score = 0;
+
+  // High-confidence industrial formats.
+  if (/^6ES\d/i.test(v)) score += 600;
+  if (/^6AV\d/i.test(v)) score += 590;
+  if (/^6GK\d/i.test(v)) score += 580;
+  if (/^6EP\d/i.test(v)) score += 580;
+  if (/^IC\d{3}[A-Z]{2,}\d+/i.test(v)) score += 560;
+  if (/^A\d{2}B-\d{4}-[A-Z0-9]+$/i.test(v)) score += 550;
+
+  // Siemens shortened format such as 222-1BF22-0XA8.
+  if (/^\d{3}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d$/i.test(v)) {
+    score += 540;
+  }
+
+  // Structured codes are preferred over simple family labels.
+  const groups = v.split('-').filter(Boolean).length;
+  if (groups >= 3) score += 120;
+  if (groups >= 4) score += 40;
+  if (/[A-Z]/.test(v)) score += 40;
+  if (/\d/.test(v)) score += 40;
+  if (/[-/.]/.test(v)) score += 30;
+  if (v.length >= 6 && v.length <= 30) score += 30;
+
+  return score;
+}
+
+function extractBestPartNumber(
+  item: any,
+  title: string,
+  ebayItemId: string,
+  realItemId: string
+): string {
+  const candidates: string[] = [];
+
+  const aspectCandidates = [
+    getAspectValue(item, ['MPN']),
+    getAspectValue(item, ['Manufacturer Part Number']),
+    getAspectValue(item, ['Part Number']),
+    getAspectValue(item, ['Model Number']),
+  ];
+
+  for (const candidate of aspectCandidates) {
+    if (candidate) {
+      candidates.push(candidate);
+      const extracted = extractPartNumber(candidate);
+      if (extracted) candidates.push(extracted);
+    }
+  }
+
+  const extractedFromTitle = extractPartNumber(title);
+  if (extractedFromTitle) candidates.push(extractedFromTitle);
+
+  // Explicit fallback for Siemens titles like:
+  // SIEMENS 222-1BF22-0XA8 Module EM 222...
+  const siemensShort = title.match(
+    /\b\d{3}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d\b/i
+  )?.[0];
+
+  if (siemensShort) candidates.push(siemensShort);
+
+  const ranked = [...new Set(candidates.map(normalizePartNumber))]
+    .filter((candidate) =>
+      isValidPartNumber(candidate, ebayItemId, realItemId)
+    )
+    .map((candidate) => ({
+      candidate,
+      score: scorePartNumber(candidate),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return b.candidate.length - a.candidate.length;
+    });
+
+  return ranked[0]?.candidate || '';
+}
+
+function isExistingPartNumberBad(
+  value: unknown,
+  ebayItemId: string
+): boolean {
+  const partNumber = normalizePartNumber(String(value || ''));
+
+  if (!partNumber) return true;
+  if (partNumber === String(ebayItemId).toUpperCase()) return true;
+  if (/^\d{10,14}$/.test(partNumber)) return true;
+  if (/\b(?:LOT|QTY|PCS?|PIECES?)\b/i.test(partNumber)) return true;
+  if (isElectricalRating(partNumber)) return true;
+  if (isWeakFamilyModel(partNumber)) return true;
+
+  return false;
 }
 
 async function markQueue(
   ebayItemId: string,
   status: string,
   errorMessage: string | null = null
-) {
+): Promise<void> {
   await supabaseAdmin
     .from('ebay_import_queue')
     .update({
@@ -336,281 +261,353 @@ async function markQueue(
 export async function GET() {
   const now = new Date().toISOString();
 
-  const { data: queueRows, error: queueError } = await supabaseAdmin
-    .from('ebay_import_queue')
-    .select('ebay_item_id, attempts')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true })
-    .limit(LIMIT);
+  try {
+    const { data: queueRows, error: queueError } = await supabaseAdmin
+      .from('ebay_import_queue')
+      .select('ebay_item_id, attempts')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(LIMIT);
 
-  if (queueError) {
-    return NextResponse.json({ success: false, error: queueError }, { status: 500 });
-  }
+    if (queueError) {
+      return NextResponse.json(
+        { success: false, error: queueError.message },
+        { status: 500 }
+      );
+    }
 
-  if (!queueRows || queueRows.length === 0) {
+    if (!queueRows?.length) {
+      return NextResponse.json({
+        success: true,
+        message: 'No pending items in queue.',
+        processed: 0,
+      });
+    }
+
+    const token = await getEbayToken();
+    const accessToken = String(token.access_token || '').trim();
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, error: 'Missing eBay access token.' },
+        { status: 500 }
+      );
+    }
+
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+    let failed = 0;
+    let rateLimited = false;
+
+    const results: Array<Record<string, unknown>> = [];
+
+    for (const row of queueRows) {
+      const ebayItemId = String(row.ebay_item_id || '').trim();
+
+      if (!ebayItemId) {
+        failed++;
+        results.push({
+          status: 'failed_invalid_queue_item',
+          error: 'Missing ebay_item_id',
+        });
+        continue;
+      }
+
+      await supabaseAdmin
+        .from('ebay_import_queue')
+        .update({
+          status: 'processing',
+          attempts: Number(row.attempts || 0) + 1,
+          updated_at: now,
+        })
+        .eq('ebay_item_id', ebayItemId);
+
+      const { data: existingProduct, error: existingError } =
+        await supabaseAdmin
+          .from('products')
+          .select('id, part_number, model_number, brand')
+          .eq('ebay_item_id', ebayItemId)
+          .maybeSingle();
+
+      if (existingError) {
+        await markQueue(ebayItemId, 'failed', existingError.message);
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'failed_existing_lookup',
+          error: existingError.message,
+        });
+        continue;
+      }
+
+      const existingPartBad = isExistingPartNumberBad(
+        existingProduct?.part_number,
+        ebayItemId
+      );
+
+      const existingBrand = String(existingProduct?.brand || '').trim();
+      const existingBrandBad =
+        !existingBrand || existingBrand.toUpperCase() === 'UNKNOWN';
+
+      // Keep valid existing products fast: refresh only.
+      // Bad part numbers or UNKNOWN brands continue to eBay and get repaired.
+      if (existingProduct?.id && !existingPartBad && !existingBrandBad) {
+        const { error: refreshError } = await supabaseAdmin
+          .from('products')
+          .update({
+            last_seen_at: now,
+            updated_at: now,
+            is_active: true,
+          })
+          .eq('id', existingProduct.id);
+
+        if (refreshError) {
+          await markQueue(ebayItemId, 'failed', refreshError.message);
+          failed++;
+          results.push({
+            ebayItemId,
+            status: 'failed_refresh_existing',
+            error: refreshError.message,
+          });
+          continue;
+        }
+
+        await markQueue(
+          ebayItemId,
+          'completed',
+          'Existing product already has valid part number and brand'
+        );
+
+        skipped++;
+        results.push({
+          ebayItemId,
+          status: 'existing_valid',
+        });
+        continue;
+      }
+
+      const params = new URLSearchParams({
+        q: ebayItemId,
+        limit: '1',
+        filter: `sellers:{${SELLER}}`,
+      });
+
+      const response = await fetch(
+        `https://api.ebay.com/buy/browse/v1/item_summary/search?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+            'Accept-Language': 'en-US',
+          },
+          cache: 'no-store',
+        }
+      );
+
+      if (response.status === 429) {
+        await markQueue(ebayItemId, 'pending', 'EBAY_RATE_LIMIT_429');
+        rateLimited = true;
+        results.push({
+          ebayItemId,
+          status: 'rate_limited',
+        });
+        break;
+      }
+
+      const ebayData = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message = JSON.stringify(ebayData || {}).slice(0, 500);
+        await markQueue(ebayItemId, 'failed', message);
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'failed_fetch',
+          error: message,
+        });
+        continue;
+      }
+
+      const item = ebayData?.itemSummaries?.[0];
+
+      if (!item) {
+        await markQueue(
+          ebayItemId,
+          'failed',
+          'No item returned from Browse API'
+        );
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'no_item',
+        });
+        continue;
+      }
+
+      const title = String(item.title || '').trim();
+      const imageUrl = String(
+        item.image?.imageUrl ||
+          item.thumbnailImages?.[0]?.imageUrl ||
+          ''
+      ).trim();
+
+      const realItemId = String(
+        item.legacyItemId ||
+          item.itemId?.split('|')?.[1] ||
+          ebayItemId
+      ).trim();
+
+      if (
+        !title ||
+        !imageUrl ||
+        title.includes('Orbit Control Industrial Item')
+      ) {
+        await markQueue(
+          ebayItemId,
+          'failed',
+          'Missing valid title or image'
+        );
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'failed_missing_data',
+        });
+        continue;
+      }
+
+      const cleanedName = cleanTitle(title);
+
+      if (!cleanedName) {
+        await markQueue(ebayItemId, 'failed', 'Missing clean name');
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'failed_missing_name',
+        });
+        continue;
+      }
+
+      const finalPartNumber = extractBestPartNumber(
+        item,
+        title,
+        ebayItemId,
+        realItemId
+      );
+
+      const detectedBrand = detectIndustrialBrand(
+        [
+          item.brand,
+          getAspectValue(item, ['Brand']),
+          getAspectValue(item, ['Manufacturer']),
+          getAspectValue(item, ['MPN']),
+          getAspectValue(item, ['Manufacturer Part Number']),
+          title,
+          cleanedName,
+          finalPartNumber,
+          item.shortDescription,
+          item.description,
+        ]
+          .filter(Boolean)
+          .join(' ')
+      );
+
+      const finalBrand =
+        detectedBrand && detectedBrand !== 'UNKNOWN'
+          ? detectedBrand
+          : existingBrand && existingBrand.toUpperCase() !== 'UNKNOWN'
+            ? existingBrand
+            : 'UNKNOWN';
+
+      const product = {
+        ebay_item_id: realItemId,
+        sku: realItemId,
+        part_number: finalPartNumber || null,
+        model_number: finalPartNumber || null,
+        brand: finalBrand,
+        category:
+          item.categories?.[0]?.categoryName ||
+          'Industrial Automation',
+        name: cleanedName,
+        condition: item.condition || 'Used',
+        image_url: imageUrl,
+        description: title,
+        slug: slugify(`${realItemId}-${cleanedName}`),
+        marketplace: MARKETPLACE,
+        seller: SELLER,
+        source: 'ebay-browse-queue',
+        source_type: 'ebay',
+        quantity: 1,
+        price: item.price?.value
+          ? Number(item.price.value)
+          : null,
+        currency: item.price?.currency || 'USD',
+        is_active: true,
+        last_seen_at: now,
+        updated_at: now,
+      };
+
+      const { error: upsertError } = await supabaseAdmin
+        .from('products')
+        .upsert(product, {
+          onConflict: 'ebay_item_id',
+        });
+
+      if (upsertError) {
+        await markQueue(ebayItemId, 'failed', upsertError.message);
+        failed++;
+        results.push({
+          ebayItemId,
+          status: 'failed_upsert',
+          error: upsertError.message,
+        });
+        continue;
+      }
+
+      await markQueue(ebayItemId, 'completed', null);
+
+      if (existingProduct?.id) {
+        updated++;
+        results.push({
+          ebayItemId,
+          status: 'repaired_existing',
+          partNumber: finalPartNumber || null,
+          brand: finalBrand,
+        });
+      } else {
+        imported++;
+        results.push({
+          ebayItemId,
+          status: 'imported',
+          name: cleanedName,
+          partNumber: finalPartNumber || null,
+          brand: finalBrand,
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'No pending items in queue.',
-      processed: 0,
+      limit: LIMIT,
+      imported,
+      updated,
+      skipped,
+      failed,
+      rateLimited,
+      results,
     });
-  }
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Unexpected process-queue error';
 
-  const token = await getEbayToken();
-  const accessToken = String(token.access_token).trim();
-
-  let imported = 0;
-  let skipped = 0;
-  let failed = 0;
-  let rateLimited = false;
-
-  const results: any[] = [];
-
-  for (const row of queueRows) {
-    const ebayItemId = row.ebay_item_id;
-
-    await supabaseAdmin
-      .from('ebay_import_queue')
-      .update({
-        status: 'processing',
-        attempts: Number(row.attempts || 0) + 1,
-        updated_at: now,
-      })
-      .eq('ebay_item_id', ebayItemId);
-
-    const already = await supabaseAdmin
-  .from('products')
-  .select('id, part_number, model_number, brand')
-      .eq('ebay_item_id', ebayItemId)
-      .maybeSingle();
-
-    if (already.data?.id) {
-  const { error: updateExistingError } = await supabaseAdmin
-    .from('products')
-    .update({
-      last_seen_at: now,
-      updated_at: now,
-      is_active: true,
-    })
-    .eq('id', already.data.id);
-
-  if (updateExistingError) {
-    await markQueue(ebayItemId, 'failed', updateExistingError.message);
-    failed++;
-    results.push({
-      ebayItemId,
-      status: 'failed_update_existing',
-      error: updateExistingError.message,
-    });
-    continue;
-  }
-
-  await markQueue(ebayItemId, 'completed', 'Already exists - refreshed last_seen_at');
-  skipped++;
-  results.push({ ebayItemId, status: 'refreshed_existing' });
-  continue;
-}
-    const params = new URLSearchParams({
-      q: ebayItemId,
-      limit: '1',
-      filter: 'sellers:{orbitcontrol}',
-    });
-
-    const res = await fetch(
-      `https://api.ebay.com/buy/browse/v1/item_summary/search?${params.toString()}`,
+    return NextResponse.json(
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
-          'Accept-Language': 'en-US',
-        },
-      }
+        success: false,
+        error: message,
+      },
+      { status: 500 }
     );
-
-    if (res.status === 429) {
-      await markQueue(ebayItemId, 'pending', 'EBAY_RATE_LIMIT_429');
-      rateLimited = true;
-      results.push({ ebayItemId, status: 'rate_limited' });
-      break;
-    }
-
-    const ebayData = await res.json();
-
-    if (!res.ok) {
-      await markQueue(ebayItemId, 'failed', JSON.stringify(ebayData).slice(0, 500));
-      failed++;
-      results.push({ ebayItemId, status: 'failed_fetch' });
-      continue;
-    }
-
-    const item = ebayData.itemSummaries?.[0];
-console.log(JSON.stringify(item, null, 2));
-    if (!item) {
-      await markQueue(ebayItemId, 'failed', 'No item returned from Browse API');
-      failed++;
-      results.push({ ebayItemId, status: 'no_item' });
-      continue;
-    }
-
-    const title = item.title || '';
-    const imageUrl = item.image?.imageUrl || item.thumbnailImages?.[0]?.imageUrl || '';
-    const realItemId = item.legacyItemId || item.itemId?.split('|')?.[1] || ebayItemId;
-
-    if (!title || !imageUrl || title.includes('Orbit Control Industrial Item')) {
-      await markQueue(ebayItemId, 'failed', 'Missing title or image');
-      failed++;
-      results.push({ ebayItemId, status: 'failed_missing_data' });
-      continue;
-    }
-
-    const cleanedName = cleanTitle(title);
-
-if (!cleanedName) {
-  await markQueue(ebayItemId, 'failed', 'Missing clean name');
-  failed++;
-  results.push({
-    ebayItemId,
-    status: 'failed_missing_name',
-  });
-  continue;
-}
-
-const rawPartNumber = extractPartNumber(title);
-
-const cleanedPartNumber = String(rawPartNumber || '')
-  // إزالة LOT 2 / LOT 3.5 / LOT OF 6
-  .replace(/\bLOT\s*(?:OF\s*)?\d+(?:\.\d+)?\b/gi, '')
-
-  // إزالة 2 PCS / 3 PC / 5 PIECES / 6 QTY
-  .replace(
-    /\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?|QTY|SETS?|PACKS?)\b/gi,
-    ''
-  )
-
-  // إزالة الكلمات المتبقية
-  .replace(
-    /\b(?:LOT|LOT#|PCS?|PIECES?|QTY|SETS?|PACKS?)\b/gi,
-    ''
-  )
-
-  .replace(/\s+/g, ' ')
-  .replace(/^[\s,;:._\-\/]+|[\s,;:._\-\/]+$/g, '')
-  .trim();
-
-const isValidPartNumber =
-  cleanedPartNumber.length >= 2 &&
-  cleanedPartNumber !== String(realItemId) &&
-  cleanedPartNumber !== String(ebayItemId) &&
-
-  // منع رقم eBay الطويل
-  !/^\d{10,}$/.test(cleanedPartNumber) &&
-
-  // منع قيم الجهد والطاقة فقط
-  !/^\d+(?:\.\d+)?\s*(?:V|VAC|VDC|AC|DC|HZ|A|AMP|AMPS|KW)$/i.test(
-    cleanedPartNumber
-  ) &&
-
-  // منع كلمات الكمية فقط
-  !/^(?:LOT|PCS?|PIECES?|QTY|SETS?|PACKS?)$/i.test(
-    cleanedPartNumber
-  );
-
-const finalPartNumber = isValidPartNumber
-  ? cleanedPartNumber
-  : '';
-
-const detectedBrand = detectIndustrialBrand(
-  [
-    item.brand,
-
-    item.localizedAspects?.find(
-      (aspect: any) =>
-        String(aspect.name || '').toLowerCase() === 'brand'
-    )?.value,
-
-    item.localizedAspects?.find(
-      (aspect: any) =>
-        String(aspect.name || '').toLowerCase() === 'manufacturer'
-    )?.value,
-
-    title,
-    cleanedName,
-    finalPartNumber,
-    item.shortDescription,
-    item.description,
-  ]
-    .filter(Boolean)
-    .join(' ')
-);
-
-const fallbackBrand = detectBrand(title);
-
-const safeBrand =
-  detectedBrand && detectedBrand !== 'UNKNOWN'
-    ? detectedBrand
-    : fallbackBrand && fallbackBrand !== 'UNKNOWN'
-      ? fallbackBrand
-      : 'UNKNOWN';
-
-const safePartNumber = finalPartNumber;
-const safeModelNumber = finalPartNumber;
-const product = {
-  ebay_item_id: realItemId,
-  sku: realItemId,
-
-  part_number: safePartNumber || null,
-  model_number: safeModelNumber || null,
-  brand: safeBrand,
-
-  category:
-    item.categories?.[0]?.categoryName ||
-    'Industrial Automation',
-
-  name: cleanedName,
-  condition: item.condition || 'Used',
-  image_url: imageUrl,
-  description: title,
-
-  slug: slugify(`${realItemId}-${cleanedName}`),
-
-  marketplace: 'EBAY_US',
-  seller: 'orbitcontrol',
-  source: 'ebay-browse-queue',
-  source_type: 'ebay',
-
-  quantity: 1,
-  price: item.price?.value
-    ? Number(item.price.value)
-    : null,
-
-  currency: item.price?.currency || 'USD',
-
-  is_active: true,
-  last_seen_at: now,
-  updated_at: now,
-};
-    const { error: insertError } = await supabaseAdmin
-      .from('products')
-      .upsert(product, { onConflict: 'ebay_item_id' });
-
-    if (insertError) {
-      await markQueue(ebayItemId, 'failed', insertError.message);
-      failed++;
-      results.push({ ebayItemId, status: 'failed_insert', error: insertError.message });
-      continue;
-    }
-
-    await markQueue(ebayItemId, 'completed', null);
-    imported++;
-    results.push({ ebayItemId, status: 'imported', name: cleanedName });
   }
-
-  return NextResponse.json({
-    success: true,
-    limit: LIMIT,
-    imported,
-    skipped,
-    failed,
-    rateLimited,
-    results,
-  });
 }
