@@ -124,11 +124,10 @@ function isElectricalRating(value: string): boolean {
 function isWeakFamilyModel(value: string): boolean {
   const v = normalizePartNumber(value);
 
-  return /^(?:EM|CPU|CP|FM|SM|PS|IM|PM|PLC|HMI|VFD|AI|AO|DI|DO|IO)-?\d{1,4}$/i.test(
+  return /^(?:EM|CM|CPU|CP|FM|SM|PS|IM|PM|PLC|HMI|VFD|AI|AO|DI|DO|IO)-?\d{1,4}$/i.test(
     v
   );
 }
-
 function isValidPartNumber(
   value: string,
   ebayItemId: string,
