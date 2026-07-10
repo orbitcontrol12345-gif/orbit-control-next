@@ -443,7 +443,7 @@ export async function GET() {
     }
 
     const item = ebayData.itemSummaries?.[0];
-
+console.log(JSON.stringify(item, null, 2));
     if (!item) {
       await markQueue(ebayItemId, 'failed', 'No item returned from Browse API');
       failed++;
