@@ -69,6 +69,7 @@ const BAD_WORDS = new Set([
  */
 const WEAK_MODEL_PREFIXES = new Set([
   'EM',
+  'CM',
   'CPU',
   'CP',
   'FM',
@@ -215,6 +216,7 @@ function scorePart(value: string): number {
   if (/^6AV\d/.test(v)) score += 490;
   if (/^6GK\d/.test(v)) score += 480;
   if (/^6EP\d/.test(v)) score += 480;
+  if (/^6DP\d/.test(v)) score += 295;
 
   if (/^IC\d{3}[A-Z]{2,}\d+/i.test(v)) score += 450;
   if (/^A\d{2}B-\d{4}-[A-Z0-9]+$/i.test(v)) score += 440;
@@ -308,7 +310,14 @@ export function extractIndustrialPartNumberV2(
     /\b6AV\d[\dA-Z\-/.]+\b/gi,
     /\b6GK\d[\dA-Z\-/.]+\b/gi,
     /\b6EP\d[\dA-Z\-/.]+\b/gi,
-
+     /\b6ES\d[\dA-Z-]+\b/g,
+  /\b6AV\d[\dA-Z-]+\b/g,
+  /\b6DP\d[\dA-Z-]+\b/g,
+  /\bIC\d{3}[A-Z]{2,}\d{2,4}\b/g,
+  /\b17\d{2}[A-Z0-9]{2,8}\/[A-Z]\b/g,
+  /\b17\d{2}-?[A-Z0-9]{2,8}\b/g,
+  /\bA\d{2}B-\d{4}-\d{4}\b/g,
+  /\b\d{3}-\d{5}-\d{2}[A-Z]?\b/g,
     // Siemens shortened format: 222-1BF22-0XA8
     /\b\d{3}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d\b/gi,
 
