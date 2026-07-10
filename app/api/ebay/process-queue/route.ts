@@ -463,16 +463,78 @@ export async function GET() {
     }
 
     const cleanedName = cleanTitle(title);
-    const model = extractPartNumber(title);
-    const brand = detectIndustrialBrand(
+
+if (!cleanedName) {
+  await markQueue(ebayItemId, 'failed', 'Missing clean name');
+  failed++;
+  results.push({
+    ebayItemId,
+    status: 'failed_missing_name',
+  });
+  continue;
+}
+
+const rawPartNumber = extractPartNumber(title);
+
+const cleanedPartNumber = String(rawPartNumber || '')
+  // إزالة LOT 2 / LOT 3.5 / LOT OF 6
+  .replace(/\bLOT\s*(?:OF\s*)?\d+(?:\.\d+)?\b/gi, '')
+
+  // إزالة 2 PCS / 3 PC / 5 PIECES / 6 QTY
+  .replace(
+    /\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?|QTY|SETS?|PACKS?)\b/gi,
+    ''
+  )
+
+  // إزالة الكلمات المتبقية
+  .replace(
+    /\b(?:LOT|LOT#|PCS?|PIECES?|QTY|SETS?|PACKS?)\b/gi,
+    ''
+  )
+
+  .replace(/\s+/g, ' ')
+  .replace(/^[\s,;:._\-\/]+|[\s,;:._\-\/]+$/g, '')
+  .trim();
+
+const isValidPartNumber =
+  cleanedPartNumber.length >= 2 &&
+  cleanedPartNumber !== String(realItemId) &&
+  cleanedPartNumber !== String(ebayItemId) &&
+
+  // منع رقم eBay الطويل
+  !/^\d{10,}$/.test(cleanedPartNumber) &&
+
+  // منع قيم الجهد والطاقة فقط
+  !/^\d+(?:\.\d+)?\s*(?:V|VAC|VDC|AC|DC|HZ|A|AMP|AMPS|KW)$/i.test(
+    cleanedPartNumber
+  ) &&
+
+  // منع كلمات الكمية فقط
+  !/^(?:LOT|PCS?|PIECES?|QTY|SETS?|PACKS?)$/i.test(
+    cleanedPartNumber
+  );
+
+const finalPartNumber = isValidPartNumber
+  ? cleanedPartNumber
+  : '';
+
+const detectedBrand = detectIndustrialBrand(
   [
     item.brand,
-    item.localizedAspects
-      ?.find((a: any) => a.name?.toLowerCase() === 'brand')
-      ?.value,
+
+    item.localizedAspects?.find(
+      (aspect: any) =>
+        String(aspect.name || '').toLowerCase() === 'brand'
+    )?.value,
+
+    item.localizedAspects?.find(
+      (aspect: any) =>
+        String(aspect.name || '').toLowerCase() === 'manufacturer'
+    )?.value,
+
     title,
     cleanedName,
-    model,
+    finalPartNumber,
     item.shortDescription,
     item.description,
   ]
@@ -480,60 +542,52 @@ export async function GET() {
     .join(' ')
 );
 
-    if (!cleanedName) {
-  await markQueue(ebayItemId, 'failed', 'Missing clean name');
-  failed++;
-  results.push({ ebayItemId, status: 'failed_missing_name' });
-  continue;
-}
-
-const extractedModel =
-  extractPartNumber(model || title || cleanedName || '');
-
-const finalModel =
-  extractedModel || model || '';
-
-const safePartNumber =
-  already.data?.part_number && already.data.part_number.trim()
-    ? already.data.part_number
-    : finalModel;
-
-const safeModelNumber =
-  already.data?.model_number && already.data.model_number.trim()
-    ? already.data.model_number
-    : finalModel;
+const fallbackBrand = detectBrand(title);
 
 const safeBrand =
-  already.data?.brand &&
-  already.data.brand.trim() &&
-  already.data.brand !== 'UNKNOWN'
-    ? already.data.brand
-    : brand;
+  detectedBrand && detectedBrand !== 'UNKNOWN'
+    ? detectedBrand
+    : fallbackBrand && fallbackBrand !== 'UNKNOWN'
+      ? fallbackBrand
+      : 'UNKNOWN';
 
+const safePartNumber = finalPartNumber;
+const safeModelNumber = finalPartNumber;
 const product = {
   ebay_item_id: realItemId,
   sku: realItemId,
-  part_number: safePartNumber,
-  model_number: safeModelNumber,
+
+  part_number: safePartNumber || null,
+  model_number: safeModelNumber || null,
   brand: safeBrand,
-  category: item.categories?.[0]?.categoryName || 'Industrial Automation',
+
+  category:
+    item.categories?.[0]?.categoryName ||
+    'Industrial Automation',
+
   name: cleanedName,
   condition: item.condition || 'Used',
   image_url: imageUrl,
   description: title,
+
   slug: slugify(`${realItemId}-${cleanedName}`),
+
   marketplace: 'EBAY_US',
   seller: 'orbitcontrol',
   source: 'ebay-browse-queue',
   source_type: 'ebay',
+
   quantity: 1,
-  price: item.price?.value ? Number(item.price.value) : null,
+  price: item.price?.value
+    ? Number(item.price.value)
+    : null,
+
   currency: item.price?.currency || 'USD',
+
   is_active: true,
   last_seen_at: now,
   updated_at: now,
 };
-
     const { error: insertError } = await supabaseAdmin
       .from('products')
       .upsert(product, { onConflict: 'ebay_item_id' });
