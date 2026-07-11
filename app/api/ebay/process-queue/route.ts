@@ -183,6 +183,29 @@ function extractBestPartNumber(
 ): string {
   const candidates: string[] = [];
 
+  const addCandidate = (value: string) => {
+    const raw = String(value || '').trim();
+    if (!raw) return;
+
+    // أضف القيمة كما هي
+    candidates.push(raw);
+
+    // قسم القيم المركبة إلى أجزاء منفصلة
+    const parts = raw
+      .split(/\s*[|;,]\s*|\s{2,}/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    for (const part of parts) {
+      candidates.push(part);
+
+      const extracted = extractPartNumber(part);
+      if (extracted) {
+        candidates.push(extracted);
+      }
+    }
+  };
+
   const aspectCandidates = [
     getAspectValue(item, ['MPN']),
     getAspectValue(item, ['Manufacturer Part Number']),
@@ -191,23 +214,40 @@ function extractBestPartNumber(
   ];
 
   for (const candidate of aspectCandidates) {
-    if (candidate) {
-      candidates.push(candidate);
-      const extracted = extractPartNumber(candidate);
-      if (extracted) candidates.push(extracted);
-    }
+    addCandidate(candidate);
   }
 
+  // استخراج من العنوان
   const extractedFromTitle = extractPartNumber(title);
-  if (extractedFromTitle) candidates.push(extractedFromTitle);
+  if (extractedFromTitle) {
+    candidates.push(extractedFromTitle);
+  }
 
-  // Explicit fallback for Siemens titles like:
-  // SIEMENS 222-1BF22-0XA8 Module EM 222...
+  // Siemens: 222-1BF22-0XA8
   const siemensShort = title.match(
     /\b\d{3}-\d[A-Z]{2}\d{2}-\d[A-Z]{2}\d\b/i
   )?.[0];
 
-  if (siemensShort) candidates.push(siemensShort);
+  if (siemensShort) {
+    candidates.push(siemensShort);
+  }
+
+  // Siemens / Siemens legacy: 6DP2658-7PC55-0AA0
+  const siemens6DP = title.match(
+    /\b6DP\d[\dA-Z-]+\b/i
+  )?.[0];
+
+  if (siemens6DP) {
+    candidates.push(siemens6DP);
+  }
+
+  // Generic structured industrial codes
+  const structuredCodes =
+    title.match(
+      /\b[A-Z0-9]{2,12}(?:[-/][A-Z0-9]{2,12}){1,5}\b/gi
+    ) || [];
+
+  candidates.push(...structuredCodes);
 
   const ranked = [...new Set(candidates.map(normalizePartNumber))]
     .filter((candidate) =>
@@ -218,7 +258,10 @@ function extractBestPartNumber(
       score: scorePartNumber(candidate),
     }))
     .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+
       return b.candidate.length - a.candidate.length;
     });
 
