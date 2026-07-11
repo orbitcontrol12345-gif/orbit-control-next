@@ -488,6 +488,14 @@ export async function GET() {
       }
 
       const title = String(item.title || '').trim();
+      console.log({
+  title,
+  mpn: getAspectValue(item, ['MPN']),
+  manufacturerPartNumber: getAspectValue(item, ['Manufacturer Part Number']),
+  partNumber: getAspectValue(item, ['Part Number']),
+  modelNumber: getAspectValue(item, ['Model Number']),
+  extractedFromTitle: extractPartNumber(title),
+});
       const imageUrl = String(
         item.image?.imageUrl ||
           item.thumbnailImages?.[0]?.imageUrl ||
