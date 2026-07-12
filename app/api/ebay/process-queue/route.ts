@@ -275,15 +275,45 @@ function isExistingPartNumberBad(
   const partNumber = normalizePartNumber(String(value || ''));
 
   if (!partNumber) return true;
+
+  // eBay item id
   if (partNumber === String(ebayItemId).toUpperCase()) return true;
+
+  // Long numeric IDs
   if (/^\d{10,14}$/.test(partNumber)) return true;
+
+  // Quantity / lot noise
   if (/\b(?:LOT|QTY|PCS?|PIECES?)\b/i.test(partNumber)) return true;
+
+  // Electrical ratings
   if (isElectricalRating(partNumber)) return true;
+
+  // Weak family names such as EM-222, CM-104, CPU-315, SM-1231
   if (isWeakFamilyModel(partNumber)) return true;
+
+  // Generic Siemens family/product names that are not actual part numbers
+  if (
+    /^(?:SIMATIC|SIMATIC-S7|S7|S7-\d+|LOGO|SIRIUS|SINAMICS|SITOP|MICROMASTER)$/i.test(
+      partNumber
+    )
+  ) {
+    return true;
+  }
+
+  // Generic descriptive product names
+  if (
+    /^(?:PLC|HMI|VFD|DRIVE|MODULE|CONTROLLER|RELAY|SWITCH|BOARD|CARD|POWER-SUPPLY)$/i.test(
+      partNumber
+    )
+  ) {
+    return true;
+  }
+
+  // If it has no digit, it is almost certainly not a real industrial part number
+  if (!/\d/.test(partNumber)) return true;
 
   return false;
 }
-
 async function markQueue(
   ebayItemId: string,
   status: string,
