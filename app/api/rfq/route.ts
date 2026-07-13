@@ -3,17 +3,18 @@ import { Resend } from 'resend';
 export async function POST(req: Request) {
   const apiKey = process.env.RESEND_API_KEY;
 
-if (!apiKey) {
-  return Response.json(
-    {
-      success: false,
-      error: 'RESEND_API_KEY is missing',
-    },
-    { status: 500 }
-  );
-}
+  if (!apiKey) {
+    return Response.json(
+      {
+        success: false,
+        error: 'RESEND_API_KEY is missing',
+      },
+      { status: 500 }
+    );
+  }
 
-const resend = new Resend(apiKey);
+  const resend = new Resend(apiKey);
+
   try {
     const formData = await req.formData();
 
@@ -28,31 +29,60 @@ const resend = new Resend(apiKey);
       message: String(formData.get('message') || ''),
     };
 
-   const result = await resend.emails.send({
-  from: 'Orbit Control RFQ <onboarding@resend.dev>',
-  to: ['orbitcontrol12345@gmail.com'],
-  subject: `ORBIT TEST RFQ - ${data.part_number || 'No Part Number'}`,
-  html: `
-    <h2>Orbit Control RFQ Test</h2>
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Company:</strong> ${data.company}</p>
-    <p><strong>Email:</strong> ${data.email}</p>
-    <p><strong>Phone:</strong> ${data.phone}</p>
-    <p><strong>Country:</strong> ${data.country}</p>
-    <p><strong>Part Number:</strong> ${data.part_number}</p>
-    <p><strong>Quantity:</strong> ${data.quantity}</p>
-    <p><strong>Message:</strong> ${data.message || 'No message provided'}</p>
-  `,
-});
+    const result = await resend.emails.send({
+      from: 'Orbit Control RFQ <rfq@orbit-surplus.com>',
+      to: ['rfq@orbit-surplus.com'],
+      replyTo: data.email || 'rfq@orbit-surplus.com',
+      subject: `New Orbit Control RFQ - ${
+        data.part_number || 'General Inquiry'
+      }`,
+      html: `
+        <h2>New Orbit Control RFQ Request</h2>
 
-console.log('ORBIT RESEND RESULT:', result);
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Company:</strong> ${data.company}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Phone:</strong> ${data.phone}</p>
+        <p><strong>Country:</strong> ${data.country}</p>
 
-    return Response.json({ success: true, result });
+        <hr />
+
+        <p><strong>Part Number:</strong> ${data.part_number}</p>
+        <p><strong>Quantity:</strong> ${data.quantity}</p>
+
+        <hr />
+
+        <p><strong>Message:</strong></p>
+        <p>${data.message || 'No message provided'}</p>
+      `,
+    });
+
+    if (result.error) {
+      console.error('ORBIT CONTROL RFQ RESEND ERROR:', result.error);
+
+      return Response.json(
+        {
+          success: false,
+          error: result.error,
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('ORBIT CONTROL RFQ SENT:', result.data);
+
+    return Response.json({
+      success: true,
+      data: result.data,
+    });
   } catch (error) {
-    console.error('RFQ ERROR:', error);
+    console.error('ORBIT CONTROL RFQ ERROR:', error);
 
     return Response.json(
-      { success: false, error: String(error) },
+      {
+        success: false,
+        error: String(error),
+      },
       { status: 500 }
     );
   }
