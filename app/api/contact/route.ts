@@ -1,27 +1,39 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
+
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const smtpHost = process.env.MXROUTE_SMTP_HOST;
+  const smtpUser = process.env.MXROUTE_SMTP_USER;
+  const smtpPass = process.env.MXROUTE_SMTP_PASS;
 
-  if (!apiKey) {
+  if (!smtpHost || !smtpUser || !smtpPass) {
     return Response.json(
       {
         success: false,
-        error: 'RESEND_API_KEY is missing',
+        error: 'MXroute SMTP environment variables are missing',
       },
       { status: 500 }
     );
   }
 
-  const resend = new Resend(apiKey);
-
   try {
     const data = await req.json();
 
-    const result = await resend.emails.send({
-      from: 'Orbit Control Contact <info@orbit-surplus.com>',
-      to: ['info@orbit-surplus.com'],
-      replyTo: data.email || 'info@orbit-surplus.com',
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: 465,
+      secure: true,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Orbit Control Contact" <${smtpUser}>`,
+      to: 'info@orbit-surplus.com',
+      replyTo: data.email || undefined,
       subject: `Orbit Control Contact - ${data.subject || 'New Message'}`,
       html: `
         <h2>New Orbit Control Contact Message</h2>
@@ -39,26 +51,13 @@ export async function POST(req: Request) {
       `,
     });
 
-    if (result.error) {
-      console.error('ORBIT CONTROL CONTACT RESEND ERROR:', result.error);
-
-      return Response.json(
-        {
-          success: false,
-          error: result.error,
-        },
-        { status: 500 }
-      );
-    }
-
-    console.log('ORBIT CONTROL CONTACT SENT:', result.data);
+    console.log('ORBIT CONTROL CONTACT SMTP SENT');
 
     return Response.json({
       success: true,
-      data: result.data,
     });
   } catch (error) {
-    console.error('ORBIT CONTROL CONTACT ERROR:', error);
+    console.error('ORBIT CONTROL CONTACT SMTP ERROR:', error);
 
     return Response.json(
       {
