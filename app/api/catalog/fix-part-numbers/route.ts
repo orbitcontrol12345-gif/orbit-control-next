@@ -244,6 +244,7 @@ function isKnownIndustrialPattern(value: string): boolean {
     /^[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}$/i,
     /^[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}$/i,
     /^[A-Z]{1,6}\d{3,10}[A-Z]{0,4}$/i,
+    /^\d{4,12}[A-Z]{1,4}$/i,
   ];
 
   return patterns.some((pattern) => pattern.test(v));
@@ -425,7 +426,14 @@ function titleCandidates(title: string, ebayItemId: string): Candidate[] {
     10000
   );
 
-  // Compact alphanumeric code inside title, e.g. 393151A.
+  // Digit-leading alphanumeric industrial code.
+  // Example: 393151A
+  addMatches(
+    /\b\d{4,12}[A-Z]{1,4}\b/gi,
+    9000
+  );
+
+  // Compact alphanumeric code inside title.
   addMatches(
     /\b[A-Z0-9]{6,18}\b/gi,
     5000
