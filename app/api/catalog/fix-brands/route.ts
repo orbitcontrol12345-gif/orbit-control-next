@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V1-STRICT';
+const ROUTE_VERSION = 'BRAND-V2-STRICT-NORMALIZED';
 
 const BAD_BRANDS = new Set([
   '',
@@ -125,42 +125,120 @@ function isValidAuthoritativeBrand(value: unknown): boolean {
   return /[A-Z]/i.test(brand);
 }
 
+function cleanRawBrandText(value: unknown): string {
+  let brand = normalizeBrand(value);
+
+  if (!brand) return '';
+
+  brand = brand
+    .replace(/\bPOWERED\s+BY\b.*$/i, '')
+    .replace(/\bA\s+BRAND\s+OF\b.*$/i, '')
+    .replace(/\bDIVISION\s+OF\b.*$/i, '')
+    .replace(/\bPART\s+OF\b.*$/i, '')
+    .replace(/\bMEMBER\s+OF\b.*$/i, '')
+    .replace(/\bCOMPANY\s+OF\b.*$/i, '')
+    .replace(
+      /\b(?:INCORPORATED|INC\.?|CORPORATION|CORP\.?|LIMITED|LTD\.?|LLC|L\.L\.C\.|GMBH|AG|S\.A\.|SA|S\.R\.L\.|SRL|CO\.?|COMPANY)\b\.?/gi,
+      ''
+    )
+    .replace(/[|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s,./&-]+|[\s,./&-]+$/g, '')
+    .trim();
+
+  return normalizeBrand(brand);
+}
+
 function normalizeKnownBrand(value: string): string {
-  const key = brandKey(value);
+  const cleaned = cleanRawBrandText(value);
+  const key = brandKey(cleaned);
 
   const aliases: Record<string, string> = {
     'ALLEN BRADLEY': 'Allen-Bradley',
     'ALLEN-BRADLEY': 'Allen-Bradley',
+
     'SCHNEIDER ELECTRIC': 'Schneider Electric',
-    SCHNEIDER: 'Schneider Electric',
-    SIEMENS: 'Siemens',
-    ABB: 'ABB',
-    OMRON: 'Omron',
-    YOKOGAWA: 'Yokogawa',
-    HONEYWELL: 'Honeywell',
-    EMERSON: 'Emerson',
+    'SCHNEIDER': 'Schneider Electric',
+    'TELEMECANIQUE': 'Telemecanique',
+    'TELEMECANIQUE SCHNEIDER': 'Telemecanique',
+
+    'SIEMENS': 'Siemens',
+    'ABB': 'ABB',
+    'OMRON': 'Omron',
+    'YOKOGAWA': 'Yokogawa',
+    'HONEYWELL': 'Honeywell',
+    'EMERSON': 'Emerson',
+
     'PHOENIX CONTACT': 'Phoenix Contact',
-    PHOENIX: 'Phoenix Contact',
-    MITSUBISHI: 'Mitsubishi',
+    'PHOENIX': 'Phoenix Contact',
+
+    'MITSUBISHI': 'Mitsubishi Electric',
     'MITSUBISHI ELECTRIC': 'Mitsubishi Electric',
-    EATON: 'Eaton',
+
+    'EATON': 'Eaton',
     'CUTLER HAMMER': 'Cutler-Hammer',
     'CUTLER-HAMMER': 'Cutler-Hammer',
+
     'GENERAL ELECTRIC': 'GE',
+    'GE': 'GE',
     'GE FANUC': 'GE Fanuc',
-    FANUC: 'Fanuc',
-    BELIMO: 'Belimo',
-    KONGSBERG: 'Kongsberg',
-    FLENDER: 'Flender',
-    BOSCH: 'Bosch',
-    CEAG: 'CEAG',
+    'GE FANUC AUTOMATION': 'GE Fanuc',
+    'FANUC': 'Fanuc',
+
+    'BELIMO': 'Belimo',
+    'KONGSBERG': 'Kongsberg',
+    'FLENDER': 'Flender',
+    'BOSCH': 'Bosch',
+    'CEAG': 'CEAG',
+
     'CARLO GAVAZZI': 'Carlo Gavazzi',
-    GAVAZZI: 'Carlo Gavazzi',
+    'GAVAZZI': 'Carlo Gavazzi',
+
     'MORS SMITT': 'Mors Smitt',
-    SMITT: 'Mors Smitt',
+    'SMITT': 'Mors Smitt',
+
+    'TRIDIUM': 'Tridium',
+    'TRIDIUM NIAGARA': 'Tridium',
+
+    'HMS INDUSTRIAL NETWORKS': 'HMS Networks',
+    'HMS INDUSTRIAL NETWORKS AB': 'HMS Networks',
+    'HMS NETWORKS': 'HMS Networks',
+
+    'BAUMULLER': 'Baumuller',
+    'BAUMÜLLER': 'Baumuller',
+    'SCHMALZ': 'Schmalz',
+    'FRANKE': 'Franke',
+    'MOOG': 'Moog',
+    'STULZ': 'Stulz',
+    'CESCON': 'Cescon',
+    'STATRON': 'Statron',
+    'SEIRA': 'Seira',
+    'ROPEX': 'ROPEX',
   };
 
-  return aliases[key] || normalizeBrand(value);
+  if (aliases[key]) {
+    return aliases[key];
+  }
+
+  return cleaned;
+}
+
+function isCanonicalBrandSafe(value: unknown): boolean {
+  const brand = normalizeKnownBrand(String(value || ''));
+
+  if (isBadBrand(brand)) return false;
+  if (isDescriptiveBrand(brand)) return false;
+  if (brand.split(/\s+/).length > 5) return false;
+
+  if (
+    /\b(?:POWERED BY|A BRAND OF|DIVISION OF|PART OF|MEMBER OF)\b/i.test(
+      String(value || '')
+    )
+  ) {
+    return false;
+  }
+
+  return /[A-Z]/i.test(brand);
 }
 
 function getTitlePrefixBrand(title: string): string {
@@ -182,31 +260,42 @@ function chooseBrand(item: any, title: string): {
   brand: string;
   source: 'brand' | 'manufacturer' | 'detector' | null;
 } {
-  const ebayBrand = getAspectValue(item, ['Brand']);
+  const ebayBrandRaw = getAspectValue(item, ['Brand']);
+  const ebayBrand = normalizeKnownBrand(ebayBrandRaw);
 
-  if (isValidAuthoritativeBrand(ebayBrand)) {
+  if (
+    isValidAuthoritativeBrand(ebayBrandRaw) &&
+    isCanonicalBrandSafe(ebayBrand)
+  ) {
     return {
-      brand: normalizeKnownBrand(ebayBrand),
+      brand: ebayBrand,
       source: 'brand',
     };
   }
 
-  const manufacturer = getAspectValue(item, [
+  const manufacturerRaw = getAspectValue(item, [
     'Manufacturer',
     'Manufacturer Name',
     'Make',
   ]);
 
-  if (isValidAuthoritativeBrand(manufacturer)) {
+  const manufacturer = normalizeKnownBrand(manufacturerRaw);
+
+  if (
+    isValidAuthoritativeBrand(manufacturerRaw) &&
+    isCanonicalBrandSafe(manufacturer)
+  ) {
     return {
-      brand: normalizeKnownBrand(manufacturer),
+      brand: manufacturer,
       source: 'manufacturer',
     };
   }
 
-  const detected = getTitlePrefixBrand(title);
+  const detected = normalizeKnownBrand(
+    getTitlePrefixBrand(title)
+  );
 
-  if (detected) {
+  if (detected && isCanonicalBrandSafe(detected)) {
     return {
       brand: detected,
       source: 'detector',
@@ -323,7 +412,16 @@ export async function GET(req: Request) {
     const suspiciousProducts = requestedItemId
       ? rows || []
       : (rows || [])
-          .filter((product) => isBadBrand(product.brand))
+          .filter((product) => {
+            const current = normalizeBrand(product.brand);
+            const canonical = normalizeKnownBrand(current);
+
+            return (
+              isBadBrand(current) ||
+              !isCanonicalBrandSafe(current) ||
+              brandKey(current) !== brandKey(canonical)
+            );
+          })
           .slice(0, PROCESS_LIMIT);
 
     if (suspiciousProducts.length === 0) {
@@ -411,7 +509,10 @@ export async function GET(req: Request) {
           continue;
         }
 
-        if (brandKey(product.brand) === brandKey(chosen.brand)) {
+        if (
+          brandKey(product.brand) === brandKey(chosen.brand) &&
+          normalizeBrand(product.brand) === chosen.brand
+        ) {
           unchanged++;
 
           results.push({
