@@ -9,44 +9,76 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const LIMIT = 25;
+const MAX_IMAGES = 10;
+
 function getPublicR2Url(key: string) {
   const publicBaseUrl = process.env.R2_PUBLIC_URL;
 
   if (!publicBaseUrl) {
-    return key;
+    throw new Error('Missing R2_PUBLIC_URL');
   }
 
   return `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
 }
 
+function getProductGallery(product: any): string[] {
+  const gallery = Array.isArray(product.ebay_gallery_urls)
+    ? product.ebay_gallery_urls
+        .map((url: unknown) => String(url || '').trim())
+        .filter(Boolean)
+    : [];
+
+  const mainImage = String(product.image_url || '').trim();
+
+  const images = gallery.length > 0
+    ? gallery
+    : mainImage
+      ? [mainImage]
+      : [];
+
+  return [...new Set(images)].slice(0, MAX_IMAGES);
+}
+
 export async function GET() {
   try {
     const { data: products, error } = await supabaseAdmin
-  .from('products')
-  .select('id, ebay_item_id, ebay_gallery_urls, r2_gallery_urls, image_status')
-  .eq('marketplace', 'EBAY_US')
-  .not('ebay_item_id', 'is', null)
-  .not('ebay_gallery_urls', 'is', null)
-  .neq('ebay_gallery_urls', '[]')
-  .not('image_status', 'eq', 'r2_failed')
-  .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
-  .limit(25);
+      .from('products')
+      .select(`
+        id,
+        ebay_item_id,
+        image_url,
+        ebay_gallery_urls,
+        r2_image_url,
+        r2_gallery_urls,
+        image_status
+      `)
+      .eq('marketplace', 'EBAY_US')
+      .not('ebay_item_id', 'is', null)
+      .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]')
+      .limit(LIMIT);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     let updated = 0;
     let failed = 0;
-    const results: any[] = [];
+
+    const results: Array<Record<string, unknown>> = [];
 
     for (const product of products ?? []) {
       try {
-        const ebayItemId = String(product.ebay_item_id);
-        const gallery = Array.isArray(product.ebay_gallery_urls)
-          ? product.ebay_gallery_urls.slice(0, 10)
-          : [];
+        const ebayItemId = String(product.ebay_item_id || '').trim();
+
+        if (!ebayItemId) {
+          throw new Error('Missing ebay_item_id');
+        }
+
+        const gallery = getProductGallery(product);
 
         if (gallery.length === 0) {
-          throw new Error('No eBay gallery images found');
+          throw new Error('No product images found');
         }
 
         const r2Urls: string[] = [];
@@ -54,27 +86,39 @@ export async function GET() {
         for (let i = 0; i < gallery.length; i++) {
           const imageUrl = gallery[i];
 
-          const downloaded = await downloadImageToBuffer(imageUrl);
+          try {
+            const downloaded = await downloadImageToBuffer(imageUrl);
 
-          const key = makeR2ProductImageKey({
-            ebayItemId,
-            index: i,
-            ext: 'jpg',
-          });
+            const key = makeR2ProductImageKey({
+              ebayItemId,
+              index: i,
+              ext: 'jpg',
+            });
 
-          await uploadBufferToR2({
-            key,
-            buffer: downloaded.buffer,
-            contentType: downloaded.contentType,
-          });
+            await uploadBufferToR2({
+              key,
+              buffer: downloaded.buffer,
+              contentType: downloaded.contentType,
+            });
 
-          r2Urls.push(getPublicR2Url(key));
+            r2Urls.push(getPublicR2Url(key));
+          } catch (imageError) {
+            console.error(
+              `R2 IMAGE FAILED ${ebayItemId} IMAGE ${i}:`,
+              imageError
+            );
+          }
         }
 
-        await supabaseAdmin
+        if (r2Urls.length === 0) {
+          throw new Error('All product images failed to upload');
+        }
+
+        const { error: updateError } = await supabaseAdmin
           .from('products')
           .update({
-            r2_image_url: r2Urls[0] ?? null,
+            image_url: r2Urls[0],
+            r2_image_url: r2Urls[0],
             r2_gallery_urls: r2Urls,
             image_status: 'r2_synced',
             image_count: r2Urls.length,
@@ -83,65 +127,83 @@ export async function GET() {
           })
           .eq('id', product.id);
 
+        if (updateError) {
+          throw updateError;
+        }
+
         updated++;
 
         results.push({
           id: product.id,
           ebay_item_id: ebayItemId,
+          status: 'r2_synced',
           image_count: r2Urls.length,
+          image_url: r2Urls[0],
         });
       } catch (err) {
         failed++;
+
+        const errorMessage =
+          err instanceof Error ? err.message : String(err);
 
         await supabaseAdmin
           .from('products')
           .update({
             image_status: 'r2_failed',
-            images_sync_error: String(err),
+            images_sync_error: errorMessage,
           })
           .eq('id', product.id);
 
         results.push({
           id: product.id,
           ebay_item_id: product.ebay_item_id,
-          error: String(err),
+          status: 'r2_failed',
+          error: errorMessage,
         });
       }
     }
-const { count: uploadedCount } = await supabaseAdmin
-  .from('products')
-  .select('*', { count: 'exact', head: true })
-  .eq('marketplace', 'EBAY_US')
-  .not('r2_gallery_urls', 'is', null)
-  .neq('r2_gallery_urls', '[]');
 
-const { count: remainingCount } = await supabaseAdmin
-  .from('products')
-  .select('*', { count: 'exact', head: true })
-  .eq('marketplace', 'EBAY_US')
-  .not('ebay_item_id', 'is', null)
-  .not('ebay_gallery_urls', 'is', null)
-  .neq('ebay_gallery_urls', '[]')
-  .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]');
-   return NextResponse.json({
-  success: true,
+    const { count: uploadedCount } = await supabaseAdmin
+      .from('products')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('marketplace', 'EBAY_US')
+      .not('r2_gallery_urls', 'is', null)
+      .neq('r2_gallery_urls', '[]');
 
-  processed: products?.length ?? 0,
-  updated,
-  failed,
+    const { count: remainingCount } = await supabaseAdmin
+      .from('products')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('marketplace', 'EBAY_US')
+      .not('ebay_item_id', 'is', null)
+      .or('r2_gallery_urls.is.null,r2_gallery_urls.eq.[]');
 
-  uploadedProducts: uploadedCount ?? 0,
-  remainingProducts: remainingCount ?? 0,
-  totalProducts:
-    (uploadedCount ?? 0) + (remainingCount ?? 0),
-
-  results,
-});
+    return NextResponse.json({
+      success: true,
+      processed: products?.length ?? 0,
+      updated,
+      failed,
+      uploadedProducts: uploadedCount ?? 0,
+      remainingProducts: remainingCount ?? 0,
+      totalProducts:
+        (uploadedCount ?? 0) + (remainingCount ?? 0),
+      results,
+    });
   } catch (error) {
+    console.error('SYNC R2 IMAGES ERROR:', error);
+
     return NextResponse.json(
       {
         success: false,
-        error: String(error),
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
       },
       { status: 500 }
     );
