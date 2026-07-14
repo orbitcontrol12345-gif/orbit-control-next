@@ -7,7 +7,7 @@ import { detectIndustrialBrand } from '@/lib/industrial-brand';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-const LIMIT = 250;
+const LIMIT = 50;
 const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 
