@@ -7,6 +7,10 @@
     {
       "path": "/api/catalog/sync-r2-images",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/catalog/fix-part-numbers-auto",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
