@@ -1,20 +1,22 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-  const apiKey = process.env.RESEND_API_KEY;
+export const runtime = 'nodejs';
 
-  if (!apiKey) {
-    return Response.json(
+export async function POST(req: Request) {
+  const smtpHost = process.env.MXROUTE_SMTP_HOST;
+  const smtpUser = process.env.MXROUTE_SMTP_USER;
+  const smtpPass = process.env.MXROUTE_SMTP_PASS;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    return NextResponse.json(
       {
         success: false,
-        error: 'RESEND_API_KEY is missing',
+        error: 'MXroute SMTP environment variables are missing',
       },
       { status: 500 }
     );
   }
-
-  const resend = new Resend(apiKey);
 
   try {
     const formData = await req.formData();
@@ -23,38 +25,61 @@ export async function POST(req: Request) {
     const files = formData.getAll('files') as File[];
 
     const attachments = await Promise.all(
-      files.map(async (file) => {
-        const arrayBuffer = await file.arrayBuffer();
+      files
+        .filter((file) => file && file.size > 0)
+        .map(async (file) => {
+          const arrayBuffer = await file.arrayBuffer();
 
-        return {
-          filename: file.name,
-          content: Buffer.from(arrayBuffer),
-        };
-      })
+          return {
+            filename: file.name,
+            content: Buffer.from(arrayBuffer),
+          };
+        })
     );
 
-    await resend.emails.send({
-      from: 'Xeltronic Sell Surplus <quote@xeltronic.com>',
-      to: ['quote@xeltronic.com'],
-      replyTo: data.email as string,
-      subject: `Sell Surplus Inventory - ${data.company || 'New Offer'}`,
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: 465,
+      secure: true,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Orbit Control Sell Surplus" <${smtpUser}>`,
+      to: 'surplus@orbit-surplus.com',
+      replyTo:
+        String(data.email || '').trim() || undefined,
+      subject: `Orbit Control Sell Surplus - ${
+        data.company || 'New Offer'
+      }`,
       attachments,
       html: `
-        <h2>New Sell Surplus Inventory Offer</h2>
+        <h2>New Orbit Control Sell Surplus Inventory Offer</h2>
 
-        <p><strong>Company:</strong> ${data.company}</p>
-        <p><strong>Contact Person:</strong> ${data.contact_person}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone / WhatsApp:</strong> ${data.phone}</p>
-        <p><strong>Country:</strong> ${data.country}</p>
+        <p><strong>Company:</strong> ${data.company || ''}</p>
+        <p><strong>Contact Person:</strong> ${
+          data.contact_person || ''
+        }</p>
+        <p><strong>Email:</strong> ${data.email || ''}</p>
+        <p><strong>Phone / WhatsApp:</strong> ${
+          data.phone || ''
+        }</p>
+        <p><strong>Country:</strong> ${data.country || ''}</p>
 
         <hr />
 
-        <p><strong>Brand / Manufacturer:</strong> ${data.brand}</p>
+        <p><strong>Brand / Manufacturer:</strong> ${
+          data.brand || ''
+        }</p>
+
         <p><strong>Part Numbers:</strong></p>
         <p>${data.part_numbers || 'No part numbers provided'}</p>
-        <p><strong>Quantity:</strong> ${data.quantity}</p>
-        <p><strong>Condition:</strong> ${data.condition}</p>
+
+        <p><strong>Quantity:</strong> ${data.quantity || ''}</p>
+        <p><strong>Condition:</strong> ${data.condition || ''}</p>
 
         <hr />
 
@@ -63,9 +88,23 @@ export async function POST(req: Request) {
       `,
     });
 
-    return NextResponse.json({ success: true });
+    console.log('ORBIT CONTROL SELL SURPLUS SMTP SENT');
+
+    return NextResponse.json({
+      success: true,
+    });
   } catch (error) {
-    console.error('SELL SURPLUS ERROR:', error);
-    return NextResponse.json({ success: false }, { status: 500 });
+    console.error(
+      'ORBIT CONTROL SELL SURPLUS SMTP ERROR:',
+      error
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: String(error),
+      },
+      { status: 500 }
+    );
   }
 }
