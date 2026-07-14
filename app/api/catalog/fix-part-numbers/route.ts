@@ -243,9 +243,30 @@ function isKnownIndustrialPattern(value: string): boolean {
     /^\d{3,4}-[A-Z]{1,5}\d{1,6}[A-Z0-9-]*$/i,
     /^[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}$/i,
     /^[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}$/i,
+    /^[A-Z]{1,6}\d{3,10}[A-Z]{0,4}$/i,
   ];
 
   return patterns.some((pattern) => pattern.test(v));
+}
+
+function isValidMixedCompactCode(
+  value: string,
+  title: string,
+  ebayItemId: string
+): boolean {
+  const v = normalizePartNumber(value);
+
+  if (!v) return false;
+  if (v.length < 6 || v.length > 18) return false;
+  if (isEbayItemId(v, ebayItemId)) return false;
+  if (isNoise(v)) return false;
+  if (containsDescriptionWords(v)) return false;
+  if (!appearsInTitle(v, title)) return false;
+
+  // Example: 393151A. Must contain both letters and digits.
+  if (!/[A-Z]/i.test(v) || !/\d/.test(v)) return false;
+
+  return /^[A-Z0-9]+$/i.test(v);
 }
 
 function isValidAuthoritativeCandidate(
@@ -264,17 +285,14 @@ function isValidAuthoritativeCandidate(
   if (!/[A-Z0-9]/i.test(v)) return false;
   if (/^WITH[-\s]/i.test(v)) return false;
 
-  // Never trust descriptive MPN/model text.
   if (containsDescriptionWords(v) && !isKnownIndustrialPattern(v)) {
     return false;
   }
 
-  // Long numeric-only values need title confirmation.
   if (/^\d{8,18}$/.test(v) && !appearsInTitle(v, title)) {
     return false;
   }
 
-  // Short or loose values need confirmation in the title.
   if (
     !isKnownIndustrialPattern(v) &&
     v.length < 6 &&
@@ -283,7 +301,6 @@ function isValidAuthoritativeCandidate(
     return false;
   }
 
-  // MPN alone is not enough when it looks like prose.
   if (
     (source === 'mpn' || source === 'model_number') &&
     /\s/.test(v) &&
@@ -349,73 +366,90 @@ function titleCandidates(title: string, ebayItemId: string): Candidate[] {
   // Siemens S5 / S7.
   addMatches(
     /\b6ES\d\s*\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/gi,
-    10000
+    12000
   );
 
   addMatches(
     /\b6ES\d\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/gi,
-    10000
+    12000
   );
 
   // Siemens HMI / process / communications / power.
   addMatches(
     /\b6AV\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
-    9800
+    11500
   );
 
   addMatches(
     /\b6DP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
-    9800
+    11500
   );
 
   addMatches(
     /\b6GK\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
-    9800
+    11500
   );
 
   addMatches(
     /\b6EP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
-    9800
+    11500
   );
 
   // Other Siemens structured numbers.
   addMatches(
     /\b7[A-Z]{1,3}\s?\d{3,5}(?:-\d+)?(?:\/[A-Z0-9-]+)?\b/gi,
-    9300
+    10800
   );
 
   // GE Fanuc.
   addMatches(
     /\bIC\d{3}[A-Z]{2,}\d{2,8}\b/gi,
-    9500
+    11000
   );
 
   // Fanuc.
   addMatches(
     /\bA\d{2}B-\d{4}-[A-Z0-9]{3,15}(?:\/[A-Z0-9]+)?\b/gi,
-    9500
+    11000
   );
 
   // Allen-Bradley.
   addMatches(
     /\b\d{3,4}-[A-Z]{1,5}\d{1,6}[A-Z0-9-]*\b/gi,
-    9000
+    10500
   );
 
   // Strong slash code, e.g. P8AX09-T/MF.
   addMatches(
     /\b[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}\b/gi,
-    8800
+    10000
   );
 
-  // Generic structured code: low-confidence fallback only.
+  // Compact alphanumeric code inside title, e.g. 393151A.
+  addMatches(
+    /\b[A-Z0-9]{6,18}\b/gi,
+    5000
+  );
+
+  // Generic structured code: low-confidence fallback.
   addMatches(
     /\b[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}\b/gi,
-    2500
+    3000
   );
 
   return candidates
     .filter((candidate) => {
+      if (
+        /^[A-Z0-9]{6,18}$/i.test(candidate.value) &&
+        !isKnownIndustrialPattern(candidate.value)
+      ) {
+        return isValidMixedCompactCode(
+          candidate.value,
+          title,
+          ebayItemId
+        );
+      }
+
       if (containsDescriptionWords(candidate.value)) {
         return isKnownIndustrialPattern(candidate.value);
       }
@@ -565,37 +599,53 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
 
+    const requestedItemId = String(
+      url.searchParams.get('ebay_item_id') || ''
+    ).trim();
+
     const offset = Math.max(
       0,
       Number(url.searchParams.get('offset') || 0)
     );
 
-    const { data: rows, error: productsError } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('products')
       .select(
         'id, ebay_item_id, part_number, model_number, name, marketplace'
       )
       .eq('marketplace', MARKETPLACE)
       .not('ebay_item_id', 'is', null)
-      .order('id', { ascending: true })
-      .range(offset, offset + SCAN_LIMIT - 1);
+      .order('id', { ascending: true });
+
+    if (requestedItemId) {
+      query = query.eq('ebay_item_id', requestedItemId).limit(1);
+    } else {
+      query = query.range(offset, offset + SCAN_LIMIT - 1);
+    }
+
+    const { data: rows, error: productsError } = await query;
 
     if (productsError) throw productsError;
 
-    const suspiciousProducts = (rows || [])
-      .filter((product) =>
-        isWeakExistingPartNumber(
-          product.part_number,
-          product.ebay_item_id
-        )
-      )
-      .slice(0, PROCESS_LIMIT);
+    const suspiciousProducts = requestedItemId
+      ? rows || []
+      : (rows || [])
+          .filter((product) =>
+            isWeakExistingPartNumber(
+              product.part_number,
+              product.ebay_item_id
+            )
+          )
+          .slice(0, PROCESS_LIMIT);
 
     if (suspiciousProducts.length === 0) {
       return NextResponse.json({
         success: true,
-        mode: 'strict-cross-check',
+        mode: requestedItemId
+          ? 'single-item-verified'
+          : 'strict-cross-check-v2',
         offset,
+        ebay_item_id: requestedItemId || null,
         scanned: rows?.length ?? 0,
         suspiciousFound: 0,
         processed: 0,
@@ -604,8 +654,11 @@ export async function GET(req: Request) {
         unresolved: 0,
         failed: 0,
         rateLimited: false,
-        message: 'No suspicious part numbers in this scan window.',
+        message: requestedItemId
+          ? 'Product not found.'
+          : 'No suspicious part numbers in this scan window.',
         nextOffset:
+          !requestedItemId &&
           (rows?.length ?? 0) === SCAN_LIMIT
             ? offset + SCAN_LIMIT
             : null,
@@ -749,8 +802,11 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      mode: 'strict-cross-check',
+      mode: requestedItemId
+        ? 'single-item-verified'
+        : 'strict-cross-check-v2',
       offset,
+      ebay_item_id: requestedItemId || null,
       scanned: rows?.length ?? 0,
       suspiciousFound: suspiciousProducts.length,
       processed: results.length,
@@ -760,6 +816,7 @@ export async function GET(req: Request) {
       failed,
       rateLimited,
       nextOffset:
+        !requestedItemId &&
         (rows?.length ?? 0) === SCAN_LIMIT
           ? offset + SCAN_LIMIT
           : null,
