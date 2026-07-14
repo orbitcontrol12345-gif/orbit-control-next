@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V5-INDUSTRIAL-CONSERVATIVE';
+const ROUTE_VERSION = 'BRAND-V6-KNOWN-EBAY-SAFE';
 
 const BAD_BRANDS = new Set([
   '',
@@ -474,6 +474,7 @@ function chooseBrand(item: any, title: string): {
     | 'detector+part-number'
     | 'known-detector'
     | 'known-manufacturer'
+    | 'known-ebay-brand'
     | null;
   evidence?: Record<string, unknown>;
 } {
@@ -560,6 +561,19 @@ function chooseBrand(item: any, title: string): {
     return {
       brand: detected,
       source: 'detector+part-number',
+      evidence,
+    };
+  }
+
+  // A normalized eBay Brand is safe only when it exists in our
+  // explicit industrial brand dictionary.
+  if (
+    brandValid &&
+    isCanonicalKnownBrand(ebayBrand)
+  ) {
+    return {
+      brand: ebayBrand,
+      source: 'known-ebay-brand',
       evidence,
     };
   }
