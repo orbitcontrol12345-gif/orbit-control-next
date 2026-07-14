@@ -10,7 +10,7 @@ const SELLER = 'orbitcontrol';
 
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-
+const ROUTE_VERSION = 'V4-KONGSBERG-DIRECT';
 type CandidateSource =
   | 'mpn'
   | 'manufacturer_part_number'
@@ -746,6 +746,7 @@ export async function GET(req: Request) {
     if (suspiciousProducts.length === 0) {
       return NextResponse.json({
         success: true,
+        routeVersion: ROUTE_VERSION,
         mode: requestedItemId
           ? 'single-item-verified'
           : 'strict-cross-check-v2',
