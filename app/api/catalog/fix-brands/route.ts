@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V2-STRICT-NORMALIZED';
+const ROUTE_VERSION = 'BRAND-V3-CANONICAL';
 
 const BAD_BRANDS = new Set([
   '',
@@ -153,15 +153,87 @@ function normalizeKnownBrand(value: string): string {
   const cleaned = cleanRawBrandText(value);
   const key = brandKey(cleaned);
 
+  // Canonical contains rules first.
+  // These intentionally run before exact aliases because old eBay Brand
+  // values may contain marketing suffixes or legacy company wording.
+  if (key.includes('TRIDIUM')) return 'Tridium';
+
+  if (
+    key.includes('HMS INDUSTRIAL NETWORKS') ||
+    key.includes('HMS NETWORKS')
+  ) {
+    return 'HMS Networks';
+  }
+
+  if (
+    key.includes('INFINITY ANDOVER') ||
+    key.includes('ANDOVER CONTROLS')
+  ) {
+    return 'Andover Controls';
+  }
+
+  if (
+    key.includes('ALLEN BRADLEY') ||
+    key.includes('ALLEN-BRADLEY')
+  ) {
+    return 'Allen-Bradley';
+  }
+
+  if (key.includes('SCHNEIDER')) {
+    return 'Schneider Electric';
+  }
+
+  if (key.includes('GE FANUC')) {
+    return 'GE Fanuc';
+  }
+
+  if (
+    key.includes('CUTLER HAMMER') ||
+    key.includes('CUTLER-HAMMER')
+  ) {
+    return 'Cutler-Hammer';
+  }
+
+  if (
+    key.includes('PHOENIX CONTACT') ||
+    key === 'PHOENIX'
+  ) {
+    return 'Phoenix Contact';
+  }
+
+  if (
+    key.includes('MITSUBISHI ELECTRIC') ||
+    key === 'MITSUBISHI'
+  ) {
+    return 'Mitsubishi Electric';
+  }
+
+  if (
+    key.includes('CARLO GAVAZZI') ||
+    key === 'GAVAZZI'
+  ) {
+    return 'Carlo Gavazzi';
+  }
+
+  if (
+    key.includes('MORS SMITT') ||
+    key === 'SMITT'
+  ) {
+    return 'Mors Smitt';
+  }
+
+  if (
+    key.includes('GENERAL ELECTRIC') ||
+    key === 'GE'
+  ) {
+    return 'GE';
+  }
+
+  if (key.includes('TELEMECANIQUE')) {
+    return 'Telemecanique';
+  }
+
   const aliases: Record<string, string> = {
-    'ALLEN BRADLEY': 'Allen-Bradley',
-    'ALLEN-BRADLEY': 'Allen-Bradley',
-
-    'SCHNEIDER ELECTRIC': 'Schneider Electric',
-    'SCHNEIDER': 'Schneider Electric',
-    'TELEMECANIQUE': 'Telemecanique',
-    'TELEMECANIQUE SCHNEIDER': 'Telemecanique',
-
     'SIEMENS': 'Siemens',
     'ABB': 'ABB',
     'OMRON': 'Omron',
@@ -169,40 +241,13 @@ function normalizeKnownBrand(value: string): string {
     'HONEYWELL': 'Honeywell',
     'EMERSON': 'Emerson',
 
-    'PHOENIX CONTACT': 'Phoenix Contact',
-    'PHOENIX': 'Phoenix Contact',
-
-    'MITSUBISHI': 'Mitsubishi Electric',
-    'MITSUBISHI ELECTRIC': 'Mitsubishi Electric',
-
     'EATON': 'Eaton',
-    'CUTLER HAMMER': 'Cutler-Hammer',
-    'CUTLER-HAMMER': 'Cutler-Hammer',
-
-    'GENERAL ELECTRIC': 'GE',
-    'GE': 'GE',
-    'GE FANUC': 'GE Fanuc',
-    'GE FANUC AUTOMATION': 'GE Fanuc',
     'FANUC': 'Fanuc',
-
     'BELIMO': 'Belimo',
     'KONGSBERG': 'Kongsberg',
     'FLENDER': 'Flender',
     'BOSCH': 'Bosch',
     'CEAG': 'CEAG',
-
-    'CARLO GAVAZZI': 'Carlo Gavazzi',
-    'GAVAZZI': 'Carlo Gavazzi',
-
-    'MORS SMITT': 'Mors Smitt',
-    'SMITT': 'Mors Smitt',
-
-    'TRIDIUM': 'Tridium',
-    'TRIDIUM NIAGARA': 'Tridium',
-
-    'HMS INDUSTRIAL NETWORKS': 'HMS Networks',
-    'HMS INDUSTRIAL NETWORKS AB': 'HMS Networks',
-    'HMS NETWORKS': 'HMS Networks',
 
     'BAUMULLER': 'Baumuller',
     'BAUMÜLLER': 'Baumuller',
@@ -214,13 +259,20 @@ function normalizeKnownBrand(value: string): string {
     'STATRON': 'Statron',
     'SEIRA': 'Seira',
     'ROPEX': 'ROPEX',
+
+    'SICK': 'SICK',
+    'JUKI': 'JUKI',
+    'GRACO': 'Graco',
+    'SUN MICROSYSTEMS': 'Sun Microsystems',
+    'WINCOR NIXDORF': 'Wincor Nixdorf',
+    'CEDES': 'Cedes',
+    'NOVINTEC': 'Novintec',
+    'BAELZ': 'Baelz',
+    'IBC CONTROL': 'IBC Control',
+    'KAISER': 'Kaiser',
   };
 
-  if (aliases[key]) {
-    return aliases[key];
-  }
-
-  return cleaned;
+  return aliases[key] || cleaned;
 }
 
 function isCanonicalBrandSafe(value: unknown): boolean {
@@ -264,7 +316,7 @@ function chooseBrand(item: any, title: string): {
   const ebayBrand = normalizeKnownBrand(ebayBrandRaw);
 
   if (
-    isValidAuthoritativeBrand(ebayBrandRaw) &&
+    !isBadBrand(ebayBrand) &&
     isCanonicalBrandSafe(ebayBrand)
   ) {
     return {
@@ -282,7 +334,7 @@ function chooseBrand(item: any, title: string): {
   const manufacturer = normalizeKnownBrand(manufacturerRaw);
 
   if (
-    isValidAuthoritativeBrand(manufacturerRaw) &&
+    !isBadBrand(manufacturer) &&
     isCanonicalBrandSafe(manufacturer)
   ) {
     return {
@@ -295,7 +347,11 @@ function chooseBrand(item: any, title: string): {
     getTitlePrefixBrand(title)
   );
 
-  if (detected && isCanonicalBrandSafe(detected)) {
+  if (
+    detected &&
+    !isBadBrand(detected) &&
+    isCanonicalBrandSafe(detected)
+  ) {
     return {
       brand: detected,
       source: 'detector',
