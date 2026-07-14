@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/catalog/sync-r2-images",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }
