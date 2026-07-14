@@ -29,10 +29,14 @@ const GENERIC_VALUES = new Set([
   'N/A',
   'NA',
   'NONE',
+  'NOT APPLICABLE',
   'NOT-APPLICABLE',
+  'DOES NOT APPLY',
   'DOES-NOT-APPLY',
   'SIMATIC',
+  'SIMATIC S7',
   'SIMATIC-S7',
+  'SIMATIC S5',
   'SIMATIC-S5',
   'S7',
   'S5',
@@ -54,8 +58,44 @@ const GENERIC_VALUES = new Set([
   'SYSTEM',
   'TYPE',
   'MODEL',
+  'POWER SUPPLY',
   'POWER-SUPPLY',
 ]);
+
+const DESCRIPTION_WORDS = [
+  'CONTROLLER',
+  'CONTROL',
+  'POWER',
+  'SUPPLY',
+  'SOURCE',
+  'BOARD',
+  'CARD',
+  'MODULE',
+  'CONVERTER',
+  'INVERTER',
+  'SENSOR',
+  'SWITCH',
+  'RELAY',
+  'PROCESSOR',
+  'PANEL',
+  'DISPLAY',
+  'MONITOR',
+  'MOTOR',
+  'DRIVE',
+  'AMPLIFIER',
+  'TRANSFORMER',
+  'CONTACTOR',
+  'BREAKER',
+  'TERMINAL',
+  'CIRCUIT',
+  'AUTOMATIC',
+  'SAFETY',
+  'PRINTED',
+  'CURRENT',
+  'VOLTAGE',
+  'SOURCE',
+  'KONSTANTSTROMQUELLE',
+];
 
 function normalizePartNumber(value: unknown): string {
   return String(value || '')
@@ -84,6 +124,14 @@ function isElectricalRating(value: string): boolean {
     /^\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|AMP|AMPS|KW|W)$/i.test(v) ||
     /^\d+(?:\.\d+)?-\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|KW|W)$/i.test(v) ||
     /^\d+X\d+(?:V|VAC|VDC|A|MA|KW|W)$/i.test(v)
+  );
+}
+
+function containsDescriptionWords(value: string): boolean {
+  const v = normalizePartNumber(value);
+
+  return DESCRIPTION_WORDS.some((word) =>
+    new RegExp(`\\b${word}\\b`, 'i').test(v)
   );
 }
 
@@ -118,12 +166,17 @@ function isWeakExistingPartNumber(
   if (isEbayItemId(v, itemId)) return true;
   if (isNoise(v)) return true;
 
-  // Weak family-only labels such as CM-104, EM-222, CPU-315, SM-1231.
   if (
     /^(?:CM|EM|CPU|CP|FM|SM|PS|IM|PM|PLC|HMI|VFD|AI|AO|DI|DO|IO)-?\d{1,4}$/i.test(
       v
     )
   ) {
+    return true;
+  }
+
+  if (/^WITH[-\s]/i.test(v)) return true;
+
+  if (containsDescriptionWords(v) && v.split(/\s+/).length >= 2) {
     return true;
   }
 
@@ -155,7 +208,6 @@ function cleanAuthoritativeValue(value: unknown): string {
 
   if (!v) return '';
 
-  // Remove only explicit field labels, never arbitrary letters/numbers.
   v = v
     .replace(
       /^(?:MFR\.?\s*)?(?:PART\s*(?:NO|NUMBER)|P\/N|PN|MPN|MODEL\s*(?:NO|NUMBER)?|TYPE)\s*[:#-]?\s*/i,
@@ -166,99 +218,25 @@ function cleanAuthoritativeValue(value: unknown): string {
   return normalizePartNumber(v);
 }
 
-function isValidAuthoritativeCandidate(
-  value: string,
-  ebayItemId: string
-): boolean {
-  const v = cleanAuthoritativeValue(value);
+function appearsInTitle(candidate: string, title: string): boolean {
+  const candidateCanonical = canonicalCompare(candidate);
+  const titleCanonical = canonicalCompare(title);
 
-  if (!v) return false;
-  if (v.length < 2 || v.length > 80) return false;
-  if (isEbayItemId(v, ebayItemId)) return false;
-  if (isNoise(v)) return false;
+  if (!candidateCanonical) return false;
 
-  // Reject obvious descriptive sentences.
-  if (v.split(/\s+/).length > 5) return false;
-
-  // Must contain at least one letter or digit.
-  if (!/[A-Z0-9]/i.test(v)) return false;
-
-  return true;
+  return titleCanonical.includes(candidateCanonical);
 }
 
-function scoreAuthoritativeSource(source: CandidateSource): number {
-  switch (source) {
-    case 'mpn':
-      return 10000;
-    case 'manufacturer_part_number':
-      return 9500;
-    case 'part_number':
-      return 9000;
-    case 'model_number':
-      return 8000;
-    default:
-      return 0;
-  }
-}
-
-function titleCandidates(title: string): string[] {
-  const patterns: RegExp[] = [
-    // Siemens full industrial numbers.
-    /\b6ES\d[\s-]?[A-Z0-9][A-Z0-9 -]{5,30}\b/gi,
-    /\b6AV\d[A-Z0-9 -]{5,30}\b/gi,
-    /\b6DP\d[A-Z0-9 -]{5,30}\b/gi,
-    /\b6GK\d[A-Z0-9 -]{5,30}\b/gi,
-    /\b6EP\d[A-Z0-9 -]{5,30}\b/gi,
-    /\b7[A-Z]{1,3}\s?\d{3,5}(?:-\d+)?(?:\/[A-Z0-9-]+)?\b/gi,
-
-    // GE Fanuc / industrial codes.
-    /\bIC\d{3}[A-Z]{2,}\d{2,8}\b/gi,
-
-    // Fanuc.
-    /\bA\d{2}B-\d{4}-[A-Z0-9]{3,15}\b/gi,
-    /\bA\d{2}B-\d{4}-[A-Z0-9]{3,15}\/[A-Z0-9]+\b/gi,
-
-    // Allen-Bradley common catalog forms.
-    /\b\d{3,4}-[A-Z]{1,5}\d{1,6}[A-Z0-9-]*\b/gi,
-
-    // Strong slash/hyphen code such as P8AX09-T/MF.
-    /\b[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}\b/gi,
-
-    // Strong multi-group industrial code.
-    /\b[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}\b/gi,
-  ];
-
-  const found: string[] = [];
-
-  for (const pattern of patterns) {
-    const matches = title.match(pattern) || [];
-    found.push(...matches);
-  }
-
-  return Array.from(
-    new Set(found.map((value) => normalizePartNumber(value)))
-  );
-}
-
-function isHighConfidenceTitleCandidate(
-  value: string,
-  ebayItemId: string
-): boolean {
+function isKnownIndustrialPattern(value: string): boolean {
   const v = normalizePartNumber(value);
 
-  if (!v) return false;
-  if (v.length < 5 || v.length > 50) return false;
-  if (isEbayItemId(v, ebayItemId)) return false;
-  if (isNoise(v)) return false;
-
-  // Title fallback MUST look structured. We intentionally do not accept
-  // loose values such as "10-2A" or "026593" from a title alone.
-  const strongPatterns = [
-    /^6ES\d[A-Z0-9 -]{6,}$/i,
-    /^6AV\d[A-Z0-9 -]{6,}$/i,
-    /^6DP\d[A-Z0-9 -]{6,}$/i,
-    /^6GK\d[A-Z0-9 -]{6,}$/i,
-    /^6EP\d[A-Z0-9 -]{6,}$/i,
+  const patterns = [
+    /^6ES\d\s*\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?$/i,
+    /^6ES\d\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?$/i,
+    /^6AV\d\s*\d{3,4}-[A-Z0-9-]{4,20}$/i,
+    /^6DP\d\s*\d{3,4}-[A-Z0-9-]{4,20}$/i,
+    /^6GK\d\s*\d{3,4}-[A-Z0-9-]{4,20}$/i,
+    /^6EP\d\s*\d{3,4}-[A-Z0-9-]{4,20}$/i,
     /^7[A-Z]{1,3}\s?\d{3,5}(?:-\d+)?(?:\/[A-Z0-9-]+)?$/i,
     /^IC\d{3}[A-Z]{2,}\d{2,8}$/i,
     /^A\d{2}B-\d{4}-[A-Z0-9]{3,15}(?:\/[A-Z0-9]+)?$/i,
@@ -267,7 +245,184 @@ function isHighConfidenceTitleCandidate(
     /^[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}$/i,
   ];
 
-  return strongPatterns.some((pattern) => pattern.test(v));
+  return patterns.some((pattern) => pattern.test(v));
+}
+
+function isValidAuthoritativeCandidate(
+  value: string,
+  source: Exclude<CandidateSource, 'title'>,
+  title: string,
+  ebayItemId: string
+): boolean {
+  const v = cleanAuthoritativeValue(value);
+
+  if (!v) return false;
+  if (v.length < 2 || v.length > 80) return false;
+  if (isEbayItemId(v, ebayItemId)) return false;
+  if (isNoise(v)) return false;
+  if (v.split(/\s+/).length > 4) return false;
+  if (!/[A-Z0-9]/i.test(v)) return false;
+  if (/^WITH[-\s]/i.test(v)) return false;
+
+  // Never trust descriptive MPN/model text.
+  if (containsDescriptionWords(v) && !isKnownIndustrialPattern(v)) {
+    return false;
+  }
+
+  // Long numeric-only values need title confirmation.
+  if (/^\d{8,18}$/.test(v) && !appearsInTitle(v, title)) {
+    return false;
+  }
+
+  // Short or loose values need confirmation in the title.
+  if (
+    !isKnownIndustrialPattern(v) &&
+    v.length < 6 &&
+    !appearsInTitle(v, title)
+  ) {
+    return false;
+  }
+
+  // MPN alone is not enough when it looks like prose.
+  if (
+    (source === 'mpn' || source === 'model_number') &&
+    /\s/.test(v) &&
+    !appearsInTitle(v, title) &&
+    !isKnownIndustrialPattern(v)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function scoreAuthoritativeCandidate(
+  value: string,
+  source: Exclude<CandidateSource, 'title'>,
+  title: string
+): number {
+  let score = 0;
+
+  switch (source) {
+    case 'mpn':
+      score += 5000;
+      break;
+    case 'manufacturer_part_number':
+      score += 4800;
+      break;
+    case 'part_number':
+      score += 4600;
+      break;
+    case 'model_number':
+      score += 4000;
+      break;
+  }
+
+  if (appearsInTitle(value, title)) score += 2500;
+  if (isKnownIndustrialPattern(value)) score += 3000;
+
+  return score;
+}
+
+function titleCandidates(title: string, ebayItemId: string): Candidate[] {
+  const candidates: Candidate[] = [];
+
+  const addMatches = (pattern: RegExp, score: number) => {
+    const matches = title.match(pattern) || [];
+
+    for (const match of matches) {
+      const value = normalizePartNumber(match);
+
+      if (!value) continue;
+      if (isEbayItemId(value, ebayItemId)) continue;
+      if (isNoise(value)) continue;
+      if (/^WITH[-\s]/i.test(value)) continue;
+
+      candidates.push({
+        source: 'title',
+        value,
+        score,
+      });
+    }
+  };
+
+  // Siemens S5 / S7.
+  addMatches(
+    /\b6ES\d\s*\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/gi,
+    10000
+  );
+
+  addMatches(
+    /\b6ES\d\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/gi,
+    10000
+  );
+
+  // Siemens HMI / process / communications / power.
+  addMatches(
+    /\b6AV\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
+    9800
+  );
+
+  addMatches(
+    /\b6DP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
+    9800
+  );
+
+  addMatches(
+    /\b6GK\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
+    9800
+  );
+
+  addMatches(
+    /\b6EP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/gi,
+    9800
+  );
+
+  // Other Siemens structured numbers.
+  addMatches(
+    /\b7[A-Z]{1,3}\s?\d{3,5}(?:-\d+)?(?:\/[A-Z0-9-]+)?\b/gi,
+    9300
+  );
+
+  // GE Fanuc.
+  addMatches(
+    /\bIC\d{3}[A-Z]{2,}\d{2,8}\b/gi,
+    9500
+  );
+
+  // Fanuc.
+  addMatches(
+    /\bA\d{2}B-\d{4}-[A-Z0-9]{3,15}(?:\/[A-Z0-9]+)?\b/gi,
+    9500
+  );
+
+  // Allen-Bradley.
+  addMatches(
+    /\b\d{3,4}-[A-Z]{1,5}\d{1,6}[A-Z0-9-]*\b/gi,
+    9000
+  );
+
+  // Strong slash code, e.g. P8AX09-T/MF.
+  addMatches(
+    /\b[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}\b/gi,
+    8800
+  );
+
+  // Generic structured code: low-confidence fallback only.
+  addMatches(
+    /\b[A-Z0-9]{2,15}(?:-[A-Z0-9]{2,15}){2,5}\b/gi,
+    2500
+  );
+
+  return candidates
+    .filter((candidate) => {
+      if (containsDescriptionWords(candidate.value)) {
+        return isKnownIndustrialPattern(candidate.value);
+      }
+
+      return isKnownIndustrialPattern(candidate.value);
+    })
+    .sort((a, b) => b.score - a.score);
 }
 
 function getBestPartNumber(
@@ -275,6 +430,8 @@ function getBestPartNumber(
   title: string,
   ebayItemId: string
 ): Candidate | null {
+  const titleList = titleCandidates(title, ebayItemId);
+
   const authoritative: Array<{
     source: Exclude<CandidateSource, 'title'>;
     value: string;
@@ -298,33 +455,39 @@ function getBestPartNumber(
   ];
 
   const authoritativeCandidates: Candidate[] = authoritative
-    .map(({ source, value }) => ({
-      source,
-      value: cleanAuthoritativeValue(value),
-      score: scoreAuthoritativeSource(source),
-    }))
+    .map(({ source, value }) => {
+      const cleaned = cleanAuthoritativeValue(value);
+
+      return {
+        source,
+        value: cleaned,
+        score: scoreAuthoritativeCandidate(cleaned, source, title),
+      };
+    })
     .filter((candidate) =>
-      isValidAuthoritativeCandidate(candidate.value, ebayItemId)
+      isValidAuthoritativeCandidate(
+        candidate.value,
+        candidate.source,
+        title,
+        ebayItemId
+      )
     );
 
-  authoritativeCandidates.sort((a, b) => b.score - a.score);
+  const allCandidates = [
+    ...titleList,
+    ...authoritativeCandidates,
+  ].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
 
-  if (authoritativeCandidates[0]) {
-    return authoritativeCandidates[0];
-  }
+    const aInTitle = appearsInTitle(a.value, title) ? 1 : 0;
+    const bInTitle = appearsInTitle(b.value, title) ? 1 : 0;
 
-  const strongTitleCandidates: Candidate[] = titleCandidates(title)
-    .filter((value) =>
-      isHighConfidenceTitleCandidate(value, ebayItemId)
-    )
-    .map((value) => ({
-      source: 'title' as const,
-      value,
-      score: 1000 + value.length,
-    }))
-    .sort((a, b) => b.score - a.score);
+    if (bInTitle !== aInTitle) return bInTitle - aInTitle;
 
-  return strongTitleCandidates[0] || null;
+    return b.value.length - a.value.length;
+  });
+
+  return allCandidates[0] || null;
 }
 
 async function fetchEbayItem(
@@ -401,6 +564,7 @@ async function fetchEbayItem(
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
+
     const offset = Math.max(
       0,
       Number(url.searchParams.get('offset') || 0)
@@ -430,6 +594,7 @@ export async function GET(req: Request) {
     if (suspiciousProducts.length === 0) {
       return NextResponse.json({
         success: true,
+        mode: 'strict-cross-check',
         offset,
         scanned: rows?.length ?? 0,
         suspiciousFound: 0,
@@ -501,7 +666,7 @@ export async function GET(req: Request) {
             id: product.id,
             ebay_item_id: ebayItemId,
             old_part_number: product.part_number,
-            status: 'unresolved_no_high_confidence_part_number',
+            status: 'unresolved_no_verified_part_number',
             title,
           });
 
@@ -511,6 +676,7 @@ export async function GET(req: Request) {
         const oldCanonical = canonicalCompare(
           product.part_number
         );
+
         const newCanonical = canonicalCompare(best.value);
 
         if (oldCanonical === newCanonical) {
@@ -522,6 +688,7 @@ export async function GET(req: Request) {
             old_part_number: product.part_number,
             candidate: best.value,
             source: best.source,
+            score: best.score,
             status: 'unchanged_same_part_number',
           });
 
@@ -547,7 +714,8 @@ export async function GET(req: Request) {
           old_part_number: product.part_number,
           new_part_number: best.value,
           source: best.source,
-          status: 'updated_high_confidence',
+          score: best.score,
+          status: 'updated_verified',
         });
       } catch (error) {
         const message =
@@ -581,7 +749,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      mode: 'high-confidence-only',
+      mode: 'strict-cross-check',
       offset,
       scanned: rows?.length ?? 0,
       suspiciousFound: suspiciousProducts.length,
