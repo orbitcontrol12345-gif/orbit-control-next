@@ -472,6 +472,103 @@ function getBestPartNumber(
   title: string,
   ebayItemId: string
 ): Candidate | null {
+  // Absolute high-confidence title rules.
+  // These run BEFORE eBay MPN/model fields because old eBay listings can
+  // contain descriptive or dirty Item Specific values.
+  const strictTitleRules: Array<{
+    pattern: RegExp;
+    score: number;
+  }> = [
+    {
+      pattern:
+        /\b6ES\d\s*\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/i,
+      score: 20000,
+    },
+    {
+      pattern:
+        /\b6ES\d\d{3}-\d[A-Z]{2}\d{2}(?:-\d[A-Z]{2}\d)?\b/i,
+      score: 20000,
+    },
+    {
+      pattern: /\b6AV\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/i,
+      score: 19500,
+    },
+    {
+      pattern: /\b6DP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/i,
+      score: 19500,
+    },
+    {
+      pattern: /\b6GK\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/i,
+      score: 19500,
+    },
+    {
+      pattern: /\b6EP\d\s*\d{3,4}-[A-Z0-9-]{4,20}\b/i,
+      score: 19500,
+    },
+    {
+      pattern: /\bIC\d{3}[A-Z]{2,}\d{2,8}\b/i,
+      score: 19000,
+    },
+    {
+      pattern:
+        /\bA\d{2}B-\d{4}-[A-Z0-9]{3,15}(?:\/[A-Z0-9]+)?\b/i,
+      score: 19000,
+    },
+    {
+      pattern:
+        /\b[A-Z][A-Z0-9]{3,20}-[A-Z0-9]{1,15}\/[A-Z0-9]{1,15}\b/i,
+      score: 18500,
+    },
+  ];
+
+  for (const rule of strictTitleRules) {
+    const match = title.match(rule.pattern)?.[0];
+
+    if (match) {
+      const value = normalizePartNumber(match);
+
+      if (
+        value &&
+        !isEbayItemId(value, ebayItemId) &&
+        !isNoise(value) &&
+        !containsDescriptionWords(value)
+      ) {
+        return {
+          source: 'title',
+          value,
+          score: rule.score,
+        };
+      }
+    }
+  }
+
+  // Strict digit-leading alphanumeric code from the title.
+  // Example: KONGSBERG 393151A POWER SUPPLY -> 393151A
+  // It must contain both digits and letters, be visible verbatim in the title,
+  // and must not be a rating, quantity, eBay item ID, or description.
+  const digitLeadingMatches =
+    title.match(/\b\d{4,12}[A-Z]{1,4}\b/gi) || [];
+
+  for (const rawMatch of digitLeadingMatches) {
+    const value = normalizePartNumber(rawMatch);
+
+    if (
+      value &&
+      /[A-Z]/i.test(value) &&
+      /\d/.test(value) &&
+      appearsInTitle(value, title) &&
+      !isEbayItemId(value, ebayItemId) &&
+      !isNoise(value) &&
+      !containsDescriptionWords(value)
+    ) {
+      return {
+        source: 'title',
+        value,
+        score: 18000,
+      };
+    }
+  }
+
   const titleList = titleCandidates(title, ebayItemId);
 
   const authoritative: Array<{
