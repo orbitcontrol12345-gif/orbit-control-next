@@ -526,12 +526,29 @@ export async function GET() {
   modelNumber: getAspectValue(item, ['Model Number']),
   extractedFromTitle: extractPartNumber(title),
 });
-      const imageUrl = String(
-        item.image?.imageUrl ||
-          item.thumbnailImages?.[0]?.imageUrl ||
-          ''
-      ).trim();
+     const ebayGalleryUrls: string[] = Array.from(
+  new Set<string>(
+    [
+      item.image?.imageUrl,
 
+      ...(Array.isArray(item.additionalImages)
+        ? item.additionalImages.map(
+            (image: any) => image?.imageUrl
+          )
+        : []),
+
+      ...(Array.isArray(item.thumbnailImages)
+        ? item.thumbnailImages.map(
+            (image: any) => image?.imageUrl
+          )
+        : []),
+    ]
+      .map((url: unknown) => String(url || '').trim())
+      .filter((url: string) => url.length > 0)
+  )
+).slice(0, 10);
+
+const imageUrl = ebayGalleryUrls[0] || '';
       const realItemId = String(
         item.legacyItemId ||
           item.itemId?.split('|')?.[1] ||
@@ -610,7 +627,8 @@ export async function GET() {
           'Industrial Automation',
         name: cleanedName,
         condition: item.condition || 'Used',
-        image_url: imageUrl,
+       image_url: imageUrl,
+       ebay_gallery_urls: ebayGalleryUrls,
         description: title,
         slug: slugify(`${realItemId}-${cleanedName}`),
         marketplace: MARKETPLACE,
