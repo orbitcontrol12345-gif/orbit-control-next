@@ -23,21 +23,22 @@ function getPublicR2Url(key: string) {
 }
 
 function getProductGallery(product: any): string[] {
-  const gallery = Array.isArray(product.ebay_gallery_urls)
+  const gallery: string[] = Array.isArray(product.ebay_gallery_urls)
     ? product.ebay_gallery_urls
-        .map((url: unknown) => String(url || '').trim())
-        .filter(Boolean)
+        .map((url: unknown): string => String(url || '').trim())
+        .filter((url: string): boolean => url.length > 0)
     : [];
 
-  const mainImage = String(product.image_url || '').trim();
+  const mainImage: string = String(product.image_url || '').trim();
 
-  const images = gallery.length > 0
-    ? gallery
-    : mainImage
-      ? [mainImage]
-      : [];
+  const images: string[] =
+    gallery.length > 0
+      ? gallery
+      : mainImage
+        ? [mainImage]
+        : [];
 
-  return [...new Set(images)].slice(0, MAX_IMAGES);
+  return Array.from(new Set<string>(images)).slice(0, MAX_IMAGES);
 }
 
 export async function GET() {
