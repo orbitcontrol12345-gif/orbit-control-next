@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V4-AUDIT-SAFE';
+const ROUTE_VERSION = 'BRAND-V5-INDUSTRIAL-CONSERVATIVE';
 
 const BAD_BRANDS = new Set([
   '',
@@ -335,44 +335,39 @@ function isCanonicalKnownBrand(value: string): boolean {
   const key = canonicalBrandKey(value);
 
   const known = new Set([
-    'TRIDIUM',
-    'HMS NETWORKS',
-    'ANDOVER CONTROLS',
-    'ALLEN-BRADLEY',
-    'SCHNEIDER ELECTRIC',
-    'GE FANUC',
-    'CUTLER-HAMMER',
-    'PHOENIX CONTACT',
-    'MITSUBISHI ELECTRIC',
-    'CARLO GAVAZZI',
-    'MORS SMITT',
-    'GE',
-    'TELEMECANIQUE',
     'SIEMENS',
     'ABB',
+    'ALLEN-BRADLEY',
+    'SCHNEIDER ELECTRIC',
+    'TELEMECANIQUE',
     'OMRON',
     'YOKOGAWA',
     'HONEYWELL',
     'EMERSON',
+    'PHOENIX CONTACT',
+    'MITSUBISHI ELECTRIC',
     'EATON',
+    'CUTLER-HAMMER',
+    'GE',
+    'GE FANUC',
     'FANUC',
     'BELIMO',
     'KONGSBERG',
     'FLENDER',
     'BOSCH',
     'CEAG',
-    'BAUMULLER',
-    'SCHMALZ',
-    'FRANKE',
+    'CARLO GAVAZZI',
+    'MORS SMITT',
+    'TRIDIUM',
+    'HMS NETWORKS',
+    'ANDOVER CONTROLS',
+    'SICK',
     'MOOG',
     'STULZ',
-    'CESCON',
-    'STATRON',
-    'SEIRA',
     'ROPEX',
-    'SICK',
-    'JUKI',
+    'SCHMALZ',
     'GRACO',
+    'BAUMULLER',
     'SUN MICROSYSTEMS',
     'WINCOR NIXDORF',
     'CEDES',
@@ -385,6 +380,47 @@ function isCanonicalKnownBrand(value: string): boolean {
   return known.has(key);
 }
 
+function detectBrandFromPartNumber(
+  partNumber: string
+): string {
+  const pn = String(partNumber || '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!pn) return '';
+
+  const rules: Array<{
+    pattern: RegExp;
+    brand: string;
+  }> = [
+    {
+      pattern: /^6(?:ES|AV|EP|GK|DP)\d/i,
+      brand: 'Siemens',
+    },
+    {
+      pattern: /^IC\d{3}[A-Z]{2,}\d+/i,
+      brand: 'GE Fanuc',
+    },
+    {
+      pattern: /^A\d{2}B-\d{4}-/i,
+      brand: 'Fanuc',
+    },
+    {
+      pattern: /^\d{3,4}-[A-Z]{1,5}\d+/i,
+      brand: 'Allen-Bradley',
+    },
+  ];
+
+  for (const rule of rules) {
+    if (rule.pattern.test(pn)) {
+      return rule.brand;
+    }
+  }
+
+  return '';
+}
+
 function collectBrandEvidence(item: any, title: string) {
   const ebayBrandRaw = getAspectValue(item, ['Brand']);
   const manufacturerRaw = getAspectValue(item, [
@@ -393,30 +429,51 @@ function collectBrandEvidence(item: any, title: string) {
     'Make',
   ]);
 
+  const mpn = getAspectValue(item, ['MPN']);
+  const manufacturerPartNumber = getAspectValue(item, [
+    'Manufacturer Part Number',
+  ]);
+  const partNumber = getAspectValue(item, ['Part Number']);
+  const modelNumber = getAspectValue(item, ['Model Number']);
+
   const ebayBrand = normalizeKnownBrand(ebayBrandRaw);
   const manufacturer = normalizeKnownBrand(manufacturerRaw);
   const detected = normalizeKnownBrand(
     getTitlePrefixBrand(title)
   );
 
+  const partNumberBrand = normalizeKnownBrand(
+    detectBrandFromPartNumber(
+      mpn ||
+      manufacturerPartNumber ||
+      partNumber ||
+      modelNumber
+    )
+  );
+
   return {
     ebayBrandRaw,
     manufacturerRaw,
+    mpn,
+    manufacturerPartNumber,
+    partNumber,
+    modelNumber,
     ebayBrand,
     manufacturer,
     detected,
+    partNumberBrand,
   };
 }
 
 function chooseBrand(item: any, title: string): {
   brand: string;
   source:
-    | 'brand+title'
-    | 'manufacturer+title'
     | 'brand+manufacturer'
-    | 'brand+detector'
-    | 'manufacturer+detector'
-    | 'known-brand'
+    | 'manufacturer+part-number'
+    | 'brand+part-number'
+    | 'detector+part-number'
+    | 'known-detector'
+    | 'known-manufacturer'
     | null;
   evidence?: Record<string, unknown>;
 } {
@@ -426,6 +483,7 @@ function chooseBrand(item: any, title: string): {
     ebayBrand,
     manufacturer,
     detected,
+    partNumberBrand,
   } = evidence;
 
   const brandValid =
@@ -443,11 +501,18 @@ function chooseBrand(item: any, title: string): {
     !isBadBrand(detected) &&
     isCanonicalBrandSafe(detected);
 
+  const partNumberBrandValid =
+    partNumberBrand &&
+    !isBadBrand(partNumberBrand) &&
+    isCanonicalBrandSafe(partNumberBrand);
+
   const brandKeyValue = canonicalBrandKey(ebayBrand);
   const manufacturerKey = canonicalBrandKey(manufacturer);
   const detectedKey = canonicalBrandKey(detected);
+  const partNumberBrandKey =
+    canonicalBrandKey(partNumberBrand);
 
-  // Strongest evidence: Brand and Manufacturer agree.
+  // Strongest: eBay Brand and Manufacturer agree.
   if (
     brandValid &&
     manufacturerValid &&
@@ -460,64 +525,65 @@ function chooseBrand(item: any, title: string): {
     };
   }
 
-  // Brand appears in title.
-  if (
-    brandValid &&
-    brandAppearsInTitle(ebayBrand, title)
-  ) {
-    return {
-      brand: ebayBrand,
-      source: 'brand+title',
-      evidence,
-    };
-  }
-
-  // Manufacturer appears in title.
+  // Manufacturer agrees with a brand family derived from the part number.
   if (
     manufacturerValid &&
-    brandAppearsInTitle(manufacturer, title)
+    partNumberBrandValid &&
+    manufacturerKey === partNumberBrandKey
   ) {
     return {
       brand: manufacturer,
-      source: 'manufacturer+title',
+      source: 'manufacturer+part-number',
       evidence,
     };
   }
 
-  // eBay Brand and our industrial detector agree.
+  // eBay Brand agrees with a brand family derived from the part number.
   if (
     brandValid &&
-    detectedValid &&
-    brandKeyValue === detectedKey
+    partNumberBrandValid &&
+    brandKeyValue === partNumberBrandKey
   ) {
     return {
       brand: ebayBrand,
-      source: 'brand+detector',
+      source: 'brand+part-number',
       evidence,
     };
   }
 
-  // Manufacturer and our industrial detector agree.
+  // Our known industrial detector agrees with part-number family.
+  if (
+    detectedValid &&
+    partNumberBrandValid &&
+    detectedKey === partNumberBrandKey
+  ) {
+    return {
+      brand: detected,
+      source: 'detector+part-number',
+      evidence,
+    };
+  }
+
+  // Known manufacturer is accepted.
   if (
     manufacturerValid &&
-    detectedValid &&
-    manufacturerKey === detectedKey
+    isCanonicalKnownBrand(manufacturer)
   ) {
     return {
       brand: manufacturer,
-      source: 'manufacturer+detector',
+      source: 'known-manufacturer',
       evidence,
     };
   }
 
-  // Known canonical brands may be accepted when the detector identifies them.
+  // Known industrial detector result is accepted.
   if (
     detectedValid &&
     isCanonicalKnownBrand(detected)
   ) {
     return {
       brand: detected,
-      source: 'known-brand',
+      source: 'known-detector',
       evidence,
     };
   }
