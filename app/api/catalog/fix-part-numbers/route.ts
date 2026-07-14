@@ -10,7 +10,8 @@ const SELLER = 'orbitcontrol';
 
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'V4-KONGSBERG-DIRECT';
+const ROUTE_VERSION = 'V5-BRAND-CODE-DIRECT';
+
 type CandidateSource =
   | 'mpn'
   | 'manufacturer_part_number'
@@ -812,11 +813,42 @@ export async function GET(req: Request) {
           item.title || product.name || ''
         ).trim();
 
-        const best = getBestPartNumber(
-          item,
-          title,
-          ebayItemId
+        // Absolute direct rule for titles shaped like:
+        // BRAND 393151A POWER SUPPLY
+        // Example: KONGSBERG 393151A POWER SUPPLY
+        const brandPrefixCodeMatch = title.match(
+          /^[A-Z][A-Z0-9&.'-]{2,30}\s+(\d{4,12}[A-Z]{1,4})\b/i
         );
+
+        let best: Candidate | null = null;
+
+        if (brandPrefixCodeMatch?.[1]) {
+          const directValue = normalizePartNumber(
+            brandPrefixCodeMatch[1]
+          );
+
+          if (
+            directValue &&
+            appearsInTitle(directValue, title) &&
+            !isEbayItemId(directValue, ebayItemId) &&
+            !isNoise(directValue) &&
+            !containsDescriptionWords(directValue)
+          ) {
+            best = {
+              source: 'title',
+              value: directValue,
+              score: 30000,
+            };
+          }
+        }
+
+        if (!best) {
+          best = getBestPartNumber(
+            item,
+            title,
+            ebayItemId
+          );
+        }
 
         if (!best) {
           unresolved++;
@@ -908,6 +940,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
+      routeVersion: ROUTE_VERSION,
       mode: requestedItemId
         ? 'single-item-verified'
         : 'strict-cross-check-v2',
