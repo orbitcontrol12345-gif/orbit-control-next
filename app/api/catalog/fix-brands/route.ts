@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V3-CANONICAL';
+const ROUTE_VERSION = 'BRAND-V4-AUDIT-SAFE';
 
 const BAD_BRANDS = new Set([
   '',
@@ -308,59 +308,224 @@ function getTitlePrefixBrand(title: string): string {
   return '';
 }
 
-function chooseBrand(item: any, title: string): {
-  brand: string;
-  source: 'brand' | 'manufacturer' | 'detector' | null;
-} {
-  const ebayBrandRaw = getAspectValue(item, ['Brand']);
-  const ebayBrand = normalizeKnownBrand(ebayBrandRaw);
 
-  if (
-    !isBadBrand(ebayBrand) &&
-    isCanonicalBrandSafe(ebayBrand)
-  ) {
-    return {
-      brand: ebayBrand,
-      source: 'brand',
-    };
+function canonicalBrandKey(value: unknown): string {
+  return brandKey(normalizeKnownBrand(String(value || '')));
+}
+
+function brandAppearsInTitle(brand: string, title: string): boolean {
+  const brandCanonical = canonicalBrandKey(brand);
+  const titleCanonical = String(title || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+
+  if (!brandCanonical || brandCanonical.length < 3) {
+    return false;
   }
 
+  const compactBrand = brandCanonical.replace(/[^A-Z0-9]/g, '');
+
+  return (
+    compactBrand.length >= 3 &&
+    titleCanonical.includes(compactBrand)
+  );
+}
+
+function isCanonicalKnownBrand(value: string): boolean {
+  const key = canonicalBrandKey(value);
+
+  const known = new Set([
+    'TRIDIUM',
+    'HMS NETWORKS',
+    'ANDOVER CONTROLS',
+    'ALLEN-BRADLEY',
+    'SCHNEIDER ELECTRIC',
+    'GE FANUC',
+    'CUTLER-HAMMER',
+    'PHOENIX CONTACT',
+    'MITSUBISHI ELECTRIC',
+    'CARLO GAVAZZI',
+    'MORS SMITT',
+    'GE',
+    'TELEMECANIQUE',
+    'SIEMENS',
+    'ABB',
+    'OMRON',
+    'YOKOGAWA',
+    'HONEYWELL',
+    'EMERSON',
+    'EATON',
+    'FANUC',
+    'BELIMO',
+    'KONGSBERG',
+    'FLENDER',
+    'BOSCH',
+    'CEAG',
+    'BAUMULLER',
+    'SCHMALZ',
+    'FRANKE',
+    'MOOG',
+    'STULZ',
+    'CESCON',
+    'STATRON',
+    'SEIRA',
+    'ROPEX',
+    'SICK',
+    'JUKI',
+    'GRACO',
+    'SUN MICROSYSTEMS',
+    'WINCOR NIXDORF',
+    'CEDES',
+    'NOVINTEC',
+    'BAELZ',
+    'IBC CONTROL',
+    'KAISER',
+  ]);
+
+  return known.has(key);
+}
+
+function collectBrandEvidence(item: any, title: string) {
+  const ebayBrandRaw = getAspectValue(item, ['Brand']);
   const manufacturerRaw = getAspectValue(item, [
     'Manufacturer',
     'Manufacturer Name',
     'Make',
   ]);
 
+  const ebayBrand = normalizeKnownBrand(ebayBrandRaw);
   const manufacturer = normalizeKnownBrand(manufacturerRaw);
-
-  if (
-    !isBadBrand(manufacturer) &&
-    isCanonicalBrandSafe(manufacturer)
-  ) {
-    return {
-      brand: manufacturer,
-      source: 'manufacturer',
-    };
-  }
-
   const detected = normalizeKnownBrand(
     getTitlePrefixBrand(title)
   );
 
-  if (
+  return {
+    ebayBrandRaw,
+    manufacturerRaw,
+    ebayBrand,
+    manufacturer,
+    detected,
+  };
+}
+
+function chooseBrand(item: any, title: string): {
+  brand: string;
+  source:
+    | 'brand+title'
+    | 'manufacturer+title'
+    | 'brand+manufacturer'
+    | 'brand+detector'
+    | 'manufacturer+detector'
+    | 'known-brand'
+    | null;
+  evidence?: Record<string, unknown>;
+} {
+  const evidence = collectBrandEvidence(item, title);
+
+  const {
+    ebayBrand,
+    manufacturer,
+    detected,
+  } = evidence;
+
+  const brandValid =
+    ebayBrand &&
+    !isBadBrand(ebayBrand) &&
+    isCanonicalBrandSafe(ebayBrand);
+
+  const manufacturerValid =
+    manufacturer &&
+    !isBadBrand(manufacturer) &&
+    isCanonicalBrandSafe(manufacturer);
+
+  const detectedValid =
     detected &&
     !isBadBrand(detected) &&
-    isCanonicalBrandSafe(detected)
+    isCanonicalBrandSafe(detected);
+
+  const brandKeyValue = canonicalBrandKey(ebayBrand);
+  const manufacturerKey = canonicalBrandKey(manufacturer);
+  const detectedKey = canonicalBrandKey(detected);
+
+  // Strongest evidence: Brand and Manufacturer agree.
+  if (
+    brandValid &&
+    manufacturerValid &&
+    brandKeyValue === manufacturerKey
+  ) {
+    return {
+      brand: ebayBrand,
+      source: 'brand+manufacturer',
+      evidence,
+    };
+  }
+
+  // Brand appears in title.
+  if (
+    brandValid &&
+    brandAppearsInTitle(ebayBrand, title)
+  ) {
+    return {
+      brand: ebayBrand,
+      source: 'brand+title',
+      evidence,
+    };
+  }
+
+  // Manufacturer appears in title.
+  if (
+    manufacturerValid &&
+    brandAppearsInTitle(manufacturer, title)
+  ) {
+    return {
+      brand: manufacturer,
+      source: 'manufacturer+title',
+      evidence,
+    };
+  }
+
+  // eBay Brand and our industrial detector agree.
+  if (
+    brandValid &&
+    detectedValid &&
+    brandKeyValue === detectedKey
+  ) {
+    return {
+      brand: ebayBrand,
+      source: 'brand+detector',
+      evidence,
+    };
+  }
+
+  // Manufacturer and our industrial detector agree.
+  if (
+    manufacturerValid &&
+    detectedValid &&
+    manufacturerKey === detectedKey
+  ) {
+    return {
+      brand: manufacturer,
+      source: 'manufacturer+detector',
+      evidence,
+    };
+  }
+
+  // Known canonical brands may be accepted when the detector identifies them.
+  if (
+    detectedValid &&
+    isCanonicalKnownBrand(detected)
   ) {
     return {
       brand: detected,
-      source: 'detector',
+      source: 'known-brand',
+      evidence,
     };
   }
 
   return {
     brand: '',
     source: null,
+    evidence,
   };
 }
 
@@ -559,6 +724,7 @@ export async function GET(req: Request) {
             ebay_item_id: ebayItemId,
             old_brand: product.brand,
             title,
+            evidence: chosen.evidence,
             status: 'unresolved_no_verified_brand',
           });
 
@@ -601,6 +767,7 @@ export async function GET(req: Request) {
           old_brand: product.brand,
           new_brand: chosen.brand,
           source: chosen.source,
+          evidence: chosen.evidence,
           status: 'updated_verified_brand',
         });
       } catch (error) {
