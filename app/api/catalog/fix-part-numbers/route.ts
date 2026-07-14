@@ -10,7 +10,7 @@ const SELLER = 'orbitcontrol';
 
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'V5-BRAND-CODE-DIRECT';
+const ROUTE_VERSION = 'V6-RATING-FIX';
 
 type CandidateSource =
   | 'mpn'
@@ -121,10 +121,15 @@ function isEbayItemId(value: string, ebayItemId: string): boolean {
 function isElectricalRating(value: string): boolean {
   const v = normalizePartNumber(value).replace(/\s+/g, '');
 
+  // Important:
+  // Do not treat long digit-leading industrial codes such as 393151A
+  // as "393151 amps". Typical standalone ratings use a much shorter
+  // numeric portion. This prevents valid part numbers ending in A/V/W
+  // from being rejected as electrical ratings.
   return (
-    /^\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|AMP|AMPS|KW|W)$/i.test(v) ||
-    /^\d+(?:\.\d+)?-\d+(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|KW|W)$/i.test(v) ||
-    /^\d+X\d+(?:V|VAC|VDC|A|MA|KW|W)$/i.test(v)
+    /^\d{1,5}(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|AMP|AMPS|KW|W)$/i.test(v) ||
+    /^\d{1,5}(?:\.\d+)?-\d{1,5}(?:\.\d+)?(?:V|VAC|VDC|AC|DC|HZ|A|MA|KW|W)$/i.test(v) ||
+    /^\d{1,4}X\d{1,5}(?:V|VAC|VDC|A|MA|KW|W)$/i.test(v)
   );
 }
 
