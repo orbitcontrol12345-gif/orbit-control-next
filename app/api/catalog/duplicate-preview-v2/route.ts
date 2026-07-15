@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ROUTE_VERSION = 'DUPLICATE-PREVIEW-V2-SAFE';
+const ROUTE_VERSION = 'DUPLICATE-PREVIEW-V3-IMAGE-SAFE';
 const SCAN_LIMIT = 5000;
 const MAX_GROUPS = 100;
+const IMAGE_COMPARE_LIMIT = 3;
 
 type ProductRow = {
   id: number | string;
@@ -16,11 +18,29 @@ type ProductRow = {
   part_number: string | null;
   condition: string | null;
   name: string | null;
+  image_url: string | null;
   r2_image_url: string | null;
   r2_gallery_urls: string[] | null;
   image_count: number | null;
   last_seen_at: string | null;
 };
+
+type ImageFingerprintResult = {
+  url: string;
+  ok: boolean;
+  fingerprint: string | null;
+  size: number | null;
+  error?: string;
+};
+
+const MARKETPLACE_PRIORITY = [
+  'EBAY_US',
+  'EBAY_GB',
+  'EBAY_UK',
+  'EBAY_DE',
+  'EBAY_AU',
+  'EBAY_CA',
+];
 
 function normalizeBrand(value: unknown): string {
   return String(value || '')
@@ -44,18 +64,34 @@ function normalizeCondition(value: unknown): string {
   const v = String(value || '')
     .trim()
     .toUpperCase()
+    .replace(/[‐‑‒–—]/g, '-')
     .replace(/\s+/g, ' ');
 
-  if (/NOT WORKING|FOR PARTS|PARTS ONLY/.test(v)) return 'NOT WORKING';
-  if (/REFURBISHED/.test(v)) return 'REFURBISHED';
-  if (/OPEN BOX/.test(v)) return 'OPEN BOX';
-  if (/NEW WITHOUT BOX|NEW W\/O BOX|NEW NO BOX/.test(v)) {
+  if (!v) return 'UNKNOWN';
+
+  if (
+    /\bNOT WORKING\b/.test(v) ||
+    /\bFOR PARTS\b/.test(v) ||
+    /\bPARTS ONLY\b/.test(v)
+  ) {
+    return 'NOT WORKING';
+  }
+
+  if (/\bREFURBISHED\b/.test(v)) return 'REFURBISHED';
+  if (/\bOPEN BOX\b/.test(v)) return 'OPEN BOX';
+
+  if (
+    /\bNEW WITHOUT BOX\b/.test(v) ||
+    /\bNEW W\/O BOX\b/.test(v) ||
+    /\bNEW NO BOX\b/.test(v)
+  ) {
     return 'NEW WITHOUT BOX';
   }
+
   if (/\bNEW\b/.test(v)) return 'NEW';
   if (/\bUSED\b/.test(v)) return 'USED';
 
-  return v || 'UNKNOWN';
+  return v;
 }
 
 function isGoodPartNumber(value: unknown): boolean {
@@ -69,10 +105,35 @@ function isGoodPartNumber(value: unknown): boolean {
   return true;
 }
 
+function marketplaceRank(value: unknown): number {
+  const marketplace = String(value || '').trim().toUpperCase();
+  const index = MARKETPLACE_PRIORITY.indexOf(marketplace);
+
+  return index === -1
+    ? MARKETPLACE_PRIORITY.length + 100
+    : index;
+}
+
+function getProductImages(product: ProductRow): string[] {
+  const gallery = Array.isArray(product.r2_gallery_urls)
+    ? product.r2_gallery_urls
+    : [];
+
+  return Array.from(
+    new Set(
+      [
+        product.r2_image_url,
+        ...gallery,
+        product.image_url,
+      ]
+        .map((value) => String(value || '').trim())
+        .filter((url) => /^https?:\/\//i.test(url))
+    )
+  ).slice(0, IMAGE_COMPARE_LIMIT);
+}
+
 function hasR2Images(product: ProductRow): boolean {
-  return Boolean(product.r2_image_url) ||
-    (Array.isArray(product.r2_gallery_urls) &&
-      product.r2_gallery_urls.length > 0);
+  return getProductImages(product).length > 0;
 }
 
 function getKeepScore(product: ProductRow): number {
@@ -88,29 +149,60 @@ function getKeepScore(product: ProductRow): number {
   const brand = normalizeBrand(product.brand);
   if (brand && brand !== 'UNKNOWN') score += 1000;
 
+  score += Math.max(0, 100 - marketplaceRank(product.marketplace));
   score += Math.min(Number(product.image_count || 0), 10) * 10;
 
   return score;
 }
 
-function sortCandidates(items: ProductRow[]): ProductRow[] {
-  return [...items].sort((a, b) => {
-    const score = getKeepScore(b) - getKeepScore(a);
-    if (score !== 0) return score;
+function sortCandidates(products: ProductRow[]): ProductRow[] {
+  return [...products].sort((a, b) => {
+    const scoreDifference = getKeepScore(b) - getKeepScore(a);
 
-    const aDate = new Date(a.last_seen_at || 0).getTime();
-    const bDate = new Date(b.last_seen_at || 0).getTime();
+    if (scoreDifference !== 0) {
+      return scoreDifference;
+    }
 
-    return bDate - aDate;
+    const aLastSeen = new Date(a.last_seen_at || 0).getTime();
+    const bLastSeen = new Date(b.last_seen_at || 0).getTime();
+
+    if (bLastSeen !== aLastSeen) {
+      return bLastSeen - aLastSeen;
+    }
+
+    return String(a.id).localeCompare(String(b.id));
   });
 }
 
 function titleTokens(value: unknown): Set<string> {
   const noise = new Set([
-    'NEW', 'USED', 'OPEN', 'BOX', 'REFURBISHED', 'TESTED',
-    'WITH', 'WITHOUT', 'THE', 'AND', 'FOR', 'OF', 'ONLY',
-    'LOT', 'QTY', 'PCS', 'PC', 'PIECE', 'PIECES',
-    'UNIT', 'UNITS', 'ITEM', 'ITEMS', 'PACK', 'SET',
+    'NEW',
+    'USED',
+    'OPEN',
+    'BOX',
+    'REFURBISHED',
+    'TESTED',
+    'TRIED',
+    'OK',
+    'WITH',
+    'WITHOUT',
+    'THE',
+    'AND',
+    'FOR',
+    'OF',
+    'ONLY',
+    'LOT',
+    'QTY',
+    'PCS',
+    'PC',
+    'PIECE',
+    'PIECES',
+    'UNIT',
+    'UNITS',
+    'ITEM',
+    'ITEMS',
+    'PACK',
+    'SET',
   ]);
 
   const tokens = String(value || '')
@@ -146,6 +238,7 @@ function titleSimilarity(a: unknown, b: unknown): number {
 
 function extractVariantSignals(value: unknown): string[] {
   const text = String(value || '').toUpperCase();
+
   const patterns = [
     /\b\d+(?:\.\d+)?\s*(?:FEET|FOOT|FT|METER|METERS|METRE|METRES)\b/g,
     /\bREV\.?\s*[A-Z0-9.-]+\b/g,
@@ -163,11 +256,16 @@ function extractVariantSignals(value: unknown): string[] {
   );
 }
 
-function conflictingVariants(a: ProductRow, b: ProductRow): boolean {
+function conflictingVariants(
+  a: ProductRow,
+  b: ProductRow
+): boolean {
   const aSignals = extractVariantSignals(a.name);
   const bSignals = extractVariantSignals(b.name);
 
-  if (!aSignals.length || !bSignals.length) return false;
+  if (!aSignals.length || !bSignals.length) {
+    return false;
+  }
 
   return (
     aSignals.length !== bSignals.length ||
@@ -175,58 +273,139 @@ function conflictingVariants(a: ProductRow, b: ProductRow): boolean {
   );
 }
 
-function classify(
-  keep: ProductRow,
-  candidate: ProductRow
-) {
-  const similarity = titleSimilarity(keep.name, candidate.name);
-  const hasConflict = conflictingVariants(keep, candidate);
-  const sameMarketplace =
-    String(keep.marketplace || '').toUpperCase() ===
-    String(candidate.marketplace || '').toUpperCase();
+async function fingerprintImage(
+  url: string
+): Promise<ImageFingerprintResult> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 Orbit-Control-Duplicate-Preview',
+      },
+      cache: 'no-store',
+    });
 
-  if (hasConflict) {
+    if (!response.ok) {
+      return {
+        url,
+        ok: false,
+        fingerprint: null,
+        size: null,
+        error: `HTTP_${response.status}`,
+      };
+    }
+
+    const contentType =
+      response.headers.get('content-type') || '';
+
+    if (!contentType.startsWith('image/')) {
+      return {
+        url,
+        ok: false,
+        fingerprint: null,
+        size: null,
+        error: `INVALID_CONTENT_TYPE_${contentType}`,
+      };
+    }
+
+    const buffer = Buffer.from(
+      await response.arrayBuffer()
+    );
+
     return {
-      level: 'NOT_SAFE_TO_DELETE',
-      similarity,
-      reasons: ['conflicting_variant_signals'],
+      url,
+      ok: true,
+      fingerprint: createHash('sha256')
+        .update(buffer)
+        .digest('hex'),
+      size: buffer.length,
+    };
+  } catch (error) {
+    return {
+      url,
+      ok: false,
+      fingerprint: null,
+      size: null,
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    };
+  }
+}
+
+async function fingerprintProduct(
+  product: ProductRow
+): Promise<ImageFingerprintResult[]> {
+  const images = getProductImages(product);
+
+  return Promise.all(
+    images.map((url) => fingerprintImage(url))
+  );
+}
+
+function compareFingerprints(
+  a: ImageFingerprintResult[],
+  b: ImageFingerprintResult[]
+): {
+  comparable: boolean;
+  exactImageMatch: boolean;
+  matchedCount: number;
+  comparedCount: number;
+} {
+  const aHashes = a
+    .filter((item) => item.ok && item.fingerprint)
+    .map((item) => item.fingerprint as string);
+
+  const bHashes = b
+    .filter((item) => item.ok && item.fingerprint)
+    .map((item) => item.fingerprint as string);
+
+  if (!aHashes.length || !bHashes.length) {
+    return {
+      comparable: false,
+      exactImageMatch: false,
+      matchedCount: 0,
+      comparedCount: 0,
     };
   }
 
-  if (similarity >= 0.92) {
-    return {
-      level: 'EXACT_DUPLICATE',
-      similarity,
-      reasons: ['very_high_title_similarity'],
-    };
-  }
+  const comparedCount = Math.min(
+    aHashes.length,
+    bHashes.length
+  );
 
-  if (!sameMarketplace && similarity >= 0.78) {
-    return {
-      level: 'PROBABLE_DUPLICATE',
-      similarity,
-      reasons: ['high_similarity_cross_marketplace'],
-    };
-  }
+  let matchedCount = 0;
 
-  if (sameMarketplace && similarity >= 0.85) {
-    return {
-      level: 'PROBABLE_DUPLICATE',
-      similarity,
-      reasons: ['high_similarity_same_marketplace'],
-    };
+  for (let i = 0; i < comparedCount; i++) {
+    if (aHashes[i] === bHashes[i]) {
+      matchedCount++;
+    }
   }
 
   return {
-    level: 'NOT_SAFE_TO_DELETE',
-    similarity,
-    reasons: ['insufficient_duplicate_confidence'],
+    comparable: true,
+    exactImageMatch:
+      comparedCount > 0 &&
+      matchedCount === comparedCount,
+    matchedCount,
+    comparedCount,
   };
+}
+
+function sameMarketplace(
+  a: ProductRow,
+  b: ProductRow
+): boolean {
+  return (
+    String(a.marketplace || '').toUpperCase() ===
+    String(b.marketplace || '').toUpperCase()
+  );
 }
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
+
     const offset = Math.max(
       0,
       Number(url.searchParams.get('offset') || 0)
@@ -242,6 +421,7 @@ export async function GET(req: Request) {
         part_number,
         condition,
         name,
+        image_url,
         r2_image_url,
         r2_gallery_urls,
         image_count,
@@ -251,103 +431,219 @@ export async function GET(req: Request) {
       .order('id', { ascending: true })
       .range(offset, offset + SCAN_LIMIT - 1);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     const groups = new Map<string, ProductRow[]>();
 
     for (const product of (products || []) as ProductRow[]) {
       const brand = normalizeBrand(product.brand);
-      const partNumber = normalizePartNumber(product.part_number);
-      const condition = normalizeCondition(product.condition);
+      const partNumber = normalizePartNumber(
+        product.part_number
+      );
+      const condition = normalizeCondition(
+        product.condition
+      );
 
-      if (!brand || brand === 'UNKNOWN') continue;
-      if (!isGoodPartNumber(partNumber)) continue;
+      if (!brand || brand === 'UNKNOWN') {
+        continue;
+      }
+
+      if (!isGoodPartNumber(partNumber)) {
+        continue;
+      }
 
       const key = `${brand}::${partNumber}::${condition}`;
-      const items = groups.get(key) || [];
+      const current = groups.get(key) || [];
 
-      items.push(product);
-      groups.set(key, items);
+      current.push(product);
+      groups.set(key, current);
     }
 
     const duplicateGroups = Array.from(groups.entries())
-      .filter(([, items]) => items.length > 1)
-      .map(([key, items]) => {
-        const sorted = sortCandidates(items);
-        const keep = sorted[0];
+      .filter(([, items]) => items.length > 1);
 
-        const candidates = sorted.slice(1).map((candidate) => {
-          const result = classify(keep, candidate);
+    const previewGroups: Array<Record<string, unknown>> = [];
 
-          return {
-            id: candidate.id,
-            ebay_item_id: candidate.ebay_item_id,
-            marketplace: candidate.marketplace,
-            brand: candidate.brand,
-            part_number: candidate.part_number,
-            condition: candidate.condition,
-            name: candidate.name,
-            duplicate_level: result.level,
-            title_similarity: Number(result.similarity.toFixed(4)),
-            reasons: result.reasons,
-            variant_signals: extractVariantSignals(candidate.name),
-            has_r2_images: hasR2Images(candidate),
-            image_count: Number(candidate.image_count || 0),
-          };
-        });
+    let exactDuplicateCandidates = 0;
+    let probableDuplicateCandidates = 0;
+    let unsafeCandidates = 0;
+    let imageComparedCandidates = 0;
 
-        return {
-          duplicate_key: key,
-          normalized_brand: normalizeBrand(keep.brand),
-          normalized_part_number: normalizePartNumber(keep.part_number),
-          normalized_condition: normalizeCondition(keep.condition),
-          total_items_in_group: sorted.length,
-          marketplaces: Array.from(
-            new Set(sorted.map((item) => item.marketplace || 'UNKNOWN'))
+    for (const [key, items] of duplicateGroups) {
+      const sorted = sortCandidates(items);
+      const keep = sorted[0];
+
+      const keepFingerprints =
+        await fingerprintProduct(keep);
+
+      const candidates: Array<Record<string, unknown>> = [];
+
+      for (const candidate of sorted.slice(1)) {
+        const similarity = titleSimilarity(
+          keep.name,
+          candidate.name
+        );
+
+        const hasConflict = conflictingVariants(
+          keep,
+          candidate
+        );
+
+        const candidateFingerprints =
+          await fingerprintProduct(candidate);
+
+        const imageComparison = compareFingerprints(
+          keepFingerprints,
+          candidateFingerprints
+        );
+
+        if (imageComparison.comparable) {
+          imageComparedCandidates++;
+        }
+
+        let duplicateLevel:
+          | 'EXACT_DUPLICATE'
+          | 'PROBABLE_DUPLICATE'
+          | 'NOT_SAFE_TO_DELETE';
+
+        const reasons: string[] = [];
+
+        if (hasConflict) {
+          duplicateLevel = 'NOT_SAFE_TO_DELETE';
+          reasons.push('conflicting_variant_signals');
+        } else if (
+          similarity >= 0.92 &&
+          imageComparison.exactImageMatch
+        ) {
+          duplicateLevel = 'EXACT_DUPLICATE';
+          reasons.push(
+            'very_high_title_similarity',
+            'exact_image_fingerprint_match'
+          );
+        } else if (
+          similarity >= 0.92 &&
+          imageComparison.comparable &&
+          !imageComparison.exactImageMatch
+        ) {
+          duplicateLevel = 'NOT_SAFE_TO_DELETE';
+          reasons.push(
+            'same_title_but_different_images'
+          );
+        } else if (
+          similarity >= 0.85 &&
+          imageComparison.exactImageMatch
+        ) {
+          duplicateLevel = 'PROBABLE_DUPLICATE';
+          reasons.push(
+            'high_title_similarity',
+            'exact_image_fingerprint_match'
+          );
+        } else if (
+          !sameMarketplace(keep, candidate) &&
+          similarity >= 0.78 &&
+          imageComparison.exactImageMatch
+        ) {
+          duplicateLevel = 'PROBABLE_DUPLICATE';
+          reasons.push(
+            'cross_marketplace_high_similarity',
+            'exact_image_fingerprint_match'
+          );
+        } else {
+          duplicateLevel = 'NOT_SAFE_TO_DELETE';
+          reasons.push(
+            imageComparison.comparable
+              ? 'insufficient_duplicate_confidence'
+              : 'images_not_comparable'
+          );
+        }
+
+        if (duplicateLevel === 'EXACT_DUPLICATE') {
+          exactDuplicateCandidates++;
+        } else if (
+          duplicateLevel === 'PROBABLE_DUPLICATE'
+        ) {
+          probableDuplicateCandidates++;
+        } else {
+          unsafeCandidates++;
+        }
+
+        candidates.push({
+          id: candidate.id,
+          ebay_item_id: candidate.ebay_item_id,
+          marketplace: candidate.marketplace,
+          brand: candidate.brand,
+          part_number: candidate.part_number,
+          condition: candidate.condition,
+          name: candidate.name,
+          duplicate_level: duplicateLevel,
+          title_similarity: Number(
+            similarity.toFixed(4)
           ),
-          keep: {
-            id: keep.id,
-            ebay_item_id: keep.ebay_item_id,
-            marketplace: keep.marketplace,
-            brand: keep.brand,
-            part_number: keep.part_number,
-            condition: keep.condition,
-            name: keep.name,
-            variant_signals: extractVariantSignals(keep.name),
-            has_r2_images: hasR2Images(keep),
-            image_count: Number(keep.image_count || 0),
-            keep_score: getKeepScore(keep),
-          },
-          candidates,
-        };
+          reasons,
+          variant_signals: extractVariantSignals(
+            candidate.name
+          ),
+          image_comparison: imageComparison,
+          candidate_image_fingerprints:
+            candidateFingerprints.map((item) => ({
+              ok: item.ok,
+              size: item.size,
+              fingerprint: item.fingerprint,
+              error: item.error,
+            })),
+          has_r2_images: hasR2Images(candidate),
+          image_count: Number(candidate.image_count || 0),
+        });
+      }
+
+      previewGroups.push({
+        duplicate_key: key,
+        normalized_brand: normalizeBrand(keep.brand),
+        normalized_part_number: normalizePartNumber(
+          keep.part_number
+        ),
+        normalized_condition: normalizeCondition(
+          keep.condition
+        ),
+        total_items_in_group: sorted.length,
+        marketplaces: Array.from(
+          new Set(
+            sorted.map(
+              (item) =>
+                String(item.marketplace || 'UNKNOWN')
+            )
+          )
+        ),
+        keep: {
+          id: keep.id,
+          ebay_item_id: keep.ebay_item_id,
+          marketplace: keep.marketplace,
+          brand: keep.brand,
+          part_number: keep.part_number,
+          condition: keep.condition,
+          name: keep.name,
+          variant_signals: extractVariantSignals(keep.name),
+          has_r2_images: hasR2Images(keep),
+          image_count: Number(keep.image_count || 0),
+          keep_score: getKeepScore(keep),
+          image_fingerprints: keepFingerprints.map(
+            (item) => ({
+              ok: item.ok,
+              size: item.size,
+              fingerprint: item.fingerprint,
+              error: item.error,
+            })
+          ),
+        },
+        candidates,
       });
 
-    const exactDuplicateCandidates = duplicateGroups.reduce(
-      (sum, group) =>
-        sum +
-        group.candidates.filter(
-          (item) => item.duplicate_level === 'EXACT_DUPLICATE'
-        ).length,
-      0
-    );
-
-    const probableDuplicateCandidates = duplicateGroups.reduce(
-      (sum, group) =>
-        sum +
-        group.candidates.filter(
-          (item) => item.duplicate_level === 'PROBABLE_DUPLICATE'
-        ).length,
-      0
-    );
-
-    const unsafeCandidates = duplicateGroups.reduce(
-      (sum, group) =>
-        sum +
-        group.candidates.filter(
-          (item) => item.duplicate_level === 'NOT_SAFE_TO_DELETE'
-        ).length,
-      0
-    );
+      if (previewGroups.length >= MAX_GROUPS) {
+        break;
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -360,19 +656,41 @@ export async function GET(req: Request) {
       exactDuplicateCandidates,
       probableDuplicateCandidates,
       unsafeCandidates,
-      previewGroupsReturned: Math.min(
-        duplicateGroups.length,
-        MAX_GROUPS
-      ),
+      imageComparedCandidates,
+      previewGroupsReturned: previewGroups.length,
       nextOffset:
         (products?.length ?? 0) === SCAN_LIMIT
           ? offset + SCAN_LIMIT
           : null,
-      deleteMode: false,
-      groups: duplicateGroups.slice(0, MAX_GROUPS),
+      rules: {
+        exactDuplicate: [
+          'same normalized brand',
+          'same normalized part number',
+          'same normalized condition',
+          'title similarity >= 0.92',
+          'no conflicting variant signals',
+          'exact SHA-256 match on compared product images',
+        ],
+        probableDuplicate: [
+          'high title similarity',
+          'exact SHA-256 match on compared product images',
+        ],
+        unsafeWhen: [
+          'same title but different image fingerprints',
+          'conflicting revision/version/accessory signals',
+          'images cannot be compared',
+          'insufficient title similarity',
+        ],
+        imageCompareLimit: IMAGE_COMPARE_LIMIT,
+        deleteMode: false,
+      },
+      groups: previewGroups,
     });
   } catch (error) {
-    console.error('DUPLICATE PREVIEW V2 ERROR:', error);
+    console.error(
+      'DUPLICATE PREVIEW V3 ERROR:',
+      error
+    );
 
     return NextResponse.json(
       {
