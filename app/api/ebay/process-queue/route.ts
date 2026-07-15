@@ -183,15 +183,21 @@ export function cleanTitle(title: string): string {
     .replace(/\s*[-,:]*\s*WITH\s*$/gi, '')
 
     // =========================================================
-    // Final cleanup
-    // =========================================================
+// Final cleanup
+// =========================================================
 
-    .replace(/^\s*[.,:;|]+\s*/g, '')
-    .replace(/\s*[.,:;|]+\s*$/g, '')
-    .replace(/\s+-\s*$/g, '')
-    .replace(/\s+-\s+/g, ' ')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+.replace(/^\s*[.,:;|]+\s*/g, '')
+.replace(/\s*[.,:;|]+\s*$/g, '')
+
+// Remove trailing punctuation / separators.
+.replace(/[\s\-–—,:;|/]+$/g, '')
+
+// Remove separator dashes between words/noise.
+.replace(/\s+[-–—]\s+/g, ' ')
+
+// Normalize spaces.
+.replace(/\s{2,}/g, ' ')
+.trim();
 }
 
 function getAspectValue(item: any, names: string[]): string {
