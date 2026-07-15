@@ -22,6 +22,36 @@ function slugify(text: string): string {
 function cleanTitle(title: string): string {
   return String(title || '')
     // Remove quantity/lot prefixes and suffixes without touching real part numbers.
+    .replace(/^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?)\b[\s:,-]*/gi,'')
+    // Remove quantity / lot / pack noise from start or end of title.
+.replace(
+  /^\s*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,-]*/gi,
+  ''
+)
+.replace(
+  /^\s*(?:QTY|QUANTITY)\s*[:\-]?\s*\d+\b[\s:,-]*/gi,
+  ''
+)
+.replace(
+  /^\s*\d+\s*[X×]\s*/gi,
+  ''
+)
+.replace(
+  /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,-]*/gi,
+  ''
+)
+.replace(
+  /[\s:,-]*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/gi,
+  ''
+)
+.replace(
+  /[\s:,-]*(?:QTY|QUANTITY)\s*[:\-]?\s*\d+\s*$/gi,
+  ''
+)
+.replace(
+  /[\s:,-]*(?:PACK|SET)\s+OF\s+\d+\s*$/gi,
+  ''
+)
     .replace(/^\s*LOT\s+(?:OF\s+)?\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)?\s*/i, '')
     .replace(/^\s*\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\s*/i, '')
     .replace(/\bLOT\s*#?\s*(?:OF\s+)?\d+(?:\.\d+)?\b/gi, '')
