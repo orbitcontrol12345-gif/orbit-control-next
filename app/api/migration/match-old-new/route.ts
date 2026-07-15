@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ROUTE_VERSION = 'MIGRATION-MATCHER-V3-OLD-PAGE-DATA';
+const ROUTE_VERSION = 'MIGRATION-MATCHER-V4-FINAL-SAFE';
 const OLD_SITE = 'https://www.orbit-surplus.com';
 
 const OLD_URL_BATCH = 50;
@@ -906,11 +906,64 @@ function classifyCandidates(
     };
   }
 
+  // Exact old-page identifier + exact schema brand.
   if (
     hasExactPageIdentifier &&
     hasExactBrand &&
     best.score >= 1400 &&
     scoreGap >= 200
+  ) {
+    return {
+      level: 'EXACT_MATCH',
+      best,
+      review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+      scoreGap,
+      equivalentTopCandidates,
+    };
+  }
+
+  // Near-identical old page title/H1/schema name with a clearly unique winner.
+  if (
+    best.titleSimilarity >= 0.95 &&
+    best.score >= 900 &&
+    scoreGap >= 300
+  ) {
+    return {
+      level: 'EXACT_MATCH',
+      best,
+      review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+      scoreGap,
+      equivalentTopCandidates,
+    };
+  }
+
+  // Useful exact part/model identifier + brand signal + strong title similarity.
+  if (
+    hasExactPageIdentifier &&
+    (
+      hasExactBrand ||
+      best.reasons.includes('brand_found_in_old_page')
+    ) &&
+    best.titleSimilarity >= 0.75 &&
+    best.score >= 900 &&
+    scoreGap >= 250
+  ) {
+    return {
+      level: 'EXACT_MATCH',
+      best,
+      review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+      scoreGap,
+      equivalentTopCandidates,
+    };
+  }
+
+  // Part number appears in the old page, brand appears too, and title is strong.
+  if (
+    best.reasons.includes('new_part_number_found_in_old_page') &&
+    best.reasons.includes('brand_found_in_old_page') &&
+    best.titleSimilarity >= 0.75 &&
+    best.score >= 900 &&
+    scoreGap >= 250
   ) {
     return {
       level: 'EXACT_MATCH',
@@ -1177,6 +1230,13 @@ export async function GET(req: Request) {
           'old page title / H1 / schema name similarity',
           'old slug as fallback only',
         ],
+        exactMatch: [
+          'eBay item id with a strong unique score gap',
+          'exact old-page identifier + exact schema brand',
+          'title similarity >= 0.95 with score >= 900 and gap >= 300',
+          'useful part/model identifier + brand signal + title similarity >= 0.75 with gap >= 250',
+          'part number found in old page + brand signal + title similarity >= 0.75 with gap >= 250',
+        ],
         batchSize: OLD_URL_BATCH,
         writeMode: false,
         redirectMode: false,
@@ -1185,7 +1245,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error(
-      'MIGRATION MATCHER V3 ERROR:',
+      'MIGRATION MATCHER V4 ERROR:',
       error
     );
 
