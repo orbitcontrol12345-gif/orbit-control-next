@@ -7,7 +7,7 @@ export const maxDuration = 300;
 
 const JOB_KEY = 'clean-product-titles';
 const LIMIT = 500;
-const ROUTE_VERSION = 'CLEAN-TITLES-AUTO-V4-SAFE-REPAIR';
+const ROUTE_VERSION = 'CLEAN-TITLES-AUTO-V5-SAFE-REPAIR';
 
 type ProductRow = {
   id: number | string;
@@ -18,6 +18,14 @@ type ProductRow = {
 function cleanTitle(title: string): string {
   return String(title || '')
     // Quantity / lot noise ONLY at the beginning.
+    .replace(
+      /^\s*LOTS?\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\b[\s:,.–—-]*/i,
+      ''
+    )
+    .replace(
+      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s+IN\s+A\s+LOT\b[\s:,.–—-]*/i,
+      ''
+    )
     .replace(
       /^\s*(?:\d+\s*)?LOTS?\s+(?:OF\s+)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?\.?\b[\s:,.–—-]*/i,
       ''
@@ -116,9 +124,10 @@ function cleanTitle(title: string): string {
 
     // Broken trailing fragments.
     .replace(/\s*[-–—]?\s*W\/\s*$/gi, '')
-    .replace(/\s*[-–—]?\s*W\s*$/gi, '')
 
     // Final normalization.
+    .replace(/\(\s*\)/g, '')
+    .replace(/\[\s*\]/g, '')
     .replace(/^[\s.,:;|/\\\-–—]+/g, '')
     .replace(/[\s.,:;|/\\\-–—]+$/g, '')
     .replace(/\s+([,.;:])/g, '$1')
@@ -275,7 +284,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error(
-      'AUTO CLEAN PRODUCT TITLES V4 ERROR:',
+      'AUTO CLEAN PRODUCT TITLES V5 ERROR:',
       error
     );
 
