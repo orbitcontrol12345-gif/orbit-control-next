@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ROUTE_VERSION = 'MIGRATION-MATCHER-V1-SAFE';
+const ROUTE_VERSION = 'MIGRATION-MATCHER-V2-SAFE';
 const OLD_SITE = 'https://www.orbit-surplus.com';
 
 const OLD_URL_BATCH = 500;
@@ -51,6 +51,7 @@ const SLUG_NOISE = new Set([
   'OPEN',
   'BOX',
   'REFURBISHED',
+  'SELLER',
   'TESTED',
   'TRIED',
   'OK',
@@ -140,7 +141,7 @@ async function fetchText(url: string): Promise<{
       redirect: 'follow',
       headers: {
         'User-Agent':
-          'Mozilla/5.0 (compatible; OrbitMigrationMatcher/1.0)',
+          'Mozilla/5.0 (compatible; OrbitMigrationMatcher/2.0)',
         Accept: 'application/xml,text/xml,text/plain,*/*',
       },
     });
@@ -197,9 +198,7 @@ async function discoverOldProductUrls(): Promise<string[]> {
 
     const result = await fetchText(sitemapUrl);
 
-    if (!result.ok) {
-      continue;
-    }
+    if (!result.ok) continue;
 
     const locs = extractLocs(result.text);
 
@@ -238,9 +237,7 @@ async function fetchAllProducts(): Promise<ProductRow[]> {
       .order('id', { ascending: true })
       .range(from, from + PRODUCT_PAGE_SIZE - 1);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const rows = (data || []) as ProductRow[];
 
@@ -334,9 +331,7 @@ function getOldSlug(oldUrl: string): string {
 function getNewUrl(product: ProductRow): string | null {
   const slug = String(product.slug || '').trim();
 
-  if (!slug) {
-    return null;
-  }
+  if (!slug) return null;
 
   return `/products/${slug}`;
 }
@@ -348,6 +343,24 @@ function isUsefulPartNumber(value: unknown): boolean {
   if (/^\d{10,14}$/.test(partNumber)) return false;
 
   if (/^(UNKNOWN|NONE|NA|N\/A)$/.test(partNumber)) {
+    return false;
+  }
+
+  // Quantity / packaging false part numbers.
+  if (
+    /^(?:LOT|QTY|QUANTITY|PACK|SET)[-_/]?\d+$/i.test(partNumber) ||
+    /^\d+[-_/]?(?:PCS?|PIECES?|UNITS?|ITEMS?)$/i.test(partNumber) ||
+    /^(?:PCS?|PIECES?|UNITS?|ITEMS?)[-_/]?\d+$/i.test(partNumber)
+  ) {
+    return false;
+  }
+
+  // Brand-like placeholders seen in imported data.
+  if (
+    /^(?:ASHTEAD|HONEYWELL-XNX|WAGO-750|BOX-\d+|VALVE-\d+)$/i.test(
+      partNumber
+    )
+  ) {
     return false;
   }
 
@@ -370,6 +383,7 @@ function scoreCandidate(
 
   const partCompact = normalizeCompact(partNumber);
   const brandCompact = normalizeBrand(product.brand);
+
   const ebayItemId = String(
     product.ebay_item_id || ''
   ).trim();
@@ -397,7 +411,7 @@ function scoreCandidate(
   }
 
   if (
-    brandCompact.length >= 2 &&
+    brandCompact.length >= 3 &&
     oldCompact.includes(brandCompact)
   ) {
     score += 120;
@@ -406,7 +420,7 @@ function scoreCandidate(
 
   if (
     isUsefulPartNumber(partNumber) &&
-    brandCompact &&
+    brandCompact.length >= 3 &&
     partCompact.length >= 4 &&
     oldCompact.includes(partCompact) &&
     oldCompact.includes(brandCompact)
@@ -416,16 +430,16 @@ function scoreCandidate(
   }
 
   if (titleSimilarity >= 0.95) {
-    score += 400;
+    score += 450;
     reasons.push('title_similarity_95_plus');
   } else if (titleSimilarity >= 0.85) {
-    score += 300;
+    score += 340;
     reasons.push('title_similarity_85_plus');
   } else if (titleSimilarity >= 0.72) {
-    score += 180;
+    score += 220;
     reasons.push('title_similarity_72_plus');
   } else if (titleSimilarity >= 0.6) {
-    score += 80;
+    score += 100;
     reasons.push('title_similarity_60_plus');
   }
 
@@ -441,9 +455,12 @@ function scoreCandidate(
     }
   }
 
-  if (sharedStrongTokens >= 3) {
-    score += 120;
-    reasons.push('three_or_more_strong_tokens_match');
+  if (sharedStrongTokens >= 4) {
+    score += 180;
+    reasons.push('four_or_more_strong_tokens_match');
+  } else if (sharedStrongTokens >= 3) {
+    score += 130;
+    reasons.push('three_strong_tokens_match');
   } else if (sharedStrongTokens === 2) {
     score += 70;
     reasons.push('two_strong_tokens_match');
@@ -462,6 +479,30 @@ function scoreCandidate(
   };
 }
 
+function sameLogicalProduct(
+  a: MatchCandidate,
+  b: MatchCandidate
+): boolean {
+  const aPart = normalizePartNumber(a.product.part_number);
+  const bPart = normalizePartNumber(b.product.part_number);
+
+  const aBrand = normalizeBrand(a.product.brand);
+  const bBrand = normalizeBrand(b.product.brand);
+
+  if (
+    !isUsefulPartNumber(aPart) ||
+    !isUsefulPartNumber(bPart)
+  ) {
+    return false;
+  }
+
+  return (
+    aPart === bPart &&
+    aBrand === bBrand &&
+    similarity(a.product.name, b.product.name) >= 0.85
+  );
+}
+
 function classifyCandidates(
   candidates: MatchCandidate[]
 ): {
@@ -469,6 +510,7 @@ function classifyCandidates(
   best: MatchCandidate | null;
   review: MatchCandidate[];
   scoreGap: number | null;
+  equivalentTopCandidates: number;
 } {
   const sorted = [...candidates]
     .filter((candidate) => candidate.score > 0)
@@ -486,14 +528,29 @@ function classifyCandidates(
       best: null,
       review: [],
       scoreGap: null,
+      equivalentTopCandidates: 0,
     };
   }
 
   const best = sorted[0];
   const second = sorted[1] || null;
-  const scoreGap = second
+
+  const equivalentTopCandidates = sorted.filter(
+    (candidate) =>
+      candidate.score === best.score &&
+      sameLogicalProduct(best, candidate)
+  ).length;
+
+  const rawScoreGap = second
     ? best.score - second.score
     : best.score;
+
+  const scoreGap =
+    rawScoreGap === 0 &&
+    second &&
+    sameLogicalProduct(best, second)
+      ? 999
+      : rawScoreGap;
 
   const hasExactPart =
     best.reasons.includes(
@@ -520,6 +577,7 @@ function classifyCandidates(
       best,
       review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
       scoreGap,
+      equivalentTopCandidates,
     };
   }
 
@@ -534,6 +592,7 @@ function classifyCandidates(
       best,
       review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
       scoreGap,
+      equivalentTopCandidates,
     };
   }
 
@@ -547,11 +606,12 @@ function classifyCandidates(
       best,
       review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
       scoreGap,
+      equivalentTopCandidates,
     };
   }
 
   if (
-    best.score >= 500 &&
+    best.score >= 550 &&
     best.titleSimilarity >= 0.72 &&
     scoreGap >= 120
   ) {
@@ -560,6 +620,7 @@ function classifyCandidates(
       best,
       review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
       scoreGap,
+      equivalentTopCandidates,
     };
   }
 
@@ -569,6 +630,7 @@ function classifyCandidates(
       best,
       review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
       scoreGap,
+      equivalentTopCandidates,
     };
   }
 
@@ -577,6 +639,7 @@ function classifyCandidates(
     best: null,
     review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
     scoreGap,
+    equivalentTopCandidates,
   };
 }
 
@@ -670,8 +733,7 @@ export async function GET(req: Request) {
         partNumber,
         matchingProducts,
       ] of productByPartNumber.entries()) {
-        const compactPart =
-          normalizeCompact(partNumber);
+        const compactPart = normalizeCompact(partNumber);
 
         if (
           compactPart.length >= 4 &&
@@ -739,6 +801,8 @@ export async function GET(req: Request) {
         matchLevel: classification.level,
         score: best?.score ?? 0,
         scoreGap: classification.scoreGap,
+        equivalentTopCandidates:
+          classification.equivalentTopCandidates,
         reasons: best?.reasons ?? [],
         titleSimilarity: best
           ? Number(best.titleSimilarity.toFixed(4))
@@ -801,9 +865,18 @@ export async function GET(req: Request) {
           ? offset + oldUrlBatch.length
           : null,
       rules: {
+        rejectedPartNumberNoise: [
+          'LOT-10',
+          'QTY-2',
+          '2-PCS',
+          'PACK-5',
+          'SET-2',
+          'known brand-like placeholder values',
+        ],
         exactMatch: [
           'eBay item id in old URL with strong score gap',
           'or exact part number + brand with high score and strong score gap',
+          'equivalent same-brand same-part-number same-title listings do not create a false zero score gap',
         ],
         strongMatch: [
           'exact part number with strong score gap',
@@ -822,7 +895,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error(
-      'MIGRATION MATCHER V1 ERROR:',
+      'MIGRATION MATCHER V2 ERROR:',
       error
     );
 
