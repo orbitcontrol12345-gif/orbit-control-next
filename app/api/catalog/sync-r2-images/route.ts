@@ -14,8 +14,8 @@ const LIMIT = 25;
 const MAX_IMAGES = 10;
 const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
-const ROUTE_VERSION = 'R2-GALLERY-V3-FULL-DETAILS';
-const DONE_STATUS = 'r2_gallery_synced';
+const ROUTE_VERSION = 'R2-GALLERY-V4-HD';
+const DONE_STATUS = 'r2_gallery_hd_synced';
 
 function getPublicR2Url(key: string) {
   const publicBaseUrl = process.env.R2_PUBLIC_URL;
