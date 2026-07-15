@@ -2,8 +2,17 @@
 
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  X,
+} from 'lucide-react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 type ProductGalleryProps = {
   r2GalleryUrls?: string[] | null;
@@ -13,13 +22,19 @@ type ProductGalleryProps = {
   alt?: string;
 };
 
-function cleanImages(images: Array<string | null | undefined>) {
+function cleanImages(
+  images: Array<string | null | undefined>
+) {
   return Array.from(
     new Set(
       images
         .filter(Boolean)
         .map((url) => String(url).trim())
-        .filter((url) => url.startsWith('http') || url.startsWith('/'))
+        .filter(
+          (url) =>
+            url.startsWith('http') ||
+            url.startsWith('/')
+        )
     )
   );
 }
@@ -38,23 +53,35 @@ export default function ProductGallery({
       mainImageUrl,
     ]);
 
-    return list.length > 0 ? list : [fallbackImageUrl];
-  }, [r2GalleryUrls, ebayGalleryUrls, mainImageUrl, fallbackImageUrl]);
+    return list.length > 0
+      ? list
+      : [fallbackImageUrl];
+  }, [
+    r2GalleryUrls,
+    ebayGalleryUrls,
+    mainImageUrl,
+    fallbackImageUrl,
+  ]);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const activeImage = images[activeIndex] || images[0];
+  const activeImage =
+    images[activeIndex] || images[0];
 
   function goPrev() {
     setActiveIndex((current) =>
-      current === 0 ? images.length - 1 : current - 1
+      current === 0
+        ? images.length - 1
+        : current - 1
     );
   }
 
   function goNext() {
-    setActiveIndex((current) => (current + 1) % images.length);
+    setActiveIndex(
+      (current) => (current + 1) % images.length
+    );
   }
 
   useEffect(() => {
@@ -69,17 +96,33 @@ export default function ProductGallery({
     if (!isOpen) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setIsOpen(false);
-      if (event.key === 'ArrowLeft') goPrev();
-      if (event.key === 'ArrowRight') goNext();
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+
+      if (event.key === 'ArrowLeft') {
+        goPrev();
+      }
+
+      if (event.key === 'ArrowRight') {
+        goNext();
+      }
     }
 
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleKeyDown);
+
+    window.addEventListener(
+      'keydown',
+      handleKeyDown
+    );
 
     return () => {
       document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
+
+      window.removeEventListener(
+        'keydown',
+        handleKeyDown
+      );
     };
   }, [isOpen, images.length]);
 
@@ -100,16 +143,18 @@ export default function ProductGallery({
             </button>
 
             <div
-              className="relative flex max-h-[90vh] max-w-[96vw] flex-col items-center justify-center"
-              onClick={(event) => event.stopPropagation()}
+              className="relative flex max-h-[94vh] max-w-[98vw] flex-col items-center justify-center"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
             >
               <div className="relative flex items-center justify-center">
                 <Image
                   src={activeImage}
                   alt={alt}
-                  width={1400}
-                  height={1400}
-                  className="max-h-[72vh] w-auto max-w-[94vw] rounded-xl object-contain shadow-2xl"
+                  width={1800}
+                  height={1800}
+                  className="max-h-[78vh] w-auto max-w-[96vw] rounded-xl object-contain shadow-2xl"
                   unoptimized
                 />
 
@@ -139,26 +184,31 @@ export default function ProductGallery({
               {images.length > 1 && (
                 <div className="mt-4 flex max-w-[94vw] gap-2 overflow-x-auto rounded-xl bg-black/50 p-2">
                   {images.map((image, index) => {
-                    const active = index === activeIndex;
+                    const active =
+                      index === activeIndex;
 
                     return (
                       <button
                         key={`modal-${image}-${index}`}
                         type="button"
-                        onClick={() => setActiveIndex(index)}
+                        onClick={() =>
+                          setActiveIndex(index)
+                        }
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-20 ${
                           active
                             ? 'border-gold-500 ring-2 ring-gold-500/60'
                             : 'border-white/30 opacity-80 hover:opacity-100'
                         }`}
-                        aria-label={`View image ${index + 1}`}
+                        aria-label={`View image ${
+                          index + 1
+                        }`}
                       >
                         <Image
                           src={image}
                           alt={`${alt} ${index + 1}`}
                           fill
                           sizes="80px"
-                          className="object-contain p-1"
+                          className="object-cover"
                           unoptimized
                         />
                       </button>
@@ -175,8 +225,8 @@ export default function ProductGallery({
   return (
     <>
       <div className="w-full">
-        <div className="mx-auto w-full max-w-[430px] rounded-2xl border border-white/10 bg-white p-2 shadow-xl shadow-black/25 sm:rounded-3xl">
-          <div className="relative h-[250px] w-full overflow-hidden rounded-xl bg-white sm:h-[300px] lg:h-[340px]">
+        <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-white shadow-xl shadow-black/25 sm:rounded-3xl">
+          <div className="relative h-[300px] w-full overflow-hidden bg-white sm:h-[380px] lg:h-[430px]">
             <button
               type="button"
               onClick={() => setIsOpen(true)}
@@ -188,8 +238,8 @@ export default function ProductGallery({
                 alt={alt}
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-contain p-2 sm:p-3"
+                sizes="(max-width: 1024px) 100vw, 520px"
+                className="object-cover"
                 unoptimized
               />
             </button>
@@ -228,29 +278,34 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mx-auto mt-3 w-full max-w-[430px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
+          <div className="mx-auto mt-3 w-full max-w-[520px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((image, index) => {
-                const active = index === activeIndex;
+                const active =
+                  index === activeIndex;
 
                 return (
                   <button
                     key={`${image}-${index}`}
                     type="button"
-                    onClick={() => setActiveIndex(index)}
-                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-16 sm:w-20 ${
+                    onClick={() =>
+                      setActiveIndex(index)
+                    }
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-white transition sm:h-20 sm:w-24 ${
                       active
                         ? 'border-gold-500 ring-2 ring-gold-500/50'
                         : 'border-white/30 opacity-80 hover:opacity-100'
                     }`}
-                    aria-label={`View image ${index + 1}`}
+                    aria-label={`View image ${
+                      index + 1
+                    }`}
                   >
                     <Image
                       src={image}
                       alt={`${alt} ${index + 1}`}
                       fill
-                      sizes="80px"
-                      className="object-contain p-1"
+                      sizes="96px"
+                      className="object-cover"
                       unoptimized
                     />
                   </button>
