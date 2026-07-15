@@ -7,7 +7,7 @@ export const maxDuration = 300;
 
 const JOB_KEY = 'clean-product-titles';
 const LIMIT = 500;
-const ROUTE_VERSION = 'CLEAN-TITLES-AUTO-V5-SAFE-REPAIR';
+const ROUTE_VERSION = 'CLEAN-TITLES-AUTO-V6-FINAL-REPAIR';
 
 type ProductRow = {
   id: number | string;
@@ -106,13 +106,16 @@ function cleanTitle(title: string): string {
     .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
     .replace(/\bW\/O\s+ACCESSORIES\b/gi, '')
     .replace(/\bNO\s+ACCESSORIES\b/gi, '')
-    .replace(/\bFOR\s+PARTS\b/gi, '')
+    .replace(/\bFOR\s+PARTS\s+ONLY\b/gi, '')
     .replace(/\bPARTS\s+ONLY\b/gi, '')
+    .replace(/\bFOR\s+PARTS\b/gi, '')
+    .replace(/\bWITH\s+DAMAGED\s+PARTS?\b/gi, '')
+    .replace(/\bDAMAGED\s+PARTS?\b/gi, '')
     .replace(/\bWITH\s+BROKEN\s+PARTS?\b/gi, '')
     .replace(/\bBROKEN\s+PARTS?\b/gi, '')
     .replace(/\bW\/\s*BROKEN\s+PART\b/gi, '')
-    .replace(/\bWITH\s+MISSING\s+PART\b/gi, '')
-    .replace(/\bMISSING\s+PART\b/gi, '')
+    .replace(/\bWITH\s+MISSING\s+PARTS?\b/gi, '')
+    .replace(/\bMISSING\s+PARTS?\b/gi, '')
     .replace(
       /\(?\bWITHOUT\s+COVER\s+FOR\s+BATTERY\b\)?/gi,
       ''
@@ -126,8 +129,8 @@ function cleanTitle(title: string): string {
     .replace(/\s*[-–—]?\s*W\/\s*$/gi, '')
 
     // Final normalization.
-    .replace(/\(\s*\)/g, '')
-    .replace(/\[\s*\]/g, '')
+    .replace(/\(\s*(?:ONLY)?\s*\)/gi, '')
+    .replace(/\[\s*(?:ONLY)?\s*\]/gi, '')
     .replace(/^[\s.,:;|/\\\-–—]+/g, '')
     .replace(/[\s.,:;|/\\\-–—]+$/g, '')
     .replace(/\s+([,.;:])/g, '$1')
@@ -284,7 +287,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error(
-      'AUTO CLEAN PRODUCT TITLES V5 ERROR:',
+      'AUTO CLEAN PRODUCT TITLES V6 ERROR:',
       error
     );
 
