@@ -21,45 +21,84 @@ function slugify(text: string): string {
 
 function cleanTitle(title: string): string {
   return String(title || '')
-    // Remove quantity/lot prefixes and suffixes without touching real part numbers.
-    .replace(/^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?)\b[\s:,-]*/gi,'')
-    // Remove quantity / lot / pack noise from start or end of title.
-.replace(
-  /^\s*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,-]*/gi,
-  ''
-)
-.replace(
-  /^\s*(?:QTY|QUANTITY)\s*[:\-]?\s*\d+\b[\s:,-]*/gi,
-  ''
-)
-.replace(
-  /^\s*\d+\s*[X×]\s*/gi,
-  ''
-)
-.replace(
-  /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,-]*/gi,
-  ''
-)
-.replace(
-  /[\s:,-]*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/gi,
-  ''
-)
-.replace(
-  /[\s:,-]*(?:QTY|QUANTITY)\s*[:\-]?\s*\d+\s*$/gi,
-  ''
-)
-.replace(
-  /[\s:,-]*(?:PACK|SET)\s+OF\s+\d+\s*$/gi,
-  ''
-)
-    .replace(/^\s*LOT\s+(?:OF\s+)?\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)?\s*/i, '')
-    .replace(/^\s*\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\s*/i, '')
-    .replace(/\bLOT\s*#?\s*(?:OF\s+)?\d+(?:\.\d+)?\b/gi, '')
-    .replace(/\bQTY\s*[:#-]?\s*\d+(?:\.\d+)?\b/gi, '')
-    .replace(/\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\b/gi, '')
-    .replace(/\b(?:PCS?|PIECES?)\s*\d+(?:\.\d+)?\b/gi, '')
+    // =========================================================
+    // Quantity / lot / pack noise — START OF TITLE ONLY
+    // =========================================================
 
-    // Condition and packaging noise.
+    // 1 LOT 2 PCS / 2 LOTS 10 PIECES / LOT 5 PCS
+    .replace(
+      /^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,\-/]*/i,
+      ''
+    )
+
+    // LOT OF 2 / LOT 2 / 2 LOT / 2 LOTS
+    .replace(
+      /^\s*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\b[\s:,\-/]*/i,
+      ''
+    )
+
+    // 2 PCS / 10 PIECES / 5 UNITS / 3 ITEMS
+    .replace(
+      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,\-/]*/i,
+      ''
+    )
+
+    // QTY 2 / QTY: 2 / QUANTITY 5
+    .replace(
+      /^\s*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\b[\s:,\-/]*/i,
+      ''
+    )
+
+    // 2X / 2 X / 10×
+    .replace(
+      /^\s*\d+\s*[X×]\s*/i,
+      ''
+    )
+
+    // PACK OF 2 / SET OF 5
+    .replace(
+      /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,\-/]*/i,
+      ''
+    )
+
+    // =========================================================
+    // Quantity / lot / pack noise — END OF TITLE ONLY
+    // =========================================================
+
+    // 1 LOT 2 PCS / LOT 5 PCS
+    .replace(
+      /[\s:,\-/]*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/i,
+      ''
+    )
+
+    // LOT OF 2 / LOT 2 / 2 LOT / 2 LOTS
+    .replace(
+      /[\s:,\-/]*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\s*$/i,
+      ''
+    )
+
+    // 2 PCS / 10 PIECES / 5 UNITS / 3 ITEMS
+    .replace(
+      /[\s:,\-/]*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/i,
+      ''
+    )
+
+    // QTY 2 / QUANTITY 5
+    .replace(
+      /[\s:,\-/]*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\s*$/i,
+      ''
+    )
+
+    // PACK OF 2 / SET OF 5
+    .replace(
+      /[\s:,\-/]*(?:PACK|SET)\s+OF\s+\d+\s*$/i,
+      ''
+    )
+
+    // =========================================================
+    // Condition and packaging noise
+    // =========================================================
+
     .replace(/\bNEW\s+OPEN\s+BOX\b/gi, '')
     .replace(/\bOPEN\s+BOX\b/gi, '')
     .replace(/\bNEW\s+OLD\s+STOCK\b/gi, '')
@@ -81,7 +120,10 @@ function cleanTitle(title: string): string {
     .replace(/\bWITH\s+OLD\s+PACKAGING\b/gi, '')
     .replace(/\bOLD\s+PACKAGING\b/gi, '')
 
-    // Accessory/parts noise.
+    // =========================================================
+    // Accessory / parts noise
+    // =========================================================
+
     .replace(/\bWITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
     .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
     .replace(/\bW\/O\s+ACCESSORIES\b/gi, '')
@@ -98,8 +140,13 @@ function cleanTitle(title: string): string {
     .replace(/\bWITH\s+BROKEN\s+BACK\s+PLATE\b/gi, '')
     .replace(/\bBROKEN\s+BACK\s+PLATE\b/gi, '')
 
-    // Final whitespace/punctuation normalization.
+    // =========================================================
+    // Final whitespace / punctuation normalization
+    // =========================================================
+
     .replace(/\s+-\s*$/g, '')
+    .replace(/^\s*[-,:/]+\s*/g, '')
+    .replace(/\s*[-,:/]+\s*$/g, '')
     .replace(/\s+-\s+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
