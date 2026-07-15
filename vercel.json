@@ -15,6 +15,10 @@
     {
       "path": "/api/catalog/fix-brands-auto",
       "schedule": "8,18,28,38,48,58 * * * *"
+    },
+    {
+      "path": "/api/catalog/clean-product-titles-auto",
+      "schedule": "1,11,21,31,41,51 * * * *"
     }
   ]
 }
