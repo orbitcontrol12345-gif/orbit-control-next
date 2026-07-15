@@ -22,30 +22,30 @@ function slugify(text: string): string {
 export function cleanTitle(title: string): string {
   return String(title || '')
     // =========================================================
-    // Quantity / lot / pack noise — START OF TITLE ONLY
+    // Quantity / lot / pack noise — START
     // =========================================================
 
-    // 1 LOT 2 PCS / 2 LOTS 10 PIECES / LOT 5 PCS
+    // 1 LOT 2 PCS / LOT 2 PCS / 2 LOTS 10 PIECES
     .replace(
-      /^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,\-/]*/i,
+      /^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?[\s:,\-/]*/i,
       ''
     )
 
     // LOT OF 2 / LOT 2 / 2 LOT / 2 LOTS
     .replace(
-      /^\s*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\b[\s:,\-/]*/i,
+      /^\s*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\.?[\s:,\-/]*/i,
       ''
     )
 
     // 2 PCS / 10 PIECES / 5 UNITS / 3 ITEMS
     .replace(
-      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,\-/]*/i,
+      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?[\s:,\-/]*/i,
       ''
     )
 
     // QTY 2 / QTY: 2 / QUANTITY 5
     .replace(
-      /^\s*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\b[\s:,\-/]*/i,
+      /^\s*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\.?[\s:,\-/]*/i,
       ''
     )
 
@@ -57,47 +57,53 @@ export function cleanTitle(title: string): string {
 
     // PACK OF 2 / SET OF 5
     .replace(
-      /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,\-/]*/i,
+      /^\s*(?:PACK|SET)\s+OF\s+\d+\.?[\s:,\-/]*/i,
       ''
     )
 
     // =========================================================
-    // Quantity / lot / pack noise — END OF TITLE ONLY
+    // Quantity / lot / pack noise — END
     // =========================================================
 
     // 1 LOT 2 PCS / LOT 5 PCS
     .replace(
-      /[\s:,\-/]*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/i,
+      /[\s:,\-/]*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\s*$/i,
       ''
     )
 
     // LOT OF 2 / LOT 2 / 2 LOT / 2 LOTS
     .replace(
-      /[\s:,\-/]*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\s*$/i,
+      /[\s:,\-/]*(?:(?:\d+\s+LOTS?)|(?:LOTS?(?:\s+OF)?\s+\d+))\.?\s*$/i,
       ''
     )
 
     // 2 PCS / 10 PIECES / 5 UNITS / 3 ITEMS
     .replace(
-      /[\s:,\-/]*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*$/i,
+      /[\s:,\-/]*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\s*$/i,
       ''
     )
 
     // QTY 2 / QUANTITY 5
     .replace(
-      /[\s:,\-/]*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\s*$/i,
+      /[\s:,\-/]*(?:QTY|QUANTITY)\s*[:#\-]?\s*\d+\.?\s*$/i,
       ''
     )
 
     // PACK OF 2 / SET OF 5
     .replace(
-      /[\s:,\-/]*(?:PACK|SET)\s+OF\s+\d+\s*$/i,
+      /[\s:,\-/]*(?:PACK|SET)\s+OF\s+\d+\.?\s*$/i,
       ''
     )
 
     // =========================================================
-    // Condition and packaging noise
+    // Condition / tested noise
     // =========================================================
+
+    .replace(/\bTRIED\s*(?:&|AND)\s*TESTED\b/gi, '')
+    .replace(/\bTESTED\s+AND\s+OK\b/gi, '')
+    .replace(/\bTESTED\s+OK\b/gi, '')
+    .replace(/\bFULLY\s+TESTED\b/gi, '')
+    .replace(/\bWORKING\s+TESTED\b/gi, '')
 
     .replace(/\bNEW\s+OPEN\s+BOX\b/gi, '')
     .replace(/\bOPEN\s+BOX\b/gi, '')
@@ -106,49 +112,85 @@ export function cleanTitle(title: string): string {
     .replace(/\bREFURBISHED\b/gi, '')
     .replace(/\bNEW\b/gi, '')
     .replace(/\bUSED\b/gi, '')
+
+    // =========================================================
+    // Box / packaging noise
+    // =========================================================
+
+    .replace(/\bWITH\s+FILTHY\s+BOX\b/gi, '')
+    .replace(/\bFILTHY\s+BOX\b/gi, '')
+    .replace(/\bWITH\s+DIRTY\s+BOX\b/gi, '')
+    .replace(/\bDIRTY\s+BOX\b/gi, '')
+
     .replace(/\bW\/O\s+BOX\b/gi, '')
     .replace(/\bWITHOUT\s+BOX\b/gi, '')
     .replace(/\bNO\s+BOX\b/gi, '')
+
     .replace(/\bWITH\s+NO\s+ORIGINAL\s+BOX\b/gi, '')
     .replace(/\bNO\s+ORIGINAL\s+BOX\b/gi, '')
+
     .replace(/\bWITH\s+DAMAGED\s+BOX\b/gi, '')
     .replace(/\bDAMAGED\s+BOX\b/gi, '')
+
     .replace(/\bWITH\s+BROKEN\s+BOX\b/gi, '')
     .replace(/\bBROKEN\s+BOX\b/gi, '')
+
     .replace(/\bWITH\s+OLD\s+BOX\b/gi, '')
     .replace(/\bOLD\s+BOX\b/gi, '')
+
     .replace(/\bWITH\s+OLD\s+PACKAGING\b/gi, '')
     .replace(/\bOLD\s+PACKAGING\b/gi, '')
 
     // =========================================================
-    // Accessory / parts noise
+    // Accessories / missing parts noise
     // =========================================================
 
     .replace(/\bWITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
     .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
     .replace(/\bW\/O\s+ACCESSORIES\b/gi, '')
     .replace(/\bNO\s+ACCESSORIES\b/gi, '')
-    .replace(/\bTRIED\s*(?:&|AND)\s*TESTED\b/gi, '')
+
     .replace(/\bFOR\s+PARTS\b/gi, '')
     .replace(/\bPARTS\s+ONLY\b/gi, '')
+
     .replace(/\bWITH\s+BROKEN\s+PARTS?\b/gi, '')
     .replace(/\bBROKEN\s+PARTS?\b/gi, '')
     .replace(/\bW\/\s*BROKEN\s+PART\b/gi, '')
-    .replace(/\bWITH\s+MISSING\s+PART\b/gi, '')
-    .replace(/\bMISSING\s+PART\b/gi, '')
-    .replace(/\(?\bWITHOUT\s+COVER\s+FOR\s+BATTERY\b\)?/gi, '')
+
+    .replace(/\bWITH\s+MISSING\s+PARTS?\b/gi, '')
+    .replace(/\bMISSING\s+PARTS?\b/gi, '')
+
+    // =========================================================
+    // Cover noise
+    // =========================================================
+
+    .replace(
+      /\(?\bWITHOUT\s+COVER\s+FOR\s+BATTERY\b\)?/gi,
+      ''
+    )
+    .replace(/\bW\/O\s+FRONT\s+COVER\b/gi, '')
+    .replace(/\bWITHOUT\s+FRONT\s+COVER\b/gi, '')
+    .replace(/\bNO\s+FRONT\s+COVER\b/gi, '')
+
     .replace(/\bWITH\s+BROKEN\s+BACK\s+PLATE\b/gi, '')
     .replace(/\bBROKEN\s+BACK\s+PLATE\b/gi, '')
 
     // =========================================================
-    // Final whitespace / punctuation normalization
+    // Incomplete trailing markers
     // =========================================================
 
+    .replace(/\s*[-,:]*\s*W\/\s*$/gi, '')
+    .replace(/\s*[-,:]*\s*WITH\s*$/gi, '')
+
+    // =========================================================
+    // Final cleanup
+    // =========================================================
+
+    .replace(/^\s*[.,:;|]+\s*/g, '')
+    .replace(/\s*[.,:;|]+\s*$/g, '')
     .replace(/\s+-\s*$/g, '')
-    .replace(/^\s*[-,:/]+\s*/g, '')
-    .replace(/\s*[-,:/]+\s*$/g, '')
     .replace(/\s+-\s+/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 }
 
