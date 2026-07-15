@@ -31,11 +31,38 @@ function normalizeImageUrl(value: unknown): string {
   return String(value || '').trim();
 }
 
+function getHighResolutionEbayImageUrl(
+  value: unknown
+): string {
+  const imageUrl = String(value || '').trim();
+
+  if (!imageUrl) {
+    return '';
+  }
+
+  try {
+    const url = new URL(imageUrl);
+
+    if (url.hostname !== 'i.ebayimg.com') {
+      return imageUrl;
+    }
+
+    url.pathname = url.pathname.replace(
+      /\/s-l\d+\.(jpg|jpeg|png|webp)$/i,
+      '/s-l1600.$1'
+    );
+
+    return url.toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
 function uniqueImageUrls(values: unknown[]): string[] {
   return Array.from(
     new Set(
       values
-        .map(normalizeImageUrl)
+        .map(getHighResolutionEbayImageUrl)
         .filter(
           (url) =>
             url.length > 0 &&
