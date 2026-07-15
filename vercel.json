@@ -2,19 +2,19 @@
   "crons": [
     {
       "path": "/api/ebay/auto-import?limit=200",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/catalog/sync-r2-images",
-      "schedule": "7,22,37,52 * * * *"
+      "schedule": "7,37 * * * *"
     },
     {
       "path": "/api/catalog/fix-part-numbers-auto",
-      "schedule": "3,13,23,33,43,53 * * * *"
+      "schedule": "13,43 * * * *"
     },
     {
       "path": "/api/catalog/fix-brands-auto",
-      "schedule": "8,18,28,38,48,58 * * * *"
+      "schedule": "23,53 * * * *"
     },
     {
       "path": "/api/catalog/clean-product-titles-auto",
