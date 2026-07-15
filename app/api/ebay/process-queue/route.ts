@@ -19,7 +19,7 @@ function slugify(text: string): string {
     .slice(0, 180);
 }
 
-function cleanTitle(title: string): string {
+export function cleanTitle(title: string): string {
   return String(title || '')
     // =========================================================
     // Quantity / lot / pack noise — START OF TITLE ONLY
