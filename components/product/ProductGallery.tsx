@@ -148,15 +148,15 @@ export default function ProductGallery({
                 event.stopPropagation()
               }
             >
-              <div className="relative flex items-center justify-center">
-                <Image
-                  src={activeImage}
-                  alt={alt}
-                  width={1800}
-                  height={1800}
-                  className="max-h-[78vh] w-auto max-w-[96vw] rounded-xl object-contain shadow-2xl"
-                  unoptimized
-                />
+              <div className="relative h-[82vh] w-[94vw] max-w-[1500px] overflow-hidden rounded-xl">
+  <Image
+    src={activeImage}
+    alt={alt}
+    fill
+    sizes="94vw"
+    className="object-contain"
+    unoptimized
+  />
 
                 {images.length > 1 && (
                   <>
