@@ -7,68 +7,61 @@ export const maxDuration = 300;
 
 const JOB_KEY = 'clean-product-titles';
 const LIMIT = 500;
+const ROUTE_VERSION = 'CLEAN-TITLES-AUTO-V4-SAFE-REPAIR';
+
+type ProductRow = {
+  id: number | string;
+  name: string | null;
+  description: string | null;
+};
 
 function cleanTitle(title: string): string {
   return String(title || '')
-    // Quantity / lot / pack noise from beginning.
+    // Quantity / lot noise ONLY at the beginning.
     .replace(
-      /^\s*\d*\s*LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\b[\s:,.–—-]*/gi,
+      /^\s*(?:\d+\s*)?LOTS?\s+(?:OF\s+)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?\.?\b[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\b[\s:,.–—-]*/gi,
+      /^\s*LOTS?\s+(?:OF\s+)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?\.?\b[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\b[\s:,.–—-]*/gi,
+      /^\s*(?:\d+\s*)?LOTS?\s+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\b[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*\d+\s*[X×]\s*/gi,
+      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\b[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,.–—-]*/gi,
-      ''
-    )
-
-    // Quantity / lot / pack noise from end.
-    .replace(
-      /[\s:,.–—-]*(?:(?:\d+\s*)?LOTS?\s*)?(?:\d+\s*)?(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\s*$/gi,
+      /^\s*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\b[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /[\s:,.–—-]*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\s*$/gi,
+      /^\s*\d+\s*[X×]\s*/i,
       ''
     )
     .replace(
-      /[\s:,.–—-]*(?:PACK|SET)\s+OF\s+\d+\s*$/gi,
+      /^\s*(?:PACK|SET)\s+OF\s+\d+\b[\s:,.–—-]*/i,
       ''
     )
 
-    // Other quantity patterns.
+    // Quantity / lot noise ONLY at the end.
     .replace(
-      /^\s*LOT\s+(?:OF\s+)?\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)?\.?\s*/gi,
+      /[\s:,.–—-]+(?:\d+\s*)?LOTS?\s+(?:OF\s+)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?\.?\s*$/i,
       ''
     )
     .replace(
-      /^\s*\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\.?\s*/gi,
+      /[\s:,.–—-]+\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\.?\s*$/i,
       ''
     )
     .replace(
-      /\bLOT\s*#?\s*(?:OF\s+)?\d+(?:\.\d+)?\b/gi,
+      /[\s:,.–—-]+(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\s*$/i,
       ''
     )
     .replace(
-      /\bQTY\s*[:#-]?\s*\d+(?:\.\d+)?\b/gi,
-      ''
-    )
-    .replace(
-      /\b\d+(?:\.\d+)?\s*(?:PCS?|PIECES?)\b/gi,
-      ''
-    )
-    .replace(
-      /\b(?:PCS?|PIECES?)\s*\d+(?:\.\d+)?\b/gi,
+      /[\s:,.–—-]+(?:PACK|SET)\s+OF\s+\d+\s*$/i,
       ''
     )
 
@@ -133,6 +126,19 @@ function cleanTitle(title: string): string {
     .trim();
 }
 
+function getRepairSource(product: ProductRow): string {
+  const description = String(product.description || '').trim();
+  const name = String(product.name || '').trim();
+
+  // eBay import stores the original listing title in description.
+  // Prefer it so previously damaged names can be rebuilt safely.
+  if (description && description.length >= 4 && description.length <= 500) {
+    return description;
+  }
+
+  return name;
+}
+
 export async function GET() {
   try {
     const { data: job, error: jobError } = await supabaseAdmin
@@ -153,7 +159,7 @@ export async function GET() {
     const { data: products, error: productsError } =
       await supabaseAdmin
         .from('products')
-        .select('id, name')
+        .select('id, name, description')
         .order('id', { ascending: true })
         .range(
           currentOffset,
@@ -164,20 +170,27 @@ export async function GET() {
       throw productsError;
     }
 
-    const rows = products ?? [];
+    const rows = (products ?? []) as ProductRow[];
 
     let updated = 0;
     let unchanged = 0;
     let failed = 0;
+    let repairedFromDescription = 0;
 
     const results: Array<Record<string, unknown>> = [];
 
     for (const product of rows) {
       try {
         const before = String(product.name || '').trim();
-        const after = cleanTitle(before);
+        const source = getRepairSource(product);
+        const after = cleanTitle(source);
 
-        if (!after || after === before) {
+        if (!after) {
+          unchanged++;
+          continue;
+        }
+
+        if (after === before) {
           unchanged++;
           continue;
         }
@@ -196,11 +209,20 @@ export async function GET() {
 
         updated++;
 
+        if (
+          source !== before &&
+          String(product.description || '').trim() === source
+        ) {
+          repairedFromDescription++;
+        }
+
         if (results.length < 25) {
           results.push({
             id: product.id,
             before,
+            source,
             after,
+            repaired_from_description: source !== before,
           });
         }
       } catch (error) {
@@ -238,8 +260,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       job: JOB_KEY,
-      routeVersion: 'CLEAN-TITLES-AUTO-V3-DIRECT',
-      mode: 'direct-clean-no-internal-fetch',
+      routeVersion: ROUTE_VERSION,
+      mode: 'direct-clean-safe-repair-from-description',
       currentOffset,
       nextOffset,
       cleaner: {
@@ -247,19 +269,20 @@ export async function GET() {
         updated,
         unchanged,
         failed,
+        repairedFromDescription,
       },
       results,
     });
   } catch (error) {
     console.error(
-      'AUTO CLEAN PRODUCT TITLES ERROR:',
+      'AUTO CLEAN PRODUCT TITLES V4 ERROR:',
       error
     );
 
     return NextResponse.json(
       {
         success: false,
-        routeVersion: 'CLEAN-TITLES-AUTO-V3-DIRECT',
+        routeVersion: ROUTE_VERSION,
         error:
           error instanceof Error
             ? error.message
