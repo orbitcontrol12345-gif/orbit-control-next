@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 const OLD_SITE = 'https://www.orbit-surplus.com';
-const MATCHER_PATH = '/api/migration/matcher-v4';
+const MATCHER_PATH = '/api/migration/match-old-new';
 const BATCH_SIZE = 50;
 
 type MatcherResult = {
