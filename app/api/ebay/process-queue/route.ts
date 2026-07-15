@@ -501,50 +501,135 @@ export async function GET() {
         continue;
       }
 
-      const item = ebayData?.itemSummaries?.[0];
+     const itemSummary = ebayData?.itemSummaries?.[0];
 
-      if (!item) {
-        await markQueue(
-          ebayItemId,
-          'failed',
-          'No item returned from Browse API'
-        );
-        failed++;
-        results.push({
-          ebayItemId,
-          status: 'no_item',
-        });
-        continue;
+if (!itemSummary) {
+  await markQueue(
+    ebayItemId,
+    'failed',
+    'No item returned from Browse API'
+  );
+
+  failed++;
+
+  results.push({
+    ebayItemId,
+    status: 'no_item',
+  });
+
+  continue;
+}
+
+let item = itemSummary;
+
+const browseItemId = String(
+  itemSummary.itemId || ''
+).trim();
+
+if (browseItemId) {
+  try {
+    const itemDetailsResponse = await fetch(
+      `https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(
+        browseItemId
+      )}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+          'Accept-Language': 'en-US',
+        },
+        cache: 'no-store',
       }
+    );
 
-      const title = String(item.title || '').trim();
-      console.log({
+    if (itemDetailsResponse.status === 429) {
+      rateLimited = true;
+
+      results.push({
+        ebayItemId,
+        status: 'rate_limited_item_details',
+      });
+
+      break;
+    }
+
+    if (itemDetailsResponse.ok) {
+      const itemDetails =
+        await itemDetailsResponse.json();
+
+      item = itemDetails;
+    } else {
+      const itemDetailsError =
+        await itemDetailsResponse
+          .text()
+          .catch(() => '');
+
+      console.error(
+        'EBAY ITEM DETAILS FAILED:',
+        ebayItemId,
+        itemDetailsResponse.status,
+        itemDetailsError
+      );
+    }
+  } catch (itemDetailsError) {
+    console.error(
+      'EBAY ITEM DETAILS ERROR:',
+      ebayItemId,
+      itemDetailsError
+    );
+  }
+}
+
+const title = String(
+  item.title || itemSummary.title || ''
+).trim();
+
+console.log({
+  ebayItemId,
+  browseItemId,
   title,
   mpn: getAspectValue(item, ['MPN']),
-  manufacturerPartNumber: getAspectValue(item, ['Manufacturer Part Number']),
-  partNumber: getAspectValue(item, ['Part Number']),
-  modelNumber: getAspectValue(item, ['Model Number']),
+  manufacturerPartNumber: getAspectValue(item, [
+    'Manufacturer Part Number',
+  ]),
+  partNumber: getAspectValue(item, [
+    'Part Number',
+  ]),
+  modelNumber: getAspectValue(item, [
+    'Model Number',
+  ]),
   extractedFromTitle: extractPartNumber(title),
+  hasAdditionalImages: Array.isArray(
+    item.additionalImages
+  ),
+  additionalImagesCount: Array.isArray(
+    item.additionalImages
+  )
+    ? item.additionalImages.length
+    : 0,
 });
-     const ebayGalleryUrls: string[] = Array.from(
+
+const ebayGalleryUrls: string[] = Array.from(
   new Set<string>(
     [
       item.image?.imageUrl,
+      itemSummary.image?.imageUrl,
 
       ...(Array.isArray(item.additionalImages)
         ? item.additionalImages.map(
             (image: any) => image?.imageUrl
           )
         : []),
-
-      ...(Array.isArray(item.thumbnailImages)
-        ? item.thumbnailImages.map(
-            (image: any) => image?.imageUrl
-          )
-        : []),
     ]
-      .map((url: unknown) => String(url || '').trim())
-      .filter((url: string) => url.length > 0)
+      .map((url: unknown) =>
+        String(url || '').trim()
+      )
+      .filter(
+        (url: string) =>
+          url.length > 0 &&
+          /^https?:\/\//i.test(url)
+      )
   )
 ).slice(0, 10);
 
