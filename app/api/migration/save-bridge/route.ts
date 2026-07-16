@@ -226,10 +226,20 @@ const siteUrl = (
   'https://orbit-control-next.vercel.app'
 ).replace(/\/$/, '');
 
+const matcherBaseUrl =
+  'https://orbit-control-next.vercel.app';
+
 const matcherUrl =
-  `${siteUrl}${MATCHER_PATH}` +
+  `${matcherBaseUrl}${MATCHER_PATH}` +
   `?offset=${currentOffset}`;
 
+const matcherResponse = await fetch(matcherUrl, {
+  method: 'GET',
+  cache: 'no-store',
+  headers: {
+    Accept: 'application/json',
+  },
+});
 const matcherResponse = await fetch(
   matcherUrl,
   {
