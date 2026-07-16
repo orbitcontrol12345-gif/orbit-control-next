@@ -22,9 +22,14 @@ type ProductGalleryProps = {
   alt?: string;
 };
 
+type GalleryImage = {
+  src: string;
+  fallbackSrc?: string;
+};
+
 function cleanImages(
   images: Array<string | null | undefined>
-) {
+): string[] {
   return Array.from(
     new Set(
       images
@@ -39,63 +44,143 @@ function cleanImages(
   );
 }
 
+function buildGallery(params: {
+  r2GalleryUrls?: string[] | null;
+  ebayGalleryUrls?: string[] | null;
+  mainImageUrl?: string | null;
+  fallbackImageUrl?: string;
+}): GalleryImage[] {
+  const r2Images = cleanImages(
+    params.r2GalleryUrls ?? []
+  );
+
+  const ebayImages = cleanImages(
+    params.ebayGalleryUrls ?? []
+  );
+
+  const mainImages = cleanImages([
+    params.mainImageUrl,
+  ]);
+
+  if (r2Images.length > 0) {
+    return r2Images.map((src, index) => ({
+      src,
+      fallbackSrc:
+        ebayImages[index] ||
+        mainImages[0] ||
+        undefined,
+    }));
+  }
+
+  if (ebayImages.length > 0) {
+    return ebayImages.map((src) => ({
+      src,
+      fallbackSrc:
+        mainImages[0] &&
+        mainImages[0] !== src
+          ? mainImages[0]
+          : undefined,
+    }));
+  }
+
+  if (mainImages.length > 0) {
+    return [{ src: mainImages[0] }];
+  }
+
+  const fallbackImages = cleanImages([
+    params.fallbackImageUrl,
+  ]);
+
+  return fallbackImages.map((src) => ({ src }));
+}
+
 export default function ProductGallery({
   r2GalleryUrls,
   ebayGalleryUrls,
   mainImageUrl,
-  fallbackImageUrl = '/placeholder-product.jpg',
+  fallbackImageUrl,
   alt = 'Product image',
 }: ProductGalleryProps) {
-  const images = useMemo(() => {
-    const r2Images = cleanImages(
-      r2GalleryUrls ?? []
-    );
-
-    if (r2Images.length > 0) {
-      return r2Images;
-    }
-
-    const ebayImages = cleanImages(
-      ebayGalleryUrls ?? []
-    );
-
-    if (ebayImages.length > 0) {
-      return ebayImages;
-    }
-
-    const fallbackImages = cleanImages([
+  const initialImages = useMemo(
+    () =>
+      buildGallery({
+        r2GalleryUrls,
+        ebayGalleryUrls,
+        mainImageUrl,
+        fallbackImageUrl,
+      }),
+    [
+      r2GalleryUrls,
+      ebayGalleryUrls,
       mainImageUrl,
       fallbackImageUrl,
-    ]);
-
-    return fallbackImages.length > 0
-      ? fallbackImages
-      : ['/placeholder-product.jpg'];
-  }, [
-    r2GalleryUrls,
-    ebayGalleryUrls,
-    mainImageUrl,
-    fallbackImageUrl,
-  ]);
-
-  console.log(
-    'PRODUCT GALLERY IMAGES:',
-    JSON.stringify(images, null, 2)
+    ]
   );
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [images, setImages] =
+    useState<GalleryImage[]>(initialImages);
 
-  const activeImage =
-    images[activeIndex] || images[0];
-console.log({
-  activeIndex,
-  imagesLength: images.length,
-  activeImage,
-  images,
-});
+  const [activeIndex, setActiveIndex] =
+    useState(0);
+
+  const [isOpen, setIsOpen] =
+    useState(false);
+
+  const [mounted, setMounted] =
+    useState(false);
+
+  useEffect(() => {
+    setImages(initialImages);
+    setActiveIndex(0);
+  }, [initialImages]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (images.length === 0) {
+      setActiveIndex(0);
+      setIsOpen(false);
+      return;
+    }
+
+    if (activeIndex >= images.length) {
+      setActiveIndex(images.length - 1);
+    }
+  }, [images.length, activeIndex]);
+
+  function handleImageError(index: number) {
+    setImages((currentImages) => {
+      const current = currentImages[index];
+
+      if (!current) {
+        return currentImages;
+      }
+
+      if (
+        current.fallbackSrc &&
+        current.fallbackSrc !== current.src
+      ) {
+        return currentImages.map((image, i) =>
+          i === index
+            ? {
+                src: current.fallbackSrc as string,
+                fallbackSrc: undefined,
+              }
+            : image
+        );
+      }
+
+      return currentImages.filter(
+        (_, i) => i !== index
+      );
+    });
+  }
+
   function goPrev() {
+    if (images.length < 2) return;
+
     setActiveIndex((current) =>
       current === 0
         ? images.length - 1
@@ -104,23 +189,19 @@ console.log({
   }
 
   function goNext() {
+    if (images.length < 2) return;
+
     setActiveIndex(
       (current) => (current + 1) % images.length
     );
   }
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [images.join('|')]);
-
-  useEffect(() => {
     if (!isOpen) return;
 
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -151,8 +232,15 @@ console.log({
     };
   }, [isOpen, images.length]);
 
+  const activeImage =
+    images[activeIndex]?.src;
+
+  const noImages = images.length === 0;
+
   const lightbox =
-    isOpen && mounted
+    isOpen &&
+    mounted &&
+    activeImage
       ? createPortal(
           <div
             className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/95 p-3"
@@ -174,21 +262,24 @@ console.log({
               }
             >
               <div className="relative h-[82vh] w-[94vw] max-w-[1500px] overflow-hidden rounded-xl">
-  <Image
-    src={activeImage}
-    alt={alt}
-    fill
-    sizes="94vw"
-    className="object-contain"
-    unoptimized
-  />
+                <Image
+                  src={activeImage}
+                  alt={alt}
+                  fill
+                  sizes="94vw"
+                  className="object-contain"
+                  unoptimized
+                  onError={() =>
+                    handleImageError(activeIndex)
+                  }
+                />
 
                 {images.length > 1 && (
                   <>
                     <button
                       type="button"
                       onClick={goPrev}
-                      className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:-left-16"
+                      className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:left-4"
                       aria-label="Previous image"
                     >
                       <ChevronLeft size={28} />
@@ -197,7 +288,7 @@ console.log({
                     <button
                       type="button"
                       onClick={goNext}
-                      className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:-right-16"
+                      className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-xl hover:bg-black/80 sm:right-4"
                       aria-label="Next image"
                     >
                       <ChevronRight size={28} />
@@ -214,7 +305,7 @@ console.log({
 
                     return (
                       <button
-                        key={`modal-${image}-${index}`}
+                        key={`modal-${image.src}-${index}`}
                         type="button"
                         onClick={() =>
                           setActiveIndex(index)
@@ -229,12 +320,17 @@ console.log({
                         }`}
                       >
                         <Image
-                          src={image}
-                          alt={`${alt} ${index + 1}`}
+                          src={image.src}
+                          alt={`${alt} ${
+                            index + 1
+                          }`}
                           fill
                           sizes="80px"
                           className="object-cover"
                           unoptimized
+                          onError={() =>
+                            handleImageError(index)
+                          }
                         />
                       </button>
                     );
@@ -252,51 +348,62 @@ console.log({
       <div className="w-full">
         <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-white shadow-xl shadow-black/25 sm:rounded-3xl">
           <div className="relative h-[300px] w-full overflow-hidden bg-white sm:h-[380px] lg:h-[430px]">
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="relative block h-full w-full"
-              aria-label="Open product image"
-            >
-              <Image
-                src={activeImage}
-                alt={alt}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 520px"
-                className="object-cover"
-                unoptimized
-              />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
-              aria-label="Enlarge image"
-            >
-              <Maximize2 size={18} />
-            </button>
-
-            {images.length > 1 && (
+            {noImages || !activeImage ? (
+              <div className="flex h-full w-full items-center justify-center bg-slate-100 px-6 text-center text-sm font-medium text-slate-500">
+                Product image unavailable
+              </div>
+            ) : (
               <>
                 <button
                   type="button"
-                  onClick={goPrev}
-                  className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
-                  aria-label="Previous image"
+                  onClick={() => setIsOpen(true)}
+                  className="relative block h-full w-full"
+                  aria-label="Open product image"
                 >
-                  <ChevronLeft size={23} />
+                  <Image
+                    src={activeImage}
+                    alt={alt}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 520px"
+                    className="object-cover"
+                    unoptimized
+                    onError={() =>
+                      handleImageError(activeIndex)
+                    }
+                  />
                 </button>
 
                 <button
                   type="button"
-                  onClick={goNext}
-                  className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
-                  aria-label="Next image"
+                  onClick={() => setIsOpen(true)}
+                  className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
+                  aria-label="Enlarge image"
                 >
-                  <ChevronRight size={23} />
+                  <Maximize2 size={18} />
                 </button>
+
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goPrev}
+                      className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={23} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-slate-900 shadow-lg hover:bg-white"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={23} />
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -311,7 +418,7 @@ console.log({
 
                 return (
                   <button
-                    key={`${image}-${index}`}
+                    key={`${image.src}-${index}`}
                     type="button"
                     onClick={() =>
                       setActiveIndex(index)
@@ -326,12 +433,15 @@ console.log({
                     }`}
                   >
                     <Image
-                      src={image}
+                      src={image.src}
                       alt={`${alt} ${index + 1}`}
                       fill
                       sizes="96px"
                       className="object-cover"
                       unoptimized
+                      onError={() =>
+                        handleImageError(index)
+                      }
                     />
                   </button>
                 );
