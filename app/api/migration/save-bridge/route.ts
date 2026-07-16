@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 const ROUTE_VERSION = 'SAVE-MIGRATION-BRIDGE-V4-LOCKED';
-const OLD_SITE = 'https://www.orbit-surplus.com';
+const OLD_SITE = 'https://www.orbit-surplus.com'
 const MATCHER_PATH = '/api/migration/match-old-new';
 const JOB_KEY = 'migration-save-bridge';
 const BATCH_SIZE = 50;
@@ -218,9 +218,14 @@ export async function GET(req: Request) {
         ? storedOffset
         : Math.max(0, Number(requestedOffset || 0));
 
-    const matcherUrl =
-      `${requestUrl.origin}${MATCHER_PATH}` +
-      `?offset=${currentOffset}`;
+   const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  'https://orbit-control-next.vercel.app'
+).replace(/\/$/, '');
+
+const matcherUrl =
+  `${siteUrl}${MATCHER_PATH}` +
+  `?offset=${currentOffset}`;
 
     const matcherResponse = await fetch(matcherUrl, {
       method: 'GET',
