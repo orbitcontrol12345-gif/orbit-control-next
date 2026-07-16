@@ -1,28 +1,28 @@
 {
   "crons": [
     {
-      "path": "/api/ebay/auto-import?limit=200",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/catalog/sync-r2-images",
-      "schedule": "7,37 * * * *"
-    },
-    {
-      "path": "/api/catalog/fix-part-numbers-auto",
-      "schedule": "13,43 * * * *"
-    },
-    {
-      "path": "/api/catalog/fix-brands-auto",
-      "schedule": "23,53 * * * *"
+      "path": "/api/migration/save-bridge",
+      "schedule": "*/2 * * * *"
     },
     {
       "path": "/api/catalog/clean-product-titles-auto",
       "schedule": "1,11,21,31,41,51 * * * *"
     },
     {
-      "path": "/api/migration/save-bridge",
-      "schedule": "6,16,26,36,46,56 * * * *"
+      "path": "/api/catalog/fix-part-numbers-auto",
+      "schedule": "3,13,23,33,43,53 * * * *"
+    },
+    {
+      "path": "/api/catalog/sync-r2-images",
+      "schedule": "7,27,47 * * * *"
+    },
+    {
+      "path": "/api/catalog/fix-brands-auto",
+      "schedule": "9,29,49 * * * *"
+    },
+    {
+      "path": "/api/ebay/auto-import?limit=200",
+      "schedule": "15 */2 * * *"
     }
   ]
 }
