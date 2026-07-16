@@ -240,16 +240,6 @@ const matcherResponse = await fetch(matcherUrl, {
     Accept: 'application/json',
   },
 });
-const matcherResponse = await fetch(
-  matcherUrl,
-  {
-    method: 'GET',
-    cache: 'no-store',
-    headers: {
-      Accept: 'application/json',
-    },
-  }
-);
 
 const matcherText =
   await matcherResponse.text();
