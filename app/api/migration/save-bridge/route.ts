@@ -214,11 +214,14 @@ export async function GET(req: Request) {
     );
 
     const currentOffset =
-      requestedOffset === null
-        ? storedOffset
-        : Math.max(0, Number(requestedOffset || 0));
+  requestedOffset === null
+    ? storedOffset
+    : Math.max(
+        0,
+        Number(requestedOffset || 0)
+      );
 
-   const siteUrl = (
+const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ||
   'https://orbit-control-next.vercel.app'
 ).replace(/\/$/, '');
@@ -227,12 +230,19 @@ const matcherUrl =
   `${siteUrl}${MATCHER_PATH}` +
   `?offset=${currentOffset}`;
 
-    const matcherResponse = await fetch(matcherUrl, {
-      method: 'GET',
-      cache: 'no-store',
-    });
+const matcherResponse = await fetch(
+  matcherUrl,
+  {
+    method: 'GET',
+    cache: 'no-store',
+    headers: {
+      Accept: 'application/json',
+    },
+  }
+);
 
-    const matcherText = await matcherResponse.text();
+const matcherText =
+  await matcherResponse.text();
 
     let matcherResult: any = null;
 
