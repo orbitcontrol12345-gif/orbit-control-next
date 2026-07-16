@@ -89,7 +89,12 @@ export default function ProductGallery({
 
   const activeImage =
     images[activeIndex] || images[0];
-
+console.log({
+  activeIndex,
+  imagesLength: images.length,
+  activeImage,
+  images,
+});
   function goPrev() {
     setActiveIndex((current) =>
       current === 0
