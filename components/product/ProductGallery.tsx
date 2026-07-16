@@ -47,36 +47,41 @@ export default function ProductGallery({
   alt = 'Product image',
 }: ProductGalleryProps) {
   const images = useMemo(() => {
-  const r2Images = cleanImages(
-    r2GalleryUrls ?? []
-  );
+    const r2Images = cleanImages(
+      r2GalleryUrls ?? []
+    );
 
-  if (r2Images.length > 0) {
-    return r2Images;
-  }
+    if (r2Images.length > 0) {
+      return r2Images;
+    }
 
-  const ebayImages = cleanImages(
-    ebayGalleryUrls ?? []
-  );
+    const ebayImages = cleanImages(
+      ebayGalleryUrls ?? []
+    );
 
-  if (ebayImages.length > 0) {
-    return ebayImages;
-  }
+    if (ebayImages.length > 0) {
+      return ebayImages;
+    }
 
-  const fallbackImages = cleanImages([
+    const fallbackImages = cleanImages([
+      mainImageUrl,
+      fallbackImageUrl,
+    ]);
+
+    return fallbackImages.length > 0
+      ? fallbackImages
+      : ['/placeholder-product.jpg'];
+  }, [
+    r2GalleryUrls,
+    ebayGalleryUrls,
     mainImageUrl,
     fallbackImageUrl,
   ]);
 
-  return fallbackImages.length > 0
-    ? fallbackImages
-    : ['/placeholder-product.jpg'];
-}, [
-  r2GalleryUrls,
-  ebayGalleryUrls,
-  mainImageUrl,
-  fallbackImageUrl,
-]);
+  console.log(
+    'PRODUCT GALLERY IMAGES:',
+    JSON.stringify(images, null, 2)
+  );
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
