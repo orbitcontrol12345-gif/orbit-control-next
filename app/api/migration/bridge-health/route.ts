@@ -451,7 +451,12 @@ async function verifyRedirect(
     const metaDescription =
       getMetaDescription(html);
     const mainImage = getMainImage(html);
-
+    
+    console.log('BRIDGE HEALTH CANONICAL CHECK', {
+  id: row.id,
+  checkedUrl,
+  canonical,
+});
     const soft404Detected = detectSoft404({
       html,
       title,
