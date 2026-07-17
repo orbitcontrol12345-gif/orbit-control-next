@@ -10,7 +10,7 @@ const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
 const PROCESS_LIMIT = 25;
 const SCAN_LIMIT = 500;
-const ROUTE_VERSION = 'BRAND-V6-KNOWN-EBAY-SAFE';
+const ROUTE_VERSION = 'BRAND-V7-TITLE-VERIFIED';
 
 const BAD_BRANDS = new Set([
   '',
