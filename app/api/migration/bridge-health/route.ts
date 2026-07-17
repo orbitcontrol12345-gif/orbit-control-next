@@ -270,6 +270,7 @@ function emptyPageChecks(): PageChecks {
     hasTitle: false,
     hasH1: false,
     hasCanonical: false,
+    hasCorrectCanonical: false,
     canonicalMatches: false,
     hasMetaDescription: false,
     hasImage: false,
