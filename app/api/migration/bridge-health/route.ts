@@ -176,14 +176,19 @@ function normalizeComparableUrl(
   }
 }
 
-function canonicalMatchesUrl(
-  canonical: string | null,
-  checkedUrl: string,
-  siteUrl: string
-): boolean {
-  if (!canonical) {
+function canonicalMatchesUrl(canonical: string, checkedUrl: string) {
+  try {
+    const canonicalUrl = new URL(canonical);
+    const checked = new URL(checkedUrl);
+
+    return (
+      canonicalUrl.pathname.replace(/\/$/, '') ===
+      checked.pathname.replace(/\/$/, '')
+    );
+  } catch {
     return false;
   }
+}
 
   const normalizedCanonical = normalizeComparableUrl(
     canonical,
