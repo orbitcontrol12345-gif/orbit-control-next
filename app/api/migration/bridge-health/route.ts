@@ -190,23 +190,6 @@ function canonicalMatchesUrl(canonical: string, checkedUrl: string) {
   }
 }
 
-  const normalizedCanonical = normalizeComparableUrl(
-    canonical,
-    siteUrl
-  );
-
-  const normalizedChecked = normalizeComparableUrl(
-    checkedUrl,
-    siteUrl
-  );
-
-  return (
-    normalizedCanonical !== null &&
-    normalizedChecked !== null &&
-    normalizedCanonical === normalizedChecked
-  );
-}
-
 function detectSoft404(params: {
   html: string;
   title: string | null;
