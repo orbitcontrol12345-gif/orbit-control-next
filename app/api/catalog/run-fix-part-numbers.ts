@@ -711,8 +711,7 @@ export async function runFixPartNumbers(params: {
   ebayItemId?: string;
 }) {
   try {
-    const url = new URL(req.url);
-
+   
     const requestedItemId = String(
   params.ebayItemId || ''
 ).trim();
