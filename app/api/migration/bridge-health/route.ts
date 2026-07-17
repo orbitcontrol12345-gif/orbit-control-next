@@ -29,8 +29,7 @@ type PageChecks = {
   hasTitle: boolean;
   hasH1: boolean;
   hasCanonical: boolean;
-  hasCorrectCanonical: boolean;
-  canonicalMatches: boolean;
+  hasCorrectCanonical: boolean; 
   hasMetaDescription: boolean;
   hasImage: boolean;
   hasPartNumber: boolean;
@@ -271,7 +270,6 @@ function emptyPageChecks(): PageChecks {
     hasH1: false,
     hasCanonical: false,
     hasCorrectCanonical: false,
-    canonicalMatches: false,
     hasMetaDescription: false,
     hasImage: false,
     hasPartNumber: false,
