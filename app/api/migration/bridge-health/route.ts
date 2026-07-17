@@ -29,6 +29,7 @@ type PageChecks = {
   hasTitle: boolean;
   hasH1: boolean;
   hasCanonical: boolean;
+  hasCorrectCanonical: boolean;
   canonicalMatches: boolean;
   hasMetaDescription: boolean;
   hasImage: boolean;
