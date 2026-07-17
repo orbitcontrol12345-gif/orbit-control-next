@@ -68,19 +68,28 @@ export async function GET() {
         failed: data.failed ?? 0,
       },
     });
-  } catch (error) {
-    console.error('AUTO FIX BRANDS ERROR:', error);
+  } catch (error: unknown) {
+  console.error('AUTO FIX BRANDS ERROR:', error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        job: JOB_NAME,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
-      { status: 500 }
-    );
-  }
+  const errorDetails =
+    error instanceof Error
+      ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        }
+      : typeof error === 'object' && error !== null
+        ? error
+        : {
+            message: String(error),
+          };
+
+  return NextResponse.json(
+    {
+      success: false,
+      job: JOB_NAME,
+      error: errorDetails,
+    },
+    { status: 500 }
+  );
 }
