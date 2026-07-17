@@ -450,22 +450,26 @@ console.log(`CANONICAL_URL=${canonical}`);
     });
 
     const pageChecks: PageChecks = {
-      hasTitle: Boolean(title?.trim()),
-      hasH1: Boolean(h1?.trim()),
-      hasCanonical: Boolean(canonical),
-      canonicalMatchesUrl(
-        canonical,
-        checkedUrl
-      )
-      hasMetaDescription:
-        Boolean(metaDescription?.trim()),
-      hasImage: Boolean(mainImage),
-      hasPartNumber: containsPartNumber(
-        html,
-        row.part_number
-      ),
-      soft404Detected,
-    };
+  hasTitle: Boolean(title?.trim()),
+  hasH1: Boolean(h1?.trim()),
+  hasCanonical: Boolean(canonical),
+
+  hasCorrectCanonical: canonicalMatchesUrl(
+    canonical,
+    checkedUrl
+  ),
+
+  hasMetaDescription: Boolean(metaDescription?.trim()),
+
+  hasImage: Boolean(mainImage),
+
+  hasPartNumber: containsPartNumber(
+    html,
+    row.part_number
+  ),
+
+  soft404Detected,
+};
 
     if (soft404Detected) {
       return {
