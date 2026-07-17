@@ -973,5 +973,3 @@ const offset = Math.max(
     throw error;
   }
 }
-}
-}
