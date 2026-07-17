@@ -524,7 +524,7 @@ console.log(`CANONICAL_URL=${canonical}`);
 
     if (!pageChecks.hasCanonical) {
       warnings.push('MISSING_CANONICAL');
-    } else if (!pageChecks.canonicalMatches) {
+    } else if (!pageChecks.hasCorrectCanonical) {
       warnings.push('WRONG_CANONICAL');
     }
 
@@ -1192,7 +1192,7 @@ export async function GET(req: Request) {
           item.pageChecks
             .hasCanonical &&
           !item.pageChecks
-            .canonicalMatches
+            .hasCorrectCanonical
       ).length;
 
     const missingMetaDescription =
