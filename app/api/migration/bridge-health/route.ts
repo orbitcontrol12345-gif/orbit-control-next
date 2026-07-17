@@ -176,7 +176,26 @@ function normalizeComparableUrl(
   }
 }
 
-function canonicalMatchesUrl(canonical: string, checkedUrl: string) {
+function canonicalMatchesUrl(
+  canonical: string | null,
+  checkedUrl: string | null
+) {
+  if (!canonical || !checkedUrl) {
+    return false;
+  }
+
+  try {
+    const canonicalUrl = new URL(canonical);
+    const checked = new URL(checkedUrl);
+
+    return (
+      canonicalUrl.pathname.replace(/\/$/, '') ===
+      checked.pathname.replace(/\/$/, '')
+    );
+  } catch {
+    return false;
+  }
+}
   try {
     const canonicalUrl = new URL(canonical);
     const checked = new URL(checkedUrl);
