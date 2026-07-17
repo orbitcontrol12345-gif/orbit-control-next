@@ -468,14 +468,17 @@ function collectBrandEvidence(item: any, title: string) {
 function chooseBrand(item: any, title: string): {
   brand: string;
   source:
-    | 'brand+manufacturer'
-    | 'manufacturer+part-number'
-    | 'brand+part-number'
-    | 'detector+part-number'
-    | 'known-detector'
-    | 'known-manufacturer'
-    | 'known-ebay-brand'
-    | null;
+  | 'brand+manufacturer'
+  | 'manufacturer+part-number'
+  | 'brand+part-number'
+  | 'detector+part-number'
+  | 'known-detector'
+  | 'known-manufacturer'
+  | 'known-ebay-brand'
+  | 'title-verified-ebay-brand'
+  | 'title-verified-manufacturer'
+  | 'verified-title-detector'
+  | null;
   evidence?: Record<string, unknown>;
 } {
   const evidence = collectBrandEvidence(item, title);
@@ -601,7 +604,38 @@ function chooseBrand(item: any, title: string): {
       evidence,
     };
   }
+  // Accept a valid eBay Brand when it is clearly present in the title.
+  if (
+    brandValid &&
+    brandAppearsInTitle(ebayBrand, title)
+  ) {
+    return {
+      brand: ebayBrand,
+      source: 'title-verified-ebay-brand',
+      evidence,
+    };
+  }
 
+  // Accept a valid Manufacturer when it is clearly present in the title.
+  if (
+    manufacturerValid &&
+    brandAppearsInTitle(manufacturer, title)
+  ) {
+    return {
+      brand: manufacturer,
+      source: 'title-verified-manufacturer',
+      evidence,
+    };
+  }
+
+  // Safe fallback: use the title detector if it found a valid industrial brand.
+  if (detectedValid) {
+    return {
+      brand: detected,
+      source: 'verified-title-detector',
+      evidence,
+    };
+  }
   return {
     brand: '',
     source: null,
