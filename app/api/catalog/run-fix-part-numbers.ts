@@ -776,7 +776,7 @@ const offset = Math.max(
           (rows?.length ?? 0) === SCAN_LIMIT
             ? offset + SCAN_LIMIT
             : null,
-      });
+      };
     }
 
     const token = await getEbayToken();
