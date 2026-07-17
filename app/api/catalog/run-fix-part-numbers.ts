@@ -945,41 +945,33 @@ const offset = Math.max(
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      routeVersion: ROUTE_VERSION,
-      mode: requestedItemId
-        ? 'single-item-verified'
-        : 'strict-cross-check-v2',
-      offset,
-      ebay_item_id: requestedItemId || null,
-      scanned: rows?.length ?? 0,
-      suspiciousFound: suspiciousProducts.length,
-      processed: results.length,
-      updated,
-      unchanged,
-      unresolved,
-      failed,
-      rateLimited,
-      nextOffset:
-        !requestedItemId &&
-        (rows?.length ?? 0) === SCAN_LIMIT
-          ? offset + SCAN_LIMIT
-          : null,
-      results,
-    };
-  } catch (error) {
-    console.error('FIX PART NUMBERS ERROR:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
-      { status: 500 }
-    );
+    return {
+  success: true,
+  routeVersion: ROUTE_VERSION,
+  mode: requestedItemId
+    ? 'single-item-verified'
+    : 'strict-cross-check-v2',
+  offset,
+  ebay_item_id: requestedItemId || null,
+  scanned: rows?.length ?? 0,
+  suspiciousFound: suspiciousProducts.length,
+  processed: results.length,
+  updated,
+  unchanged,
+  unresolved,
+  failed,
+  rateLimited,
+  nextOffset:
+    !requestedItemId &&
+    (rows?.length ?? 0) === SCAN_LIMIT
+      ? offset + SCAN_LIMIT
+      : null,
+  results,
+};
+    } catch (error) {
+    console.error('RUN FIX PART NUMBERS ERROR:', error);
+    throw error;
   }
+}
+}
 }
