@@ -27,14 +27,42 @@ function getTag(xml: string, tag: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
-    .replace(/\bNEW\b/gi, '')
-    .replace(/\bUSED\b/gi, '')
-    .replace(/\bOPEN BOX\b/gi, '')
-    .replace(/\bWITH OLD BOX\b/gi, '')
-    .replace(/\bWITHOUT BOX\b/gi, '')
-    .replace(/\bNO BOX\b/gi, '')
-    .replace(/\bW\/O BOX\b/gi, '')
-    .replace(/\bOLD STOCK\b/gi, '')
+    // حالة المنتج والعلبة
+    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNO\s+BOX\b/gi, ' ')
+    .replace(/\bW\/?O\s+BOX\b/gi, ' ')
+    .replace(/\bOPEN\s+BOX\b/gi, ' ')
+    .replace(/\bOLD\s+STOCK\b/gi, ' ')
+
+    // الإكسسوارات
+    .replace(/\bWITHOUT\s+(?:ANY\s+)?ACCESSORIES\b/gi, ' ')
+    .replace(/\bW\/?O\s+ACCESSORIES\b/gi, ' ')
+
+    // حالة التشغيل
+    .replace(/\bFOR\s+PARTS(?:\s+OR\s+NOT\s+WORKING)?\b/gi, ' ')
+    .replace(/\bNOT\s+WORKING\b/gi, ' ')
+    .replace(/\bTESTED\s*(?:&|AND)\s*WORKING\b/gi, ' ')
+    .replace(/\bTESTED\s+OK\b/gi, ' ')
+    .replace(/\bREFURBISHED\b/gi, ' ')
+
+    // الكميات والـLots
+    .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
+    .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
+    .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?)\b/gi, ' ')
+
+    // الكلمات العامة
+    .replace(/\bNEW\b/gi, ' ')
+    .replace(/\bUSED\b/gi, ' ')
+
+    // تنظيف علامات زائدة بعد حذف الكلمات
+    .replace(/\(\s*\)/g, ' ')
+    .replace(/\[\s*\]/g, ' ')
+    .replace(/\{\s*\}/g, ' ')
+    .replace(/^[\s\-|,:;]+/g, '')
+    .replace(/[\s\-|,:;]+$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
