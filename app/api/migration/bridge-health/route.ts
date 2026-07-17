@@ -456,7 +456,7 @@ console.log(`CANONICAL_URL=${canonical}`);
       canonicalMatchesUrl(
         canonical,
         checkedUrl
-      ),
+      )
       hasMetaDescription:
         Boolean(metaDescription?.trim()),
       hasImage: Boolean(mainImage),
