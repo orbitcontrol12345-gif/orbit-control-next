@@ -28,11 +28,43 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getSupabaseProductBySlug(params.slug);
 
-  if (!product) return { title: 'Product Not Found' };
+  if (!product) {
+    return { title: 'Product Not Found' };
+  }
+
+  const description =
+    product.description?.slice(0, 155) ||
+    `${product.brand} ${product.partNumber} industrial automation spare part available for RFQ.`;
 
   return {
     title: `${product.partNumber} — ${product.name}`,
-    description: `${product.brand} ${product.partNumber} — ${product.description.slice(0, 155)}`,
+    description,
+
+    alternates: {
+      canonical: `/products/${params.slug}`,
+    },
+
+    openGraph: {
+      title: `${product.partNumber} — ${product.name}`,
+      description,
+      url: `/products/${params.slug}`,
+      images: product.r2ImageUrl
+        ? [product.r2ImageUrl]
+        : product.imageUrl
+        ? [product.imageUrl]
+        : [],
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.partNumber} — ${product.name}`,
+      description,
+      images: product.r2ImageUrl
+        ? [product.r2ImageUrl]
+        : product.imageUrl
+        ? [product.imageUrl]
+        : [],
+    },
   };
 }
 
