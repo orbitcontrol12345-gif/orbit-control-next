@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const { data: job, error: jobError } = await supabaseAdmin
       .from('catalog_jobs')
-      .select('cursor')
+      .select('cursor_offset')
       .eq('name', JOB_NAME)
       .maybeSingle();
 
@@ -21,9 +21,9 @@ export async function GET() {
     }
 
     const currentOffset = Math.max(
-      0,
-      Number(job?.cursor || 0)
-    );
+  0,
+  Number(job?.cursor_offset || 0)
+);
 
     const data = await runFixBrands({
       offset: currentOffset,
@@ -38,10 +38,10 @@ export async function GET() {
       .from('catalog_jobs')
       .upsert(
         {
-          name: JOB_NAME,
-          cursor: nextOffset,
-          updated_at: new Date().toISOString(),
-        },
+  job_key: JOB_KEY,
+  cursor_offset: nextOffset,
+  updated_at: new Date().toISOString(),
+}
         {
           onConflict: 'name',
         }
