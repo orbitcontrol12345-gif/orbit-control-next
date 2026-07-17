@@ -179,31 +179,22 @@ function normalizeComparableUrl(
 function canonicalMatchesUrl(
   canonical: string | null,
   checkedUrl: string | null
-) {
+): boolean {
   if (!canonical || !checkedUrl) {
     return false;
   }
 
   try {
     const canonicalUrl = new URL(canonical);
-    const checked = new URL(checkedUrl);
+    const checkedUrlObject = new URL(checkedUrl);
 
-    return (
-      canonicalUrl.pathname.replace(/\/$/, '') ===
-      checked.pathname.replace(/\/$/, '')
-    );
-  } catch {
-    return false;
-  }
-}
-  try {
-    const canonicalUrl = new URL(canonical);
-    const checked = new URL(checkedUrl);
+    const canonicalPath =
+      canonicalUrl.pathname.replace(/\/+$/, '') || '/';
 
-    return (
-      canonicalUrl.pathname.replace(/\/$/, '') ===
-      checked.pathname.replace(/\/$/, '')
-    );
+    const checkedPath =
+      checkedUrlObject.pathname.replace(/\/+$/, '') || '/';
+
+    return canonicalPath === checkedPath;
   } catch {
     return false;
   }
