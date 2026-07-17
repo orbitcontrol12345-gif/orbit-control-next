@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const JOB_KEY = 'fix-brands';
+const JOB_KEY = 'fix-part-numbers';
 
 export async function GET(req: Request) {
   try {
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     const baseUrl = requestUrl.origin;
 
     const cleanerUrl =
-      `${baseUrl}/api/catalog/fix-brands` +
+      `${baseUrl}/api/catalog/fix-part-numbers` +
       `?offset=${currentOffset}`;
 
     const cleanerResponse = await fetch(cleanerUrl, {
@@ -38,15 +38,11 @@ export async function GET(req: Request) {
       cache: 'no-store',
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'Orbit-Control-Fix-Brands-Auto/1.0',
+        'User-Agent':
+          'Orbit-Control-Fix-Part-Numbers-Auto/1.0',
       },
     });
 
-    /*
-     * نقرأ النص أولًا بدل response.json()
-     * حتى لا نخسر رسالة الخطأ إذا كانت الاستجابة HTML
-     * أو فارغة أو ليست JSON.
-     */
     const rawResponse = await cleanerResponse.text();
 
     let cleanerResult: any = null;
@@ -62,7 +58,7 @@ export async function GET(req: Request) {
     if (!cleanerResponse.ok) {
       throw new Error(
         [
-          `Brand cleaner HTTP error`,
+          'Part-number cleaner HTTP error',
           `status=${cleanerResponse.status}`,
           `statusText=${cleanerResponse.statusText}`,
           `body=${rawResponse.slice(0, 1000) || '[empty response]'}`,
@@ -72,7 +68,7 @@ export async function GET(req: Request) {
 
     if (!cleanerResult) {
       throw new Error(
-        `Brand cleaner returned invalid or empty JSON: ${
+        `Part-number cleaner returned invalid or empty JSON: ${
           rawResponse.slice(0, 1000) || '[empty response]'
         }`
       );
@@ -80,7 +76,7 @@ export async function GET(req: Request) {
 
     if (cleanerResult.success !== true) {
       throw new Error(
-        `Brand cleaner reported failure: ${JSON.stringify(
+        `Part-number cleaner reported failure: ${JSON.stringify(
           cleanerResult
         )}`
       );
@@ -166,7 +162,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     console.error(
-      'AUTO FIX BRANDS ERROR:',
+      'AUTO FIX PART NUMBERS ERROR:',
       error
     );
 
