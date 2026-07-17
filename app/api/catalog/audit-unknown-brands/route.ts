@@ -63,8 +63,6 @@ function getCandidateFromTitle(title: unknown): string {
 
   const words = text.split(/\s+/).filter(Boolean);
 
-  // نأخذ أول كلمة أو أول كلمتين فقط كمرشح.
-  // أغلب عناوين المنتجات تبدأ بالبراند.
   const first = normalize(words[0]).toUpperCase();
   const firstTwo = normalize(words.slice(0, 2).join(' ')).toUpperCase();
 
@@ -72,12 +70,11 @@ function getCandidateFromTitle(title: unknown): string {
     !first ||
     BAD_WORDS.has(first) ||
     /^\d+$/.test(first) ||
-    /^[A-Z]*\d+[A-Z0-9-]*$/i.test(first)
+    /^[A-Z]*\d+[A-Z0-9./-]*$/i.test(first)
   ) {
     return '';
   }
 
-  // أسماء معروفة غالبًا تتكون من كلمتين.
   const twoWordPrefixes = [
     'ALLEN BRADLEY',
     'PHOENIX CONTACT',
@@ -99,6 +96,46 @@ function getCandidateFromTitle(title: unknown): string {
   return first;
 }
 
+function getConfidence(
+  candidate: string,
+  count: number,
+  examples: string[]
+): 'high' | 'review' | 'reject' {
+  const value = candidate.toUpperCase().trim();
+
+  if (!value) return 'reject';
+
+  if (BAD_WORDS.has(value)) return 'reject';
+
+  if (/^\d+$/.test(value)) return 'reject';
+
+  if (/^[A-Z]{0,4}\d+[A-Z0-9./-]*$/i.test(value))
+    return 'reject';
+
+  if (value.length < 3 || value.length > 40)
+    return 'reject';
+
+  const startsCorrectly = examples.filter((example) => {
+    const title = normalize(example).toUpperCase();
+
+    return (
+      title === value ||
+      title.startsWith(value + ' ')
+    );
+  }).length;
+
+  const ratio =
+    examples.length > 0
+      ? startsCorrectly / examples.length
+      : 0;
+
+  if (count >= 3 && ratio >= 0.8) return 'high';
+
+  if (count >= 2 && ratio >= 0.5) return 'review';
+
+  return 'review';
+}
+
 export async function GET() {
   try {
     const candidates = new Map<
@@ -115,7 +152,7 @@ export async function GET() {
     while (true) {
       const { data: rows, error } = await supabaseAdmin
         .from('products')
-        .select('id, name, brand, part_number')
+        .select('id,name,brand,part_number')
         .or(
           'brand.is.null,brand.eq.UNKNOWN,brand.eq.Unknown,brand.eq.unknown'
         )
@@ -123,25 +160,28 @@ export async function GET() {
         .range(offset, offset + PAGE_SIZE - 1);
 
       if (error) throw error;
+
       if (!rows || rows.length === 0) break;
 
       totalScanned += rows.length;
 
       for (const product of rows) {
-        const candidate = getCandidateFromTitle(product.name);
+        const candidate = getCandidateFromTitle(
+          product.name
+        );
 
         if (!candidate) continue;
 
-        const current = candidates.get(candidate) || {
+        const current = candidates.get(candidate) ?? {
           count: 0,
           examples: [],
         };
 
-        current.count += 1;
+        current.count++;
 
         if (
-          current.examples.length < 5 &&
           product.name &&
+          current.examples.length < 5 &&
           !current.examples.includes(product.name)
         ) {
           current.examples.push(product.name);
@@ -159,15 +199,41 @@ export async function GET() {
       .map(([candidate, details]) => ({
         candidate,
         count: details.count,
+        confidence: getConfidence(
+          candidate,
+          details.count,
+          details.examples
+        ),
         examples: details.examples,
       }))
       .sort((a, b) => b.count - a.count);
+
+    const highConfidence = results.filter(
+      (x) => x.confidence === 'high'
+    );
+
+    const review = results.filter(
+      (x) => x.confidence === 'review'
+    );
+
+    const rejected = results.filter(
+      (x) => x.confidence === 'reject'
+    );
 
     return NextResponse.json({
       success: true,
       totalScanned,
       uniqueCandidates: results.length,
-      results,
+
+      counts: {
+        highConfidence: highConfidence.length,
+        review: review.length,
+        rejected: rejected.length,
+      },
+
+      highConfidence,
+      review,
+      rejected,
     });
   } catch (error) {
     console.error('AUDIT UNKNOWN BRANDS ERROR:', error);
@@ -180,7 +246,9 @@ export async function GET() {
             ? error.message
             : String(error),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
