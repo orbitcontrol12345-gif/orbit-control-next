@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { runFixPartNumbers } from '../run-fix-part-numbers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 const JOB_KEY = 'fix-part-numbers';
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const { data: job, error: jobError } = await supabaseAdmin
       .from('catalog_jobs')
@@ -23,27 +25,9 @@ export async function GET(req: Request) {
       Number(job?.cursor_offset || 0)
     );
 
-    const requestUrl = new URL(req.url);
-    const baseUrl = requestUrl.origin;
-
-    const cleanerUrl =
-      `${baseUrl}/api/catalog/fix-part-numbers` +
-      `?offset=${currentOffset}`;
-
-    const cleanerResponse = await fetch(cleanerUrl, {
-      method: 'GET',
-      cache: 'no-store',
+    const cleanerResult = await runFixPartNumbers({
+      offset: currentOffset,
     });
-
-    const cleanerResult = await cleanerResponse
-      .json()
-      .catch(() => null);
-
-    if (!cleanerResponse.ok || !cleanerResult?.success) {
-      throw new Error(
-        `Cleaner failed: ${JSON.stringify(cleanerResult)}`
-      );
-    }
 
     const rateLimited =
       cleanerResult.rateLimited === true;
@@ -91,29 +75,40 @@ export async function GET(req: Request) {
       nextOffset,
       rateLimited,
       cleaner: {
-        scanned: cleanerResult.scanned,
+        scanned: cleanerResult.scanned || 0,
         suspiciousFound:
-          cleanerResult.suspiciousFound,
-        processed: cleanerResult.processed,
-        updated: cleanerResult.updated,
-        unchanged: cleanerResult.unchanged,
-        unresolved: cleanerResult.unresolved,
-        failed: cleanerResult.failed,
+          cleanerResult.suspiciousFound || 0,
+        processed: cleanerResult.processed || 0,
+        updated: cleanerResult.updated || 0,
+        unchanged: cleanerResult.unchanged || 0,
+        unresolved: cleanerResult.unresolved || 0,
+        failed: cleanerResult.failed || 0,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(
       'AUTO FIX PART NUMBERS ERROR:',
       error
     );
 
+    const errorDetails =
+      error instanceof Error
+        ? {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+          }
+        : typeof error === 'object' && error !== null
+          ? error
+          : {
+              message: String(error),
+            };
+
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        job: JOB_KEY,
+        error: errorDetails,
       },
       { status: 500 }
     );
