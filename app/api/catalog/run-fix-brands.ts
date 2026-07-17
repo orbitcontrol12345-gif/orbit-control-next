@@ -727,31 +727,31 @@ const offset = Math.max(
           .slice(0, PROCESS_LIMIT);
 
     if (suspiciousProducts.length === 0) {
-      return NextResponse.json({
-        success: true,
-        routeVersion: ROUTE_VERSION,
-        mode: requestedItemId
-          ? 'single-item-brand'
-          : 'strict-brand-cleaner',
-        offset,
-        ebay_item_id: requestedItemId || null,
-        scanned: rows?.length ?? 0,
-        suspiciousFound: 0,
-        processed: 0,
-        updated: 0,
-        unchanged: 0,
-        unresolved: 0,
-        failed: 0,
-        rateLimited: false,
-        message: requestedItemId
-          ? 'Product not found.'
-          : 'No UNKNOWN or invalid brands in this scan window.',
-        nextOffset:
-          !requestedItemId &&
-          (rows?.length ?? 0) === SCAN_LIMIT
-            ? offset + SCAN_LIMIT
-            : null,
-      });
+     return {
+  success: true,
+  routeVersion: ROUTE_VERSION,
+  mode: requestedItemId
+    ? 'single-item-brand'
+    : 'strict-brand-cleaner',
+  offset,
+  ebay_item_id: requestedItemId || null,
+  scanned: rows?.length ?? 0,
+  suspiciousFound: 0,
+  processed: 0,
+  updated: 0,
+  unchanged: 0,
+  unresolved: 0,
+  failed: 0,
+  rateLimited: false,
+  message: requestedItemId
+    ? 'Product not found.'
+    : 'No UNKNOWN or invalid brands in this scan window.',
+  nextOffset:
+    !requestedItemId &&
+    (rows?.length ?? 0) === SCAN_LIMIT
+      ? offset + SCAN_LIMIT
+      : null,
+};
     }
 
     const token = await getEbayToken();
