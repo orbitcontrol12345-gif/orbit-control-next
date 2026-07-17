@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 const JOB_KEY = 'fix-brands';
 
@@ -15,7 +16,9 @@ export async function GET(req: Request) {
       .single();
 
     if (jobError) {
-      throw jobError;
+      throw new Error(
+        `Failed to load catalog job: ${jobError.message}`
+      );
     }
 
     const currentOffset = Math.max(
@@ -33,15 +36,53 @@ export async function GET(req: Request) {
     const cleanerResponse = await fetch(cleanerUrl, {
       method: 'GET',
       cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'Orbit-Control-Fix-Brands-Auto/1.0',
+      },
     });
 
-    const cleanerResult = await cleanerResponse
-      .json()
-      .catch(() => null);
+    /*
+     * نقرأ النص أولًا بدل response.json()
+     * حتى لا نخسر رسالة الخطأ إذا كانت الاستجابة HTML
+     * أو فارغة أو ليست JSON.
+     */
+    const rawResponse = await cleanerResponse.text();
 
-    if (!cleanerResponse.ok || !cleanerResult?.success) {
+    let cleanerResult: any = null;
+
+    if (rawResponse.trim()) {
+      try {
+        cleanerResult = JSON.parse(rawResponse);
+      } catch {
+        cleanerResult = null;
+      }
+    }
+
+    if (!cleanerResponse.ok) {
       throw new Error(
-        `Brand cleaner failed: ${JSON.stringify(cleanerResult)}`
+        [
+          `Brand cleaner HTTP error`,
+          `status=${cleanerResponse.status}`,
+          `statusText=${cleanerResponse.statusText}`,
+          `body=${rawResponse.slice(0, 1000) || '[empty response]'}`,
+        ].join(' | ')
+      );
+    }
+
+    if (!cleanerResult) {
+      throw new Error(
+        `Brand cleaner returned invalid or empty JSON: ${
+          rawResponse.slice(0, 1000) || '[empty response]'
+        }`
+      );
+    }
+
+    if (cleanerResult.success !== true) {
+      throw new Error(
+        `Brand cleaner reported failure: ${JSON.stringify(
+          cleanerResult
+        )}`
       );
     }
 
@@ -51,11 +92,17 @@ export async function GET(req: Request) {
     let nextOffset = currentOffset;
 
     if (!rateLimited) {
+      const returnedNextOffset =
+        cleanerResult.nextOffset;
+
       nextOffset =
-        cleanerResult.nextOffset === null ||
-        cleanerResult.nextOffset === undefined
+        returnedNextOffset === null ||
+        returnedNextOffset === undefined
           ? 0
-          : Number(cleanerResult.nextOffset);
+          : Math.max(
+              0,
+              Number(returnedNextOffset) || 0
+            );
     }
 
     const { error: updateError } = await supabaseAdmin
@@ -80,25 +127,41 @@ export async function GET(req: Request) {
       .eq('job_key', JOB_KEY);
 
     if (updateError) {
-      throw updateError;
+      throw new Error(
+        `Failed to update catalog job: ${updateError.message}`
+      );
     }
 
     return NextResponse.json({
       success: true,
       job: JOB_KEY,
-      routeVersion: cleanerResult.routeVersion,
+      routeVersion:
+        cleanerResult.routeVersion || 'UNKNOWN',
       currentOffset,
       nextOffset,
       rateLimited,
       cleaner: {
-        scanned: cleanerResult.scanned,
-        suspiciousFound:
-          cleanerResult.suspiciousFound,
-        processed: cleanerResult.processed,
-        updated: cleanerResult.updated,
-        unchanged: cleanerResult.unchanged,
-        unresolved: cleanerResult.unresolved,
-        failed: cleanerResult.failed,
+        scanned: Number(
+          cleanerResult.scanned || 0
+        ),
+        suspiciousFound: Number(
+          cleanerResult.suspiciousFound || 0
+        ),
+        processed: Number(
+          cleanerResult.processed || 0
+        ),
+        updated: Number(
+          cleanerResult.updated || 0
+        ),
+        unchanged: Number(
+          cleanerResult.unchanged || 0
+        ),
+        unresolved: Number(
+          cleanerResult.unresolved || 0
+        ),
+        failed: Number(
+          cleanerResult.failed || 0
+        ),
       },
     });
   } catch (error) {
@@ -110,12 +173,15 @@ export async function GET(req: Request) {
     return NextResponse.json(
       {
         success: false,
+        job: JOB_KEY,
         error:
           error instanceof Error
             ? error.message
             : String(error),
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
