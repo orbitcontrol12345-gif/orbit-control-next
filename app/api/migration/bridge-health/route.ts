@@ -453,10 +453,9 @@ console.log(`CANONICAL_URL=${canonical}`);
       hasTitle: Boolean(title?.trim()),
       hasH1: Boolean(h1?.trim()),
       hasCanonical: Boolean(canonical),
-      canonicalMatches: canonicalMatchesUrl(
+      canonicalMatchesUrl(
         canonical,
-        checkedUrl,
-        siteUrl
+        checkedUrl
       ),
       hasMetaDescription:
         Boolean(metaDescription?.trim()),
