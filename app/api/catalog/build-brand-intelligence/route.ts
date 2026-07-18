@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-
+import {
+  generateSafeBrandDictionary,
+} from '@/lib/brand-dictionary-generator';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const ROUTE_VERSION = 'BRAND-INTELLIGENCE-BUILDER-V1';
+const ROUTE_VERSION =
+  'BRAND-INTELLIGENCE-BUILDER-V2-SAFE';
 const PAGE_SIZE = 1000;
 
 const INVALID_BRANDS = new Set([
@@ -532,18 +535,10 @@ export async function GET() {
           brand.learned.partNumberPrefixes.length > 0
       );
 
-    const exportDictionary =
-      brandsWithLearnedEvidence.map((brand) => ({
-        brand: brand.brand,
-        titlePrefixes:
-          brand.learned.titlePrefixes.map(
-            (entry) => entry.prefix
-          ),
-        partNumberPrefixes:
-          brand.learned.partNumberPrefixes.map(
-            (entry) => entry.prefix
-          ),
-      }));
+    const safeDictionaryResult =
+  generateSafeBrandDictionary(
+    brandsWithLearnedEvidence
+  );
 
     return NextResponse.json({
       success: true,
@@ -558,15 +553,25 @@ export async function GET() {
         brandsWithLearnedEvidence:
           brandsWithLearnedEvidence.length,
         dictionaryEntries:
-          exportDictionary.length,
+  safeDictionaryResult.dictionary.length,
+
+safeAliases:
+  safeDictionaryResult.summary.totalAliases,
+
+safePartNumberPrefixes:
+  safeDictionaryResult.summary
+    .totalPartNumberPrefixes,
       },
 
       /*
        * هذا القسم هو القاموس النظيف الذي سنستخدمه
        * في المرحلة التالية.
        */
-      exportDictionary,
+      dictionaryVersion:
+  safeDictionaryResult.version,
 
+exportDictionary:
+  safeDictionaryResult.dictionary,
       /*
        * هذا القسم يعرض التفاصيل والتضارب للمراجعة،
        * ولا يستخدم تلقائياً بعد.
