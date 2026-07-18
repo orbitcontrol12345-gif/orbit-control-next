@@ -433,28 +433,36 @@ export async function POST(
  * نمنع تشغيل الكتابة عن طريق فتح الرابط
  * من المتصفح بالخطأ.
  */
-export async function GET() {
-  return NextResponse.json(
-    {
-      success: false,
+export async function GET(
+  request: NextRequest
+) {
+  const searchParams =
+    request.nextUrl.searchParams;
 
-      job:
-        'promote-brand-evidence',
-
-      routeVersion:
-        ROUTE_VERSION,
-
-      message:
-        'Use POST. Dry-run is enabled by default.',
-
-      dryRunExample:
-        'POST /api/catalog/brands/promote-evidence?limit=2000&dryRun=true',
-
-      realWriteExample:
-        'POST /api/catalog/brands/promote-evidence?limit=2000&dryRun=false&confirm=PROMOTE',
-    },
-    {
-      status: 405,
-    }
+  const dryRun = parseBoolean(
+    searchParams.get('dryRun'),
+    true
   );
+
+  /*
+   * GET مسموح فقط للاختبار بدون كتابة.
+   */
+  if (!dryRun) {
+    return NextResponse.json(
+      {
+        success: false,
+        job:
+          'promote-brand-evidence',
+        routeVersion:
+          ROUTE_VERSION,
+        error:
+          'GET requests cannot write to the database. Use POST for real promotion.',
+      },
+      {
+        status: 405,
+      }
+    );
+  }
+
+  return POST(request);
 }
