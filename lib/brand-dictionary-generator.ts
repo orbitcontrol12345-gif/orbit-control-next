@@ -231,6 +231,280 @@ function isSafeAlias(
   if (candidate.purity < 98) return false;
   if (candidate.ownerCount > 1) return false;
 
+ /*
+ * اسم البراند الأساسي مقبول دائمًا عندما يكون
+ * دليل العنوان نظيفًا.
+ */
+if (alias === canonical) return true;
+    /*
+   * Alias يحتوي اسم البراند الأساسي، مثل:
+   * GE FANUC
+   * BUSCH-JAEGER BY ABB
+   * TELEMECANIQUE BY SCHNEIDER
+   */
+  if (
+    alias.includes(canonical) ||
+    canonical.includes(alias)
+  ) {
+    return true;
+  }
+
   /*
-   * اسم البراند الأساسي مقبول دائمًا عندما يكون
-   * دليل العنوان نظيف
+   * Alias مستقل لا يحتوي اسم البراند الأساسي، مثل:
+   * RUGGEDCOM
+   * ENTRELEC
+   * NOTIFIER
+   *
+   * لذلك نطلب تكرارًا وثقة أعلى.
+   */
+  if (
+    candidate.count >= 5 &&
+    candidate.purity === 100 &&
+    candidate.ownerCount === 1
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function isSafePartNumberPrefix(
+  candidate: EvidenceEntry
+): boolean {
+  const prefix = normalizePartPrefix(candidate.prefix);
+
+  if (!prefix) return false;
+
+  /*
+   * حذف Prefixes القصيرة والخطرة مثل:
+   * R00
+   * C98
+   * B86
+   * FX8
+   */
+  if (prefix.length < 4 || prefix.length > 12) {
+    return false;
+  }
+
+  if (!/[A-Z]/.test(prefix)) return false;
+  if (!/\d/.test(prefix)) return false;
+
+  if (/^\d+$/.test(prefix)) return false;
+  if (/^[A-Z]+$/.test(prefix)) return false;
+
+  if (GENERIC_PART_PREFIXES.has(prefix)) {
+    return false;
+  }
+
+  if (candidate.count < 3) return false;
+  if (candidate.purity < 100) return false;
+  if (candidate.ownerCount !== 1) return false;
+
+  return true;
+}
+
+function removeRedundantAliases(
+  entries: EvidenceEntry[],
+  canonicalBrand: string
+): EvidenceEntry[] {
+  const canonical = normalizeAlias(canonicalBrand);
+
+  const sorted = [...entries].sort((a, b) => {
+    const aPrefix = normalizeAlias(a.prefix);
+    const bPrefix = normalizeAlias(b.prefix);
+
+    if (aPrefix === canonical) return -1;
+    if (bPrefix === canonical) return 1;
+
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+
+    return aPrefix.length - bPrefix.length;
+  });
+
+  const result: EvidenceEntry[] = [];
+
+  for (const entry of sorted) {
+    const alias = normalizeAlias(entry.prefix);
+
+    const duplicate = result.some(
+      (existing) =>
+        normalizeAlias(existing.prefix) === alias
+    );
+
+    if (!duplicate) {
+      result.push({
+        ...entry,
+        prefix: alias,
+      });
+    }
+  }
+
+  return result.slice(0, 15);
+}
+
+function removeRedundantPartPrefixes(
+  entries: EvidenceEntry[]
+): EvidenceEntry[] {
+  const normalized = entries
+    .map((entry) => ({
+      ...entry,
+      prefix: normalizePartPrefix(entry.prefix),
+    }))
+    .filter((entry) => entry.prefix.length > 0);
+
+  const sorted = normalized.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+
+    return a.prefix.length - b.prefix.length;
+  });
+
+  const result: EvidenceEntry[] = [];
+
+  for (const candidate of sorted) {
+    const duplicate = result.some(
+      (existing) =>
+        existing.prefix === candidate.prefix
+    );
+
+    if (duplicate) continue;
+
+    const redundant = result.some((existing) => {
+      return (
+        candidate.prefix.startsWith(existing.prefix) &&
+        existing.count >= candidate.count &&
+        existing.purity >= candidate.purity
+      );
+    });
+
+    if (!redundant) {
+      result.push(candidate);
+    }
+  }
+
+  return result.slice(0, 20);
+}
+
+function combineTitleEvidence(
+  brand: LearnedBrand
+): EvidenceEntry[] {
+  return uniqueEvidence([
+    ...(brand.learned?.titlePrefixes ?? []),
+    ...(brand.review?.titlePrefixes ?? []),
+  ]);
+}
+
+function combinePartEvidence(
+  brand: LearnedBrand
+): EvidenceEntry[] {
+  return uniqueEvidence([
+    ...(brand.learned?.partNumberPrefixes ?? []),
+    ...(brand.review?.partNumberPrefixes ?? []),
+  ]);
+}
+
+export function generateSafeBrandDictionary(
+  learnedBrands: LearnedBrand[]
+): BrandDictionaryResult {
+  const dictionary: SafeBrandDictionaryEntry[] = [];
+
+  for (const brandData of learnedBrands) {
+    const canonicalBrand = normalizeAlias(
+      brandData.brand
+    );
+
+    if (!canonicalBrand) continue;
+
+    const titleEvidence =
+      combineTitleEvidence(brandData);
+
+    const safeAliasEvidence =
+      removeRedundantAliases(
+        titleEvidence.filter((entry) =>
+          isSafeAlias(entry, canonicalBrand)
+        ),
+        canonicalBrand
+      );
+
+    /*
+     * نضمن وجود اسم البراند الأساسي في القاموس.
+     */
+    const hasCanonicalAlias =
+      safeAliasEvidence.some(
+        (entry) =>
+          normalizeAlias(entry.prefix) ===
+          canonicalBrand
+      );
+
+    if (!hasCanonicalAlias) {
+      safeAliasEvidence.unshift({
+        prefix: canonicalBrand,
+        count: brandData.productCount,
+        coverage: 100,
+        purity: 100,
+        ownerCount: 1,
+        accepted: true,
+      });
+    }
+
+    const partEvidence =
+      combinePartEvidence(brandData);
+
+    const safePartEvidence =
+      removeRedundantPartPrefixes(
+        partEvidence.filter((entry) =>
+          isSafePartNumberPrefix(entry)
+        )
+      );
+
+    dictionary.push({
+      brand: canonicalBrand,
+
+      aliases: safeAliasEvidence.map(
+        (entry) => entry.prefix
+      ),
+
+      partNumberPrefixes:
+        safePartEvidence.map(
+          (entry) => entry.prefix
+        ),
+
+      evidence: {
+        aliases: safeAliasEvidence,
+        partNumberPrefixes: safePartEvidence,
+      },
+    });
+  }
+
+  dictionary.sort((a, b) =>
+    a.brand.localeCompare(b.brand)
+  );
+
+  return {
+    version: GENERATOR_VERSION,
+
+    summary: {
+      inputBrands: learnedBrands.length,
+      outputBrands: dictionary.length,
+
+      totalAliases: dictionary.reduce(
+        (sum, entry) =>
+          sum + entry.aliases.length,
+        0
+      ),
+
+      totalPartNumberPrefixes:
+        dictionary.reduce(
+          (sum, entry) =>
+            sum +
+            entry.partNumberPrefixes.length,
+          0
+        ),
+    },
+
+    dictionary,
+  };
+}
