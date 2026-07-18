@@ -88,8 +88,7 @@ export async function promoteEvidence(
         status:
           'approved',
 
-        source:
-          'auto-learning',
+      source: 'learned',
 
         metadata: {
   extractorVersion: 'BRAND-EVIDENCE-EXTRACTOR-V1',
