@@ -29,15 +29,14 @@ export async function promoteEvidence(
     };
   }
 
-  const existing =
-  await supabaseAdmin
-    .from('brand_evidence')
-    .select('id')
-    .eq('brand_id', evidence.winningBrandId)
-    .eq('evidence_type', evidence.type)
-    .eq('normalized_value', evidence.normalizedValue)
-    .eq('source', 'auto-learning')
-    .maybeSingle();
+  const existing = await supabaseAdmin
+  .from('brand_evidence')
+  .select('id')
+  .eq('brand_id', evidence.winningBrandId)
+  .eq('evidence_type', evidence.type)
+  .eq('normalized_value', evidence.normalizedValue)
+  .eq('source', 'auto-learning')
+  .maybeSingle();
 
   if (existing.data) {
     return {
@@ -93,24 +92,24 @@ export async function promoteEvidence(
           'auto-learning',
 
         metadata: {
-          validatorVersion:
-            BRAND_PROMOTER_VERSION,
+  extractorVersion: 'BRAND-EVIDENCE-EXTRACTOR-V1',
 
-          recommendation:
-            evidence.recommendation,
+  aggregatorVersion: 'BRAND-EVIDENCE-AGGREGATOR-V1',
 
-          validationDecision:
-            evidence.validationDecision,
+  validatorVersion: 'BRAND-EVIDENCE-VALIDATOR-V1',
 
-          validationScore:
-            evidence.validationScore,
+  promoterVersion: BRAND_PROMOTER_VERSION,
 
-          sampleProducts:
-            evidence.sampleProductIds,
+  recommendation: evidence.recommendation,
 
-          distribution:
-            evidence.brandDistribution,
-        },
+  validationDecision: evidence.validationDecision,
+
+  validationScore: evidence.validationScore,
+
+  sampleProducts: evidence.sampleProductIds,
+
+  distribution: evidence.brandDistribution,
+},
       });
 
   if (insert.error) {
