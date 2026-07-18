@@ -13,10 +13,6 @@ import {
   buildBrandDictionary,
 } from '@/lib/brands/dictionary';
 
-import {
-  scoreProductBrand,
-} from '@/lib/brands/scorer';
-
 import type {
   BrandScoringProduct,
 } from '@/lib/brands/types';
@@ -235,21 +231,7 @@ const results =
       (item) =>
         item.suggestedBrand !== null
     ).length,
-
-  dictionaryBrands:
-    dictionary.totalBrands,
-
-  dictionaryEvidence:
-    dictionary.totalEvidence,
-},
-
-        dictionaryBrands:
-          dictionary.totalBrands,
-
-        dictionaryEvidence:
-          dictionary.totalEvidence,
-      },
-
+  
       results:
 resolutionBatch.results,
     });
