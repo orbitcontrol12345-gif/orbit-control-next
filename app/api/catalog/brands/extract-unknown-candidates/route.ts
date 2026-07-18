@@ -915,16 +915,28 @@ export async function GET(
         );
       }
 
-      const rows: ProductRow[] = Array.isArray(data)
-  ? data.filter(
-      (
-        row
-      ): row is ProductRow =>
-        typeof row === 'object' &&
-        row !== null &&
-        'id' in row
-    )
+      const rawRows: unknown[] = Array.isArray(data)
+  ? (data as unknown[])
   : [];
+
+const rows: ProductRow[] = rawRows.filter(
+  (row): row is ProductRow => {
+    if (
+      typeof row !== 'object' ||
+      row === null
+    ) {
+      return false;
+    }
+
+    const record =
+      row as Record<string, unknown>;
+
+    return (
+      typeof record.id === 'number' ||
+      typeof record.id === 'string'
+    );
+  }
+);
 
       if (rows.length === 0) {
         reachedEnd = true;
