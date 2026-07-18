@@ -915,8 +915,16 @@ export async function GET(
         );
       }
 
-      const rows =
-        (data ?? []) as ProductRow[];
+      const rows: ProductRow[] = Array.isArray(data)
+  ? data.filter(
+      (
+        row
+      ): row is ProductRow =>
+        typeof row === 'object' &&
+        row !== null &&
+        'id' in row
+    )
+  : [];
 
       if (rows.length === 0) {
         reachedEnd = true;
