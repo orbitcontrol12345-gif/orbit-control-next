@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-
+import {
+  resolveUnknownBrands,
+} from '@/lib/brands/unknown-resolver';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 import {
@@ -180,61 +182,26 @@ export async function GET(
         ? data.filter(isRecord)
         : [];
 
-    const results =
-      rows.map((row) => {
-        const product =
-          mapProduct(row);
+    const products = rows.map(mapProduct);
 
-        const resolution =
-          scoreProductBrand(
-            product,
-            dictionary
-          );
+const resolutionBatch =
+  resolveUnknownBrands(
+    products
+      .filter(
+        (product): product is {
+          id: number | string;
+          name?: string | null;
+          title?: string | null;
+          partNumber?: string | null;
+          manufacturer?: string | null;
+          existingBrand?: string | null;
+        } => product.id != null
+      ),
+    dictionary
+  );
 
-        return {
-          productId:
-            product.id ?? null,
-
-          name:
-            product.name ??
-            product.title ??
-            null,
-
-          partNumber:
-            product.partNumber ??
-            null,
-
-          manufacturer:
-            product.manufacturer ??
-            null,
-
-          existingBrand:
-            product.existingBrand ??
-            null,
-
-          suggestedBrand:
-            resolution.brand,
-
-          score:
-            resolution.score,
-
-          confidence:
-            resolution.confidence,
-
-          reasons:
-            resolution.reasons,
-
-          alternatives:
-            resolution.alternatives.map(
-              (candidate) => ({
-                brand:
-                  candidate.brand,
-                score:
-                  candidate.score,
-              })
-            ),
-        };
-      });
+const results =
+  resolutionBatch.results;
 
     const countConfidence = (
       confidence:
@@ -261,8 +228,7 @@ export async function GET(
       readOnly: true,
 
       summary: {
-        processed:
-          results.length,
+        ...resolutionBatch.summary
 
         matched:
           results.filter(
@@ -291,7 +257,8 @@ export async function GET(
           dictionary.totalEvidence,
       },
 
-      results,
+      results:
+resolutionBatch.results,
     });
   } catch (error) {
     console.error(
