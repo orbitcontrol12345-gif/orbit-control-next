@@ -213,28 +213,31 @@ const results =
       ).length;
 
     return NextResponse.json({
-      success: true,
+  success: true,
 
-      job:
-        'test-real-brand-resolution',
+  job: 'test-real-brand-resolution',
 
-      routeVersion:
-        ROUTE_VERSION,
+  routeVersion: ROUTE_VERSION,
 
-      readOnly: true,
+  readOnly: true,
 
-     summary: {
-  ...resolutionBatch.summary,
+  summary: {
+    ...resolutionBatch.summary,
 
-  matched:
-    results.filter(
-      (item) =>
-        item.suggestedBrand !== null
+    matched: results.filter(
+      (item) => item.suggestedBrand !== null
     ).length,
-  
-      results:
-resolutionBatch.results,
-    });
+
+    dictionaryBrands:
+      dictionary.totalBrands,
+
+    dictionaryEvidence:
+      dictionary.totalEvidence,
+  },
+
+  results: resolutionBatch.results,
+});
+    
   } catch (error) {
     console.error(
       'REAL BRAND RESOLUTION ERROR:',
