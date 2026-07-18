@@ -113,8 +113,10 @@ export async function promoteEvidence(
       });
 
   if (insert.error) {
-    throw insert.error;
-  }
+  throw new Error(
+    JSON.stringify(insert.error, null, 2)
+  );
+}
 
   return {
     inserted: true,
