@@ -227,28 +227,21 @@ const results =
 
       readOnly: true,
 
-      summary: {
-        ...resolutionBatch.summary
+     summary: {
+  ...resolutionBatch.summary,
 
-        matched:
-          results.filter(
-            (item) =>
-              item.suggestedBrand !== null
-          ).length,
+  matched:
+    results.filter(
+      (item) =>
+        item.suggestedBrand !== null
+    ).length,
 
-        highConfidence:
-          countConfidence('high'),
+  dictionaryBrands:
+    dictionary.totalBrands,
 
-        mediumConfidence:
-          countConfidence('medium'),
-
-        review:
-          countConfidence('review'),
-
-        unresolved:
-          countConfidence(
-            'unresolved'
-          ),
+  dictionaryEvidence:
+    dictionary.totalEvidence,
+},
 
         dictionaryBrands:
           dictionary.totalBrands,
