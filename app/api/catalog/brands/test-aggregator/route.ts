@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 
 import {
+  BRAND_EVIDENCE_VALIDATOR_VERSION,
+  validateAggregatedEvidenceList,
+} from '@/lib/brands/validator';
+
+import {
   supabaseAdmin,
 } from '@/lib/supabase-admin';
 
@@ -343,36 +348,55 @@ export async function GET(
     }
 
     const aggregated =
-      aggregateBrandEvidence(
-        candidates
-      );
+  aggregateBrandEvidence(
+    candidates
+  );
 
-    const autoApprove =
-      aggregated.filter(
-        (item) =>
-          item.recommendation ===
-          'auto-approve'
-      );
+const validated =
+  validateAggregatedEvidenceList(
+    aggregated
+  );
 
-    const review =
-      aggregated.filter(
-        (item) =>
-          item.recommendation ===
-          'review'
-      );
+const eligible =
+  validated.filter(
+    (item) =>
+      item.validationDecision ===
+      'eligible'
+  );
 
-    const reject =
-      aggregated.filter(
-        (item) =>
-          item.recommendation ===
-          'reject'
-      );
+const manualReview =
+  validated.filter(
+    (item) =>
+      item.validationDecision ===
+      'manual-review'
+  );
 
-    const conflicts =
-      aggregated.filter(
-        (item) =>
-          item.distinctBrandCount > 1
-      );
+const blocked =
+  validated.filter(
+    (item) =>
+      item.validationDecision ===
+      'blocked'
+  );
+
+const conflicts =
+  validated.filter(
+    (item) =>
+      item.distinctBrandCount > 1
+  );
+
+const aggregatorAutoApprove =
+  validated.filter(
+    (item) =>
+      item.recommendation ===
+      'auto-approve'
+  );
+
+const preventedAutoApprove =
+  aggregatorAutoApprove.filter(
+    (item) =>
+      item.validationDecision !==
+      'eligible'
+  );
 
     return NextResponse.json({
       success: true,
@@ -388,7 +412,9 @@ export async function GET(
 
       aggregatorVersion:
         BRAND_AGGREGATOR_VERSION,
-
+      
+       validatorVersion:
+       BRAND_EVIDENCE_VALIDATOR_VERSION,
       readOnly: true,
 
       pagination: {
@@ -422,30 +448,42 @@ export async function GET(
         uniqueEvidenceValues:
           aggregated.length,
 
-        autoApproveCount:
-          autoApprove.length,
+        aggregatorAutoApproveCount:
+  aggregatorAutoApprove.length,
 
-        reviewCount:
-          review.length,
+eligibleCount:
+  eligible.length,
 
-        rejectCount:
-          reject.length,
+manualReviewCount:
+  manualReview.length,
 
-        conflictCount:
-          conflicts.length,
+blockedCount:
+  blocked.length,
+
+preventedAutoApproveCount:
+  preventedAutoApprove.length,
+
+conflictCount:
+  conflicts.length,
       },
 
-      autoApprove:
-        autoApprove.slice(0, 100),
+      eligible:
+  eligible.slice(0, 100),
 
-      review:
-        review.slice(0, 100),
+manualReview:
+  manualReview.slice(0, 100),
 
-      conflicts:
-        conflicts.slice(0, 100),
+preventedAutoApprove:
+  preventedAutoApprove.slice(
+    0,
+    100
+  ),
 
-      rejected:
-        reject.slice(0, 100),
+conflicts:
+  conflicts.slice(0, 100),
+
+blocked:
+  blocked.slice(0, 100),
     });
   } catch (error) {
     console.error(
@@ -468,7 +506,9 @@ export async function GET(
 
         aggregatorVersion:
           BRAND_AGGREGATOR_VERSION,
-
+validatorVersion:
+  BRAND_EVIDENCE_VALIDATOR_VERSION,
+        
         readOnly: true,
 
         error:
