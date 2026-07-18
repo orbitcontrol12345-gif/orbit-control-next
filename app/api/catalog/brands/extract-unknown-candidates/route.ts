@@ -27,7 +27,6 @@ const MAX_PAGE_SIZE = 1000;
 type ProductRow = {
   id: number | string;
   name?: string | null;
-  title?: string | null;
   part_number?: string | null;
   manufacturer?: string | null;
   brand?: string | null;
@@ -553,10 +552,9 @@ function addCandidate(
     String(product.id);
 
   const title =
-    cleanTitle(
-      product.title ??
-        product.name
-    );
+  cleanTitle(
+    product.name
+  );
 
   const knownBrandName =
     findKnownBrandMatch(
@@ -886,15 +884,14 @@ export async function GET(
       } = await supabaseAdmin
         .from('products')
         .select(
-          [
-            'id',
-            'name',
-            'title',
-            'part_number',
-            'manufacturer',
-            'brand',
-          ].join(',')
-        )
+  [
+    'id',
+    'name',
+    'part_number',
+    'manufacturer',
+    'brand',
+  ].join(',')
+)
         .or(
           [
             'brand.is.null',
@@ -968,10 +965,9 @@ const rows: ProductRow[] = rawRows.filter(
         }
 
         const titleCandidates =
-          extractTitleCandidates(
-            product.title ??
-              product.name
-          );
+  extractTitleCandidates(
+    product.name
+  );
 
         for (
           const extracted of
