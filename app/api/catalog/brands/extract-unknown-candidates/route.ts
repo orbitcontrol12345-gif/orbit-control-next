@@ -1,22 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
-import {
-  getActiveBrands,
-  getApprovedEvidence,
-} from '@/lib/brands/repository';
+import { getActiveBrands, getApprovedEvidence } from "@/lib/brands/repository";
 
-import {
-  buildBrandDictionary,
-} from '@/lib/brands/dictionary';
+import { buildBrandDictionary } from "@/lib/brands/dictionary";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const ROUTE_VERSION =
-  'EXTRACT-UNKNOWN-BRAND-CANDIDATES-V2';
+const ROUTE_VERSION = "EXTRACT-UNKNOWN-BRAND-CANDIDATES-V2";
 
 const DEFAULT_LIMIT = 2500;
 const MAX_LIMIT = 5000;
@@ -28,15 +22,12 @@ type ProductRow = {
   id: number | string;
   name?: string | null;
   part_number?: string | null;
-  manufacturer?: string | null;
+  model_number?: string | null;
   brand?: string | null;
 };
 
 type CandidateSource =
-  | 'manufacturer'
-  | 'title-first-token'
-  | 'title-first-two-tokens'
-  | 'title-first-three-tokens';
+  "name-first-token" | "name-first-two-tokens" | "name-first-three-tokens";
 
 type CandidateProductSample = {
   productId: number | string;
@@ -52,10 +43,7 @@ type CandidateAggregate = {
   occurrenceCount: number;
   productCount: number;
 
-  sourceCounts: Record<
-    CandidateSource,
-    number
-  >;
+  sourceCounts: Record<CandidateSource, number>;
 
   productIds: Set<string>;
 
@@ -64,10 +52,7 @@ type CandidateAggregate = {
   knownBrandMatch: boolean;
   knownBrandName: string | null;
 
-  recommendation:
-    | 'approve'
-    | 'review'
-    | 'reject';
+  recommendation: "approve" | "review" | "reject";
 
   confidenceScore: number;
 
@@ -75,248 +60,182 @@ type CandidateAggregate = {
 };
 
 const GENERIC_WORDS = new Set([
-  'NEW',
-  'USED',
-  'OPEN',
-  'BOX',
-  'REFURBISHED',
-  'TESTED',
-  'WORKING',
+  "NEW",
+  "USED",
+  "OPEN",
+  "BOX",
+  "REFURBISHED",
+  "TESTED",
+  "WORKING",
 
-  'MODULE',
-  'CONTROL',
-  'CONTROLLER',
-  'BOARD',
-  'CARD',
-  'UNIT',
-  'DEVICE',
-  'SYSTEM',
-  'PANEL',
-  'DISPLAY',
-  'SCREEN',
+  "MODULE",
+  "CONTROL",
+  "CONTROLLER",
+  "BOARD",
+  "CARD",
+  "UNIT",
+  "DEVICE",
+  "SYSTEM",
+  "PANEL",
+  "DISPLAY",
+  "SCREEN",
 
-  'DIGITAL',
-  'ANALOG',
-  'INPUT',
-  'OUTPUT',
-  'POWER',
-  'SUPPLY',
-  'TRANSFORMER',
-  'CONVERTER',
-  'INVERTER',
-  'DRIVE',
+  "DIGITAL",
+  "ANALOG",
+  "INPUT",
+  "OUTPUT",
+  "POWER",
+  "SUPPLY",
+  "TRANSFORMER",
+  "CONVERTER",
+  "INVERTER",
+  "DRIVE",
 
-  'RELAY',
-  'CONTACTOR',
-  'SWITCH',
-  'PUSHBUTTON',
-  'BUTTON',
-  'SOCKET',
-  'BASE',
-  'FUSE',
-  'HOLDER',
-  'SENSOR',
-  'MOTOR',
+  "RELAY",
+  "CONTACTOR",
+  "SWITCH",
+  "PUSHBUTTON",
+  "BUTTON",
+  "SOCKET",
+  "BASE",
+  "FUSE",
+  "HOLDER",
+  "SENSOR",
+  "MOTOR",
 
-  'CIRCUIT',
-  'PRINTED',
-  'ELECTRONIC',
-  'ELECTRICAL',
-  'INDUSTRIAL',
+  "CIRCUIT",
+  "PRINTED",
+  "ELECTRONIC",
+  "ELECTRICAL",
+  "INDUSTRIAL",
 
-  'LOT',
-  'PCS',
-  'PIECE',
-  'PIECES',
-  'ONLY',
-  'WITHOUT',
-  'WITH',
-  'FOR',
-  'THE',
-  'AND',
+  "LOT",
+  "PCS",
+  "PIECE",
+  "PIECES",
+  "ONLY",
+  "WITHOUT",
+  "WITH",
+  "FOR",
+  "THE",
+  "AND",
 
-  'UNKNOWN',
-  'GENERIC',
-  'UNBRANDED',
-  'NONE',
-  'OTHER',
+  "UNKNOWN",
+  "GENERIC",
+  "UNBRANDED",
+  "NONE",
+  "OTHER",
 
-  'AC',
-  'DC',
-  'VAC',
-  'VDC',
-  'AMP',
-  'AMPS',
-  'VOLT',
-  'VOLTS',
-  'WATT',
-  'WATTS',
+  "AC",
+  "DC",
+  "VAC",
+  "VDC",
+  "AMP",
+  "AMPS",
+  "VOLT",
+  "VOLTS",
+  "WATT",
+  "WATTS",
 ]);
 
 const BAD_PREFIXES = [
-  'LOT ',
-  'PCS ',
-  'NEW ',
-  'USED ',
-  'OPEN BOX ',
-  'REFURBISHED ',
+  "LOT ",
+  "PCS ",
+  "NEW ",
+  "USED ",
+  "OPEN BOX ",
+  "REFURBISHED ",
 ];
 
-function normalizeText(
-  value: unknown
-): string {
-  if (
-    typeof value !== 'string' &&
-    typeof value !== 'number'
-  ) {
-    return '';
+function normalizeText(value: unknown): string {
+  if (typeof value !== "string" && typeof value !== "number") {
+    return "";
   }
 
   return String(value)
-    .normalize('NFKD')
-    .replace(
-      /[\u0300-\u036f]/g,
-      ''
-    )
-    .replace(/&/g, ' AND ')
-    .replace(
-      /[^A-Za-z0-9+._/\-\s]/g,
-      ' '
-    )
-    .replace(/\s+/g, ' ')
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " AND ")
+    .replace(/[^A-Za-z0-9+._/\-\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
-function normalizeCandidate(
-  value: string
-): string {
+function normalizeCandidate(value: string): string {
   return normalizeText(value)
-    .replace(
-      /^[\s._/+:-]+|[\s._/+:-]+$/g,
-      ''
-    )
-    .replace(/\s+/g, ' ')
+    .replace(/^[\s._/+:-]+|[\s._/+:-]+$/g, "")
+    .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
 }
 
-function cleanTitle(
-  value: unknown
-): string {
-  let title =
-    normalizeText(value);
+function cleanTitle(value: unknown): string {
+  let title = normalizeText(value);
 
   for (const prefix of BAD_PREFIXES) {
-    if (
-      title
-        .toUpperCase()
-        .startsWith(prefix)
-    ) {
-      title = title.slice(
-        prefix.length
-      );
+    if (title.toUpperCase().startsWith(prefix)) {
+      title = title.slice(prefix.length);
     }
   }
 
   return title.trim();
 }
 
-function isNumericOnly(
-  value: string
-): boolean {
-  return /^[0-9\s._/\-]+$/.test(
-    value
-  );
+function isNumericOnly(value: string): boolean {
+  return /^[0-9\s._/\-]+$/.test(value);
 }
 
-function looksLikePartNumber(
-  value: string
-): boolean {
-  const compact =
-    value.replace(/\s+/g, '');
+function looksLikePartNumber(value: string): boolean {
+  const compact = value.replace(/\s+/g, "");
 
   if (compact.length < 2) {
     return false;
   }
 
-  const hasLetter =
-    /[A-Z]/i.test(compact);
+  const hasLetter = /[A-Z]/i.test(compact);
 
-  const hasNumber =
-    /[0-9]/.test(compact);
+  const hasNumber = /[0-9]/.test(compact);
 
-  if (
-    hasLetter &&
-    hasNumber &&
-    /^[A-Z0-9._/\-]+$/i.test(
-      compact
-    )
-  ) {
+  if (hasLetter && hasNumber && /^[A-Z0-9._/\-]+$/i.test(compact)) {
     return true;
   }
 
   return false;
 }
 
-function isVoltageOrRating(
-  value: string
-): boolean {
-  const compact =
-    value
-      .replace(/\s+/g, '')
-      .toUpperCase();
+function isVoltageOrRating(value: string): boolean {
+  const compact = value.replace(/\s+/g, "").toUpperCase();
 
   return (
-    /^[0-9.]+(?:VAC|VDC|V|A|AMP|HZ|KW|W)$/.test(
-      compact
-    ) ||
-    /^[0-9.]+-[0-9.]+(?:VAC|VDC|V|A|HZ)$/.test(
-      compact
-    )
+    /^[0-9.]+(?:VAC|VDC|V|A|AMP|HZ|KW|W)$/.test(compact) ||
+    /^[0-9.]+-[0-9.]+(?:VAC|VDC|V|A|HZ)$/.test(compact)
   );
 }
 
-function isGenericCandidate(
-  candidate: string
-): boolean {
-  const normalized =
-    normalizeCandidate(candidate);
+function isGenericCandidate(candidate: string): boolean {
+  const normalized = normalizeCandidate(candidate);
 
   if (!normalized) {
     return true;
   }
 
-  const tokens =
-    normalized.split(' ');
+  const tokens = normalized.split(" ");
 
-  if (
-    tokens.every((token) =>
-      GENERIC_WORDS.has(token)
-    )
-  ) {
+  if (tokens.every((token) => GENERIC_WORDS.has(token))) {
     return true;
   }
 
-  if (
-    tokens.length === 1 &&
-    GENERIC_WORDS.has(tokens[0])
-  ) {
+  if (tokens.length === 1 && GENERIC_WORDS.has(tokens[0])) {
     return true;
   }
 
   return false;
 }
 
-function isValidCandidate(
-  candidate: string
-): boolean {
-  const normalized =
-    normalizeCandidate(candidate);
+function isValidCandidate(candidate: string): boolean {
+  const normalized = normalizeCandidate(candidate);
 
-  if (
-    normalized.length < 2 ||
-    normalized.length > 45
-  ) {
+  if (normalized.length < 2 || normalized.length > 45) {
     return false;
   }
 
@@ -336,36 +255,27 @@ function isValidCandidate(
    * كلمة واحدة تشبه Part Number غالبًا
    * لا نعاملها كاسم براند.
    */
-  if (
-    !normalized.includes(' ') &&
-    looksLikePartNumber(normalized)
-  ) {
+  if (!normalized.includes(" ") && looksLikePartNumber(normalized)) {
     return false;
   }
 
   return true;
 }
 
-function extractTitleCandidates(
-  titleValue: unknown
-): Array<{
+function extractTitleCandidates(titleValue: unknown): Array<{
   candidate: string;
   source: CandidateSource;
 }> {
-  const title =
-    cleanTitle(titleValue);
+  const title = cleanTitle(titleValue);
 
   if (!title) {
     return [];
   }
 
-  const tokens =
-    title
-      .split(' ')
-      .map((token) =>
-        token.trim()
-      )
-      .filter(Boolean);
+  const tokens = title
+    .split(" ")
+    .map((token) => token.trim())
+    .filter(Boolean);
 
   if (tokens.length === 0) {
     return [];
@@ -376,88 +286,52 @@ function extractTitleCandidates(
     source: CandidateSource;
   }> = [];
 
-  const first =
-    tokens[0];
+  const first = tokens[0];
 
-  const firstTwo =
-    tokens
-      .slice(0, 2)
-      .join(' ');
+  const firstTwo = tokens.slice(0, 2).join(" ");
 
-  const firstThree =
-    tokens
-      .slice(0, 3)
-      .join(' ');
+  const firstThree = tokens.slice(0, 3).join(" ");
 
   if (isValidCandidate(first)) {
     extracted.push({
       candidate: first,
-      source:
-        'title-first-token',
+      source: "name-first-token",
     });
   }
 
-  if (
-    tokens.length >= 2 &&
-    isValidCandidate(firstTwo)
-  ) {
+  if (tokens.length >= 2 && isValidCandidate(firstTwo)) {
     extracted.push({
       candidate: firstTwo,
-      source:
-        'title-first-two-tokens',
+      source: "name-first-two-tokens",
     });
   }
 
-  if (
-    tokens.length >= 3 &&
-    isValidCandidate(firstThree)
-  ) {
+  if (tokens.length >= 3 && isValidCandidate(firstThree)) {
     extracted.push({
       candidate: firstThree,
-      source:
-        'title-first-three-tokens',
+      source: "name-first-three-tokens",
     });
   }
 
   return extracted;
 }
 
-function parseInteger(
-  value: unknown,
-  fallback: number
-): number {
-  const parsed =
-    Number.parseInt(
-      String(value ?? ''),
-      10
-    );
+function parseInteger(value: unknown, fallback: number): number {
+  const parsed = Number.parseInt(String(value ?? ""), 10);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : fallback;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function clampInteger(
   value: unknown,
   fallback: number,
   minimum: number,
-  maximum: number
+  maximum: number,
 ): number {
-  return Math.min(
-    Math.max(
-      parseInteger(
-        value,
-        fallback
-      ),
-      minimum
-    ),
-    maximum
-  );
+  return Math.min(Math.max(parseInteger(value, fallback), minimum), maximum);
 }
 
-function getKnownBrandNames(
-  dictionary: any
-): string[] {
+function getKnownBrandNames(dictionary: any): string[] {
   const names = new Set<string>();
 
   const possibleCollections = [
@@ -467,22 +341,12 @@ function getKnownBrandNames(
     dictionary?.aliases,
   ];
 
-  for (
-    const collection of
-    possibleCollections
-  ) {
+  for (const collection of possibleCollections) {
     if (Array.isArray(collection)) {
       for (const item of collection) {
-        if (
-          typeof item === 'string'
-        ) {
-          names.add(
-            normalizeCandidate(item)
-          );
-        } else if (
-          item &&
-          typeof item === 'object'
-        ) {
+        if (typeof item === "string") {
+          names.add(normalizeCandidate(item));
+        } else if (item && typeof item === "object") {
           const values = [
             item.name,
             item.brand,
@@ -492,15 +356,8 @@ function getKnownBrandNames(
           ];
 
           for (const value of values) {
-            if (
-              typeof value ===
-              'string'
-            ) {
-              names.add(
-                normalizeCandidate(
-                  value
-                )
-              );
+            if (typeof value === "string") {
+              names.add(normalizeCandidate(value));
             }
           }
         }
@@ -513,15 +370,12 @@ function getKnownBrandNames(
 
 function findKnownBrandMatch(
   candidate: string,
-  knownBrandNames: string[]
+  knownBrandNames: string[],
 ): string | null {
-  const normalized =
-    normalizeCandidate(candidate);
+  const normalized = normalizeCandidate(candidate);
 
   for (const knownBrand of knownBrandNames) {
-    if (
-      normalized === knownBrand
-    ) {
+    if (normalized === knownBrand) {
       return knownBrand;
     }
   }
@@ -530,229 +384,140 @@ function findKnownBrandMatch(
 }
 
 function addCandidate(
-  map: Map<
-    string,
-    CandidateAggregate
-  >,
+  map: Map<string, CandidateAggregate>,
   candidateValue: string,
   source: CandidateSource,
   product: ProductRow,
-  knownBrandNames: string[]
+  knownBrandNames: string[],
 ) {
-  const normalized =
-    normalizeCandidate(
-      candidateValue
-    );
+  const normalized = normalizeCandidate(candidateValue);
 
   if (!isValidCandidate(normalized)) {
     return;
   }
 
-  const productId =
-    String(product.id);
+  const productId = String(product.id);
 
-  const title =
-  cleanTitle(
-    product.name
-  );
+  const title = cleanTitle(product.name);
 
-  const knownBrandName =
-    findKnownBrandMatch(
-      normalized,
-      knownBrandNames
-    );
+  const knownBrandName = findKnownBrandMatch(normalized, knownBrandNames);
 
-  const current =
-    map.get(normalized) ?? {
-      normalizedCandidate:
-        normalized,
+  const current = map.get(normalized) ?? {
+    normalizedCandidate: normalized,
 
-      displayCandidate:
-        candidateValue.trim(),
+    displayCandidate: candidateValue.trim(),
 
-      occurrenceCount: 0,
-      productCount: 0,
+    occurrenceCount: 0,
+    productCount: 0,
 
-      sourceCounts: {
-        manufacturer: 0,
-        'title-first-token': 0,
-        'title-first-two-tokens': 0,
-        'title-first-three-tokens': 0,
-      },
+    sourceCounts: {
+      "name-first-token": 0,
+      "name-first-two-tokens": 0,
+      "name-first-three-tokens": 0,
+    },
 
-      productIds:
-        new Set<string>(),
+    productIds: new Set<string>(),
 
-      samples: [],
+    samples: [],
 
-      knownBrandMatch:
-        Boolean(knownBrandName),
+    knownBrandMatch: Boolean(knownBrandName),
 
-      knownBrandName,
+    knownBrandName,
 
-      recommendation:
-        'review',
+    recommendation: "review",
 
-      confidenceScore: 0,
+    confidenceScore: 0,
 
-      reasons: [],
-    };
+    reasons: [],
+  };
 
   current.occurrenceCount += 1;
 
   current.sourceCounts[source] += 1;
 
-  if (
-    !current.productIds.has(
-      productId
-    )
-  ) {
-    current.productIds.add(
-      productId
-    );
+  if (!current.productIds.has(productId)) {
+    current.productIds.add(productId);
 
     current.productCount += 1;
   }
 
-  if (
-    current.samples.length < 5
-  ) {
+  if (current.samples.length < 5) {
     current.samples.push({
-      productId:
-        product.id,
+      productId: product.id,
 
       title,
 
-      partNumber:
-        product.part_number ??
-        null,
+      partNumber: product.part_number ?? null,
 
       source,
     });
   }
 
-  map.set(
-    normalized,
-    current
-  );
+  map.set(normalized, current);
 }
 
-function scoreCandidate(
-  candidate: CandidateAggregate
-): CandidateAggregate {
+function scoreCandidate(candidate: CandidateAggregate): CandidateAggregate {
   let score = 0;
   const reasons: string[] = [];
 
-  const manufacturerCount =
-    candidate.sourceCounts
-      .manufacturer;
+  const firstTokenCount = candidate.sourceCounts["name-first-token"];
 
-  const firstTokenCount =
-    candidate.sourceCounts[
-      'title-first-token'
-    ];
-
-  const firstTwoCount =
-    candidate.sourceCounts[
-      'title-first-two-tokens'
-    ];
+  const firstTwoCount = candidate.sourceCounts["name-first-two-tokens"];
 
   if (candidate.knownBrandMatch) {
     score += 50;
 
-    reasons.push(
-      'Matches an existing dictionary brand.'
-    );
-  }
-
-  if (manufacturerCount > 0) {
-    score += 40;
-
-    reasons.push(
-      'Appears in manufacturer field.'
-    );
+    reasons.push("Matches an existing dictionary brand.");
   }
 
   if (candidate.productCount >= 10) {
     score += 30;
 
-    reasons.push(
-      'Appears in at least 10 products.'
-    );
-  } else if (
-    candidate.productCount >= 5
-  ) {
+    reasons.push("Appears in at least 10 products.");
+  } else if (candidate.productCount >= 5) {
     score += 20;
 
-    reasons.push(
-      'Appears in at least 5 products.'
-    );
-  } else if (
-    candidate.productCount >= 2
-  ) {
+    reasons.push("Appears in at least 5 products.");
+  } else if (candidate.productCount >= 2) {
     score += 10;
 
-    reasons.push(
-      'Appears in multiple products.'
-    );
+    reasons.push("Appears in multiple products.");
   }
 
   if (firstTokenCount >= 2) {
     score += 15;
 
-    reasons.push(
-      'Repeatedly appears as the first title token.'
-    );
+    reasons.push("Repeatedly appears as the first name token.");
   }
 
-  if (
-    firstTwoCount >= 2 &&
-    firstTwoCount >=
-      firstTokenCount
-  ) {
+  if (firstTwoCount >= 2 && firstTwoCount >= firstTokenCount) {
     score += 10;
 
-    reasons.push(
-      'Repeatedly appears as the first two title tokens.'
-    );
+    reasons.push("Repeatedly appears as the first two name tokens.");
   }
 
-  if (
-    candidate.normalizedCandidate
-      .split(' ').length <= 3
-  ) {
+  if (candidate.normalizedCandidate.split(" ").length <= 3) {
     score += 5;
   }
 
-  let recommendation:
-    CandidateAggregate['recommendation'];
+  let recommendation: CandidateAggregate["recommendation"];
 
   if (
     candidate.knownBrandMatch ||
-    (
-      manufacturerCount >= 2 &&
-      candidate.productCount >= 2
-    ) ||
-    (
-      score >= 60 &&
-      candidate.productCount >= 3
-    )
+    (score >= 55 && candidate.productCount >= 3) ||
+    (firstTokenCount >= 5 && candidate.productCount >= 5)
   ) {
-    recommendation = 'approve';
-  } else if (
-    score >= 20 ||
-    candidate.productCount >= 2
-  ) {
-    recommendation = 'review';
+    recommendation = "approve";
+  } else if (score >= 20 || candidate.productCount >= 2) {
+    recommendation = "review";
   } else {
-    recommendation = 'reject';
+    recommendation = "reject";
   }
 
   return {
     ...candidate,
 
-    confidenceScore:
-      Math.min(score, 100),
+    confidenceScore: Math.min(score, 100),
 
     recommendation,
 
@@ -760,180 +525,112 @@ function scoreCandidate(
   };
 }
 
-function serializeCandidate(
-  candidate: CandidateAggregate
-) {
+function serializeCandidate(candidate: CandidateAggregate) {
   return {
-    candidate:
-      candidate.displayCandidate,
+    candidate: candidate.displayCandidate,
 
-    normalizedCandidate:
-      candidate
-        .normalizedCandidate,
+    normalizedCandidate: candidate.normalizedCandidate,
 
-    productCount:
-      candidate.productCount,
+    productCount: candidate.productCount,
 
-    occurrenceCount:
-      candidate.occurrenceCount,
+    occurrenceCount: candidate.occurrenceCount,
 
-    sourceCounts:
-      candidate.sourceCounts,
+    sourceCounts: candidate.sourceCounts,
 
-    knownBrandMatch:
-      candidate.knownBrandMatch,
+    knownBrandMatch: candidate.knownBrandMatch,
 
-    knownBrandName:
-      candidate.knownBrandName,
+    knownBrandName: candidate.knownBrandName,
 
-    confidenceScore:
-      candidate.confidenceScore,
+    confidenceScore: candidate.confidenceScore,
 
-    recommendation:
-      candidate.recommendation,
+    recommendation: candidate.recommendation,
 
-    reasons:
-      candidate.reasons,
+    reasons: candidate.reasons,
 
-    samples:
-      candidate.samples,
+    samples: candidate.samples,
   };
 }
 
-export async function GET(
-  request: Request
-) {
-  const startedAt =
-    Date.now();
+export async function GET(request: Request) {
+  const startedAt = Date.now();
 
   try {
-    const url =
-      new URL(request.url);
+    const url = new URL(request.url);
 
-    const limit =
-      clampInteger(
-        url.searchParams.get(
-          'limit'
-        ),
-        DEFAULT_LIMIT,
-        1,
-        MAX_LIMIT
-      );
+    const limit = clampInteger(
+      url.searchParams.get("limit"),
+      DEFAULT_LIMIT,
+      1,
+      MAX_LIMIT,
+    );
 
-    const pageSize =
-      clampInteger(
-        url.searchParams.get(
-          'pageSize'
-        ),
-        DEFAULT_PAGE_SIZE,
-        1,
-        MAX_PAGE_SIZE
-      );
+    const pageSize = clampInteger(
+      url.searchParams.get("pageSize"),
+      DEFAULT_PAGE_SIZE,
+      1,
+      MAX_PAGE_SIZE,
+    );
 
-    const minimumProductCount =
-      clampInteger(
-        url.searchParams.get(
-          'minimumProductCount'
-        ),
-        1,
-        1,
-        1000
-      );
+    const minimumProductCount = clampInteger(
+      url.searchParams.get("minimumProductCount"),
+      1,
+      1,
+      1000,
+    );
 
-    const [brands, evidence] =
-      await Promise.all([
-        getActiveBrands(),
-        getApprovedEvidence(),
-      ]);
+    const [brands, evidence] = await Promise.all([
+      getActiveBrands(),
+      getApprovedEvidence(),
+    ]);
 
-    const dictionary =
-      buildBrandDictionary(
-        brands,
-        evidence
-      );
+    const dictionary = buildBrandDictionary(brands, evidence);
 
-    const knownBrandNames =
-      getKnownBrandNames(
-        dictionary
-      );
+    const knownBrandNames = getKnownBrandNames(dictionary);
 
-    const candidates =
-      new Map<
-        string,
-        CandidateAggregate
-      >();
+    const candidates = new Map<string, CandidateAggregate>();
 
     let afterId = 0;
     let loaded = 0;
     let pagesProcessed = 0;
     let reachedEnd = false;
 
-    while (
-      loaded < limit &&
-      !reachedEnd
-    ) {
-      const currentLimit =
-        Math.min(
-          pageSize,
-          limit - loaded
-        );
+    while (loaded < limit && !reachedEnd) {
+      const currentLimit = Math.min(pageSize, limit - loaded);
 
-      const {
-        data,
-        error,
-      } = await supabaseAdmin
-        .from('products')
+      const { data, error } = await supabaseAdmin
+        .from("products")
         .select(
-  [
-    'id',
-    'name',
-    'part_number',
-    'manufacturer',
-    'brand',
-  ].join(',')
-)
+          ["id", "name", "part_number", "model_number", "brand"].join(","),
+        )
         .or(
           [
-            'brand.is.null',
-            'brand.eq.UNKNOWN',
-            'brand.eq.Unknown',
-            'brand.eq.unknown',
-          ].join(',')
+            "brand.is.null",
+            "brand.eq.UNKNOWN",
+            "brand.eq.Unknown",
+            "brand.eq.unknown",
+          ].join(","),
         )
-        .gt('id', afterId)
-        .order('id', {
+        .gt("id", afterId)
+        .order("id", {
           ascending: true,
         })
         .limit(currentLimit);
 
       if (error) {
-        throw new Error(
-          `Failed loading UNKNOWN products: ${error.message}`
-        );
+        throw new Error(`Failed loading UNKNOWN products: ${error.message}`);
       }
 
-      const rawRows: unknown[] = Array.isArray(data)
-  ? (data as unknown[])
-  : [];
+      const rawRows: unknown[] = Array.isArray(data) ? (data as unknown[]) : [];
 
-const rows: ProductRow[] = rawRows.filter(
-  (row): row is ProductRow => {
-    if (
-      typeof row !== 'object' ||
-      row === null
-    ) {
-      return false;
-    }
+      const rows: ProductRow[] = rawRows.filter((row): row is ProductRow => {
+        if (typeof row !== "object" || row === null) {
+          return false;
+        }
 
-    const record =
-      row as Record<string, unknown>;
+        const record = row as Record<string, unknown>;
 
-    return (
-      typeof record.id === 'number' ||
-      typeof record.id === 'string'
-    );
-  }
-);
+        return typeof record.id === "number" || typeof record.id === "string";
+      });
 
       if (rows.length === 0) {
         reachedEnd = true;
@@ -944,230 +641,124 @@ const rows: ProductRow[] = rawRows.filter(
       loaded += rows.length;
 
       for (const product of rows) {
-        const manufacturer =
-          normalizeText(
-            product.manufacturer
-          );
+        const titleCandidates = extractTitleCandidates(product.name);
 
-        if (
-          manufacturer &&
-          isValidCandidate(
-            manufacturer
-          )
-        ) {
-          addCandidate(
-            candidates,
-            manufacturer,
-            'manufacturer',
-            product,
-            knownBrandNames
-          );
-        }
-
-        const titleCandidates =
-  extractTitleCandidates(
-    product.name
-  );
-
-        for (
-          const extracted of
-          titleCandidates
-        ) {
+        for (const extracted of titleCandidates) {
           addCandidate(
             candidates,
             extracted.candidate,
             extracted.source,
             product,
-            knownBrandNames
+            knownBrandNames,
           );
         }
       }
 
-      const lastRow =
-        rows[
-          rows.length - 1
-        ];
+      const lastRow = rows[rows.length - 1];
 
-      const nextAfterId =
-        Number(lastRow.id);
+      const nextAfterId = Number(lastRow.id);
 
-      if (
-        !Number.isFinite(
-          nextAfterId
-        )
-      ) {
-        throw new Error(
-          `Invalid product ID: ${String(lastRow.id)}`
-        );
+      if (!Number.isFinite(nextAfterId)) {
+        throw new Error(`Invalid product ID: ${String(lastRow.id)}`);
       }
 
       afterId = nextAfterId;
 
-      if (
-        rows.length <
-        currentLimit
-      ) {
+      if (rows.length < currentLimit) {
         reachedEnd = true;
       }
     }
 
-    const scored =
-      [...candidates.values()]
-        .map(scoreCandidate)
-        .filter(
-          (candidate) =>
-            candidate.productCount >=
-            minimumProductCount
-        )
-        .sort((a, b) => {
-          if (
-            b.confidenceScore !==
-            a.confidenceScore
-          ) {
-            return (
-              b.confidenceScore -
-              a.confidenceScore
-            );
-          }
+    const scored = [...candidates.values()]
+      .map(scoreCandidate)
+      .filter((candidate) => candidate.productCount >= minimumProductCount)
+      .sort((a, b) => {
+        if (b.confidenceScore !== a.confidenceScore) {
+          return b.confidenceScore - a.confidenceScore;
+        }
 
-          return (
-            b.productCount -
-            a.productCount
-          );
-        });
+        return b.productCount - a.productCount;
+      });
 
-    const approve =
-      scored.filter(
-        (item) =>
-          item.recommendation ===
-          'approve'
-      );
+    const approve = scored.filter((item) => item.recommendation === "approve");
 
-    const review =
-      scored.filter(
-        (item) =>
-          item.recommendation ===
-          'review'
-      );
+    const review = scored.filter((item) => item.recommendation === "review");
 
-    const reject =
-      scored.filter(
-        (item) =>
-          item.recommendation ===
-          'reject'
-      );
+    const reject = scored.filter((item) => item.recommendation === "reject");
 
     return NextResponse.json({
       success: true,
 
-      job:
-        'extract-unknown-brand-candidates',
+      job: "extract-unknown-brand-candidates",
 
-      routeVersion:
-        ROUTE_VERSION,
+      routeVersion: ROUTE_VERSION,
 
       writeEnabled: false,
 
       scan: {
-        loadedProducts:
-          loaded,
+        loadedProducts: loaded,
 
         pagesProcessed,
 
         reachedEnd,
 
-        lastScannedId:
-          afterId,
+        lastScannedId: afterId,
 
-        requestedLimit:
-          limit,
+        requestedLimit: limit,
 
         minimumProductCount,
       },
 
       dictionary: {
-        totalBrands:
-          dictionary.totalBrands,
+        totalBrands: dictionary.totalBrands,
 
-        totalEvidence:
-          dictionary.totalEvidence,
+        totalEvidence: dictionary.totalEvidence,
 
-        knownBrandNamesLoaded:
-          knownBrandNames.length,
+        knownBrandNamesLoaded: knownBrandNames.length,
 
-        generatedAt:
-          dictionary.generatedAt,
+        generatedAt: dictionary.generatedAt,
       },
 
       summary: {
-        totalCandidates:
-          scored.length,
+        totalCandidates: scored.length,
 
-        approveCount:
-          approve.length,
+        approveCount: approve.length,
 
-        reviewCount:
-          review.length,
+        reviewCount: review.length,
 
-        rejectCount:
-          reject.length,
+        rejectCount: reject.length,
       },
 
       candidates: {
-        approve:
-          approve
-            .slice(0, 300)
-            .map(
-              serializeCandidate
-            ),
+        approve: approve.slice(0, 300).map(serializeCandidate),
 
-        review:
-          review
-            .slice(0, 500)
-            .map(
-              serializeCandidate
-            ),
+        review: review.slice(0, 500).map(serializeCandidate),
 
-        reject:
-          reject
-            .slice(0, 100)
-            .map(
-              serializeCandidate
-            ),
+        reject: reject.slice(0, 100).map(serializeCandidate),
       },
 
       timing: {
-        durationMs:
-          Date.now() -
-          startedAt,
+        durationMs: Date.now() - startedAt,
       },
     });
   } catch (error) {
-    console.error(
-      'EXTRACT UNKNOWN BRAND CANDIDATES ERROR:',
-      error
-    );
+    console.error("EXTRACT UNKNOWN BRAND CANDIDATES ERROR:", error);
 
     return NextResponse.json(
       {
         success: false,
 
-        job:
-          'extract-unknown-brand-candidates',
+        job: "extract-unknown-brand-candidates",
 
-        routeVersion:
-          ROUTE_VERSION,
+        routeVersion: ROUTE_VERSION,
 
         writeEnabled: false,
 
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: error instanceof Error ? error.message : String(error),
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }
