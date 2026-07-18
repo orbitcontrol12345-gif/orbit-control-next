@@ -30,22 +30,14 @@ export async function promoteEvidence(
   }
 
   const existing =
-    await supabaseAdmin
-      .from('brand_evidence')
-      .select('id')
-      .eq(
-        'brand_id',
-        evidence.winningBrandId
-      )
-      .eq(
-        'evidence_type',
-        evidence.type
-      )
-      .eq(
-        'normalized_value',
-        evidence.normalizedValue
-      )
-      .maybeSingle();
+  await supabaseAdmin
+    .from('brand_evidence')
+    .select('id')
+    .eq('brand_id', evidence.winningBrandId)
+    .eq('evidence_type', evidence.type)
+    .eq('normalized_value', evidence.normalizedValue)
+    .eq('source', 'auto-learning')
+    .maybeSingle();
 
   if (existing.data) {
     return {
