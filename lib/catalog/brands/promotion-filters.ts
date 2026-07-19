@@ -50,27 +50,31 @@ export function isNumericBrand(candidate: string): boolean {
 }
 
 export function looksLikePartNumber(candidate: string): boolean {
-  const value = candidate.trim();
+  const value = candidate.trim().toUpperCase();
 
   if (value.length < 3) {
     return true;
   }
 
-  if (/^[A-Z0-9-]{8,}$/.test(value)) {
-    const digits =
-      (value.match(/[0-9]/g) || []).length;
+  // براند من أحرف فقط = مقبول
+  if (/^[A-Z]+$/.test(value)) {
+    return false;
+  }
 
-    if (
-      digits >=
-      Math.floor(value.length / 2)
-    ) {
-      return true;
+  // براند يبدأ بحرف وفيه أرقام قليلة = مقبول
+  if (/^[A-Z][A-Z0-9-]{1,15}$/.test(value)) {
+    const digits = (value.match(/[0-9]/g) || []).length;
+
+    if (digits <= 3) {
+      return false;
     }
   }
 
-  return false;
-}
+  // إذا أكثر من نصفه أرقام فهو غالباً Part Number
+  const digits = (value.match(/[0-9]/g) || []).length;
 
+  return digits > value.length / 2;
+}
 export function shouldRejectCandidate(
   candidate: string,
   confidence: number,
