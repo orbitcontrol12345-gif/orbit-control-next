@@ -287,12 +287,35 @@ function extractTitleCandidates(titleValue: unknown): Array<{
   }> = [];
 
   const first = tokens[0];
+  const firstNormalized = normalizeCandidate(first);
 
   const firstTwo = tokens.slice(0, 2).join(" ");
-
   const firstThree = tokens.slice(0, 3).join(" ");
 
-  if (isValidCandidate(first)) {
+  /*
+   * كلمات قد تكون بداية اسم شركة متعدد الكلمات،
+   * لذلك لا نعتمدها منفردة كبراند.
+   *
+   * ACTIVE POWER  → لا نضيف ACTIVE
+   * GENERAL ELECTRIC → لا نضيف GENERAL
+   */
+  const MULTI_WORD_BRAND_PREFIXES = new Set([
+    "ACTIVE",
+    "ADVANCED",
+    "AMERICAN",
+    "AUTOMATIC",
+    "GLOBAL",
+    "GENERAL",
+    "INTERNATIONAL",
+    "NATIONAL",
+    "PRECISION",
+    "UNITED",
+  ]);
+
+  const allowSingleToken =
+    !MULTI_WORD_BRAND_PREFIXES.has(firstNormalized);
+
+  if (allowSingleToken && isValidCandidate(first)) {
     extracted.push({
       candidate: first,
       source: "name-first-token",
