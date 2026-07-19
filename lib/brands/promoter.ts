@@ -30,6 +30,9 @@ export async function promoteEvidence(
   }
 
   const existing = await supabaseAdmin
+    if (existing.error) {
+  throw new Error(existing.error.message);
+}
   .from('brand_evidence')
   .select('id')
   .eq('brand_id', evidence.winningBrandId)
@@ -88,7 +91,7 @@ export async function promoteEvidence(
         status:
           'active',
 
-      source: 'learned',
+      source: 'auto-learning',
 
         metadata: {
   extractorVersion: 'BRAND-EVIDENCE-EXTRACTOR-V1',
