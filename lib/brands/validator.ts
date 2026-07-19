@@ -262,16 +262,16 @@ function validatePartPrefix(
     );
   }
 
-  if (value.length < 4) {
+  if (value.length < 2) {
     hardBlocked = true;
     score -= 60;
 
     reasons.push(
-      'Prefix is shorter than four characters'
+      'Prefix is shorter than two characters'
     );
   }
 
-  if (value.length > 10) {
+  if (value.length > 16) {
     hardBlocked = true;
     score -= 50;
 
