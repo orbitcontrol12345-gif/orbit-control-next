@@ -29,10 +29,7 @@ export async function promoteEvidence(
     };
   }
 
-  const existing = await supabaseAdmin
-    if (existing.error) {
-  throw new Error(existing.error.message);
-}
+ const existing = await supabaseAdmin
   .from('brand_evidence')
   .select('id')
   .eq('brand_id', evidence.winningBrandId)
@@ -40,9 +37,10 @@ export async function promoteEvidence(
   .eq('normalized_value', evidence.normalizedValue)
   .eq('source', 'auto-learning')
   .maybeSingle();
-
-  if (existing.data) {
-    return {
+  
+ if (existing.error) {
+  throw new Error(existing.error.message);
+}
       inserted: false,
       skipped: true,
       reason: 'already-exists',
