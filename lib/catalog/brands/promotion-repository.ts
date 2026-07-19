@@ -1,0 +1,99 @@
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
+export interface UnknownProduct {
+  id: number;
+  name: string;
+  brand: string | null;
+  part_number: string | null;
+  model_number: string | null;
+}
+
+export interface RegistryBrand {
+  id: number;
+  canonical_brand: string;
+  normalized_brand: string;
+  status: string;
+  product_count: number | null;
+}
+
+export async function loadUnknownProducts(limit = 5000) {
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select(
+      `
+      id,
+      name,
+      brand,
+      part_number,
+      model_number
+    `,
+    )
+    .or('brand.is.null,brand.eq.UNKNOWN')
+    .order('id')
+    .limit(limit);
+
+  if (error) throw error;
+
+  return (data ?? []) as UnknownProduct[];
+}
+
+export async function loadRegistryBrands() {
+  const { data, error } = await supabaseAdmin
+    .from('brand_registry')
+    .select('*');
+
+  if (error) throw error;
+
+  return (data ?? []) as RegistryBrand[];
+}
+
+export async function insertRegistryBrand(
+  canonicalBrand: string,
+  normalizedBrand: string,
+  productCount: number,
+  source: string,
+  metadata: Record<string, unknown>,
+) {
+  const { data, error } = await supabaseAdmin
+    .from('brand_registry')
+    .insert({
+      canonical_brand: canonicalBrand,
+      normalized_brand: normalizedBrand,
+      status: 'approved',
+      product_count: productCount,
+      source,
+      metadata,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data as RegistryBrand;
+}
+
+export async function insertEvidence(
+  brandId: number,
+  candidate: string,
+  occurrenceCount: number,
+  confidence: number,
+) {
+  const { error } = await supabaseAdmin
+    .from('brand_evidence')
+    .insert({
+      brand_id: brandId,
+      evidence_type: 'promotion-engine',
+      evidence_value: candidate,
+      normalized_value: candidate,
+      occurrence_count: occurrenceCount,
+      matching_brand_count: 1,
+      conflicting_brand_count: 0,
+      purity: 1,
+      weight: confidence,
+      status: 'approved',
+      source: 'promotion-engine',
+      metadata: {},
+    });
+
+  if (error) throw error;
+}
