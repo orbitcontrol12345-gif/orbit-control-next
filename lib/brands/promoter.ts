@@ -29,7 +29,7 @@ export async function promoteEvidence(
     };
   }
 
- const existing = await supabaseAdmin
+const existing = await supabaseAdmin
   .from('brand_evidence')
   .select('id')
   .eq('brand_id', evidence.winningBrandId)
@@ -37,15 +37,14 @@ export async function promoteEvidence(
   .eq('normalized_value', evidence.normalizedValue)
   .eq('source', 'auto-learning')
   .maybeSingle();
-  
- if (existing.error) {
-  throw new Error(existing.error.message);
+
+if (existing.data) {
+  return {
+    inserted: false,
+    skipped: true,
+    reason: 'already-exists',
+  };
 }
-      inserted: false,
-      skipped: true,
-      reason: 'already-exists',
-    };
-  }
 
   if (dryRun) {
     return {
