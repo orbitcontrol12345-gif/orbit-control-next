@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
-
+import { normalizeBrand } from './promotion-filters';
 export interface UnknownProduct {
   id: number;
   name: string;
@@ -59,7 +59,7 @@ export async function insertRegistryBrand(
     .insert({
       canonical_brand: canonicalBrand,
       normalized_brand: normalizedBrand,
-      status: 'approved',
+     status: 'active',
       product_count: productCount,
       source,
       metadata,
@@ -84,13 +84,13 @@ export async function insertEvidence(
       brand_id: brandId,
       evidence_type: 'promotion-engine',
       evidence_value: candidate,
-      normalized_value: candidate,
+      normalized_value: normalizeBrand(candidate),
       occurrence_count: occurrenceCount,
       matching_brand_count: 1,
       conflicting_brand_count: 0,
       purity: 1,
       weight: confidence,
-      status: 'approved',
+      status: 'active',
       source: 'promotion-engine',
       metadata: {},
     });
