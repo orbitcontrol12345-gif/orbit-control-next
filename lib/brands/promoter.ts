@@ -86,7 +86,7 @@ export async function promoteEvidence(
           evidence.validationScore,
 
         status:
-          'approved',
+          'active',
 
       source: 'learned',
 
