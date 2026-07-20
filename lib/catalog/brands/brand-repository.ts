@@ -37,40 +37,61 @@ export async function loadUnknownProducts(limit = 5000) {
   return (data ?? []) as UnknownProduct[];
 }
 
-export async function loadRegistryBrands() {
+export async function loadUnknownProducts(
+  limit = 5000,
+) {
   const pageSize = 1000;
-  const allBrands: RegistryBrand[] = [];
+  const allProducts: UnknownProduct[] = [];
 
   let from = 0;
 
-  while (true) {
-    const to = from + pageSize - 1;
+  while (allProducts.length < limit) {
+    const remaining =
+      limit - allProducts.length;
 
-    const { data, error } = await supabaseAdmin
-      .from('brand_registry')
-      .select('*')
-      .order('id', {
-        ascending: true,
-      })
-      .range(from, to);
+    const batchSize = Math.min(
+      pageSize,
+      remaining,
+    );
+
+    const to =
+      from + batchSize - 1;
+
+    const { data, error } =
+      await supabaseAdmin
+        .from('products')
+        .select(`
+          id,
+          name,
+          brand,
+          part_number,
+          model_number
+        `)
+        .or(
+          'brand.is.null,brand.eq.UNKNOWN',
+        )
+        .order('id', {
+          ascending: true,
+        })
+        .range(from, to);
 
     if (error) {
       throw error;
     }
 
     const rows =
-      (data ?? []) as RegistryBrand[];
+      (data ?? []) as UnknownProduct[];
 
-    allBrands.push(...rows);
+    allProducts.push(...rows);
 
-    if (rows.length < pageSize) {
+    if (rows.length < batchSize) {
       break;
     }
 
-    from += pageSize;
+    from += batchSize;
   }
 
-  return allBrands;
+  return allProducts;
 }
 export async function insertRegistryBrand(
   canonicalBrand: string,
