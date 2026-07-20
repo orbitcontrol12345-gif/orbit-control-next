@@ -5,7 +5,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
 import { detectBrand as detectRegistryBrand } from '@/lib/catalog/brands/detector';
-} from '@/lib/industrial-brand';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
