@@ -250,6 +250,12 @@ export class BrandEngine {
     }> = [];
 
     for (const candidate of candidates) {
+
+      console.log(
+     candidate.canonicalBrand,
+     candidate.normalizedBrand,
+  existingBrands.has(candidate.normalizedBrand)
+);
       if (
         existingBrands.has(
           candidate.normalizedBrand,
