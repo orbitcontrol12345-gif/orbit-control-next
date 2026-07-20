@@ -136,3 +136,37 @@ export async function insertEvidence(
 
   if (error) throw error;
 }
+export async function updateProductsBrand(
+  productIds: number[],
+  canonicalBrand: string,
+) {
+  const batchSize = 100;
+  let updated = 0;
+
+  for (
+    let index = 0;
+    index < productIds.length;
+    index += batchSize
+  ) {
+    const batch = productIds.slice(
+      index,
+      index + batchSize,
+    );
+
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .update({
+        brand: canonicalBrand,
+      })
+      .in('id', batch)
+      .select('id');
+
+    if (error) {
+      throw error;
+    }
+
+    updated += data?.length ?? 0;
+  }
+
+  return updated;
+}
