@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { detectBrand as detectRegistryBrand } from '@/lib/catalog/brands/detector';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
