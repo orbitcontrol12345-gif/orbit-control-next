@@ -253,23 +253,9 @@ export async function GET() {
     const ebayItemId = item.legacyItemId || item.itemId || '';
     const itemDetails = await getEbayItemDetails(item.itemId, accessToken);
 
-const aspectBrand = getAspect(itemDetails, [
-  'Brand',
-  'Manufacturer',
-]);
-
-const registryBrand = await detectRegistryBrand(title);
-
 const ebayBrand =
-  aspectBrand &&
-  !['UNKNOWN', 'UNBRANDED', 'DOES NOT APPLY', 'N/A'].includes(
-    aspectBrand.toUpperCase(),
-  )
-    ? aspectBrand.trim().toUpperCase()
-    : registryBrand !== 'UNKNOWN'
-      ? registryBrand
-      : detectBrand(title);
-
+  getAspect(itemDetails, ['Brand', 'Manufacturer']) ||
+  detectBrand(title);
 const modelFromEbay = getAspect(itemDetails, [
   'MPN',
   'Manufacturer Part Number',
