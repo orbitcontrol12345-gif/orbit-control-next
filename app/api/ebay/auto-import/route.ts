@@ -4,7 +4,7 @@ import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
-
+import { cleanProductName } from '@/lib/product-name';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -490,7 +490,7 @@ let uncategorized = 0;
 
           const realItemId = getRealItemId(item.itemId) || row.ebay_item_id;
           const title = String(item.title || '').trim();
-          const cleanedName = cleanTitle(title);
+          
           const partNumber = getBestPartNumber(item, title, realItemId);
 
           const aspectBrand =
@@ -501,6 +501,11 @@ let uncategorized = 0;
 const ebayBrand = String(item.brand || aspectBrand || '').trim();
 
 const brand = ebayBrand || detectIndustrialBrand(title);
+          const cleanedName = cleanProductName({
+  title,
+  brand,
+  partNumber,
+});
           const imageUrl =
             item.image?.imageUrl ||
             item.thumbnailImages?.[0]?.imageUrl ||
@@ -603,7 +608,15 @@ if (
       checkedNewProducts: missingRows.length,
       inserted,
       failed,
-      sample: sample.slice(0, 10),
+      inserted,
+failed,
+quality: {
+  unknown_brand: unknownBrand,
+  unknown_part_number: unknownPartNumber,
+  missing_image: missingImage,
+  uncategorized,
+},
+sample: sample.slice(0, 10),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
