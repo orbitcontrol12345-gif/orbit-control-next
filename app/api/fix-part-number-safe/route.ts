@@ -152,13 +152,16 @@ async function loadCandidates(limit: number) {
         item.ebay_item_id
       );
 
-      const canUpdate =
-        currentIsWrong &&
-        Boolean(proposedPartNumber) &&
-        proposedPartNumber !== 'UNKNOWN' &&
-        proposedPartNumber !== currentPartNumber &&
-        !isEbayItemId(proposedPartNumber) &&
-        !isElectricalValue(proposedPartNumber);
+      const isShortNumericOnly = /^\d{1,4}$/.test(proposedPartNumber);
+
+const canUpdate =
+  currentIsWrong &&
+  Boolean(proposedPartNumber) &&
+  proposedPartNumber !== 'UNKNOWN' &&
+  proposedPartNumber !== currentPartNumber &&
+  !isEbayItemId(proposedPartNumber) &&
+  !isElectricalValue(proposedPartNumber) &&
+  !isShortNumericOnly;
 
       return {
         id: item.id,
