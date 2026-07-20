@@ -607,8 +607,8 @@ if (
       totalActiveFeedItems: feedRows.length,
       checkedNewProducts: missingRows.length,
       inserted,
-      failed,
-      inserted,
+failed,
+inserted,
 failed,
 quality: {
   unknown_brand: unknownBrand,
