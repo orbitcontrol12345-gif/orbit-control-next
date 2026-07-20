@@ -3,7 +3,10 @@ import JSZip from 'jszip';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
-import { detectIndustrialBrand } from '@/lib/industrial-brand';
+import {
+  detectIndustrialBrand,
+  detectIndustrialBrandAsync,
+} from '@/lib/industrial-brand';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -377,12 +380,11 @@ export async function GET(req: NextRequest) {
               (a: any) => String(a.name || '').toLowerCase() === 'brand'
             )?.value || '';
 
-          const brand = detectIndustrialBrand(
-            [item.brand, aspectBrand, title, cleanedName, partNumber]
-              .filter(Boolean)
-              .join(' ')
-          );
-
+          const brand = await detectIndustrialBrandAsync(
+  [item.brand, aspectBrand, title, cleanedName, partNumber]
+    .filter(Boolean)
+    .join(' ')
+);
           const imageUrl =
             item.image?.imageUrl ||
             item.thumbnailImages?.[0]?.imageUrl ||
