@@ -38,16 +38,40 @@ export async function loadUnknownProducts(limit = 5000) {
 }
 
 export async function loadRegistryBrands() {
-  const { data, error } = await supabaseAdmin
-  .from('brand_registry')
-  .select('*')
-  .range(0, 10000);
+  const pageSize = 1000;
+  const allBrands: RegistryBrand[] = [];
 
-  if (error) throw error;
+  let from = 0;
 
-  return (data ?? []) as RegistryBrand[];
+  while (true) {
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabaseAdmin
+      .from('brand_registry')
+      .select('*')
+      .order('id', {
+        ascending: true,
+      })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows =
+      (data ?? []) as RegistryBrand[];
+
+    allBrands.push(...rows);
+
+    if (rows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return allBrands;
 }
-
 export async function insertRegistryBrand(
   canonicalBrand: string,
   normalizedBrand: string,
