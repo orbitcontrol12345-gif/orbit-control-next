@@ -292,9 +292,12 @@ export class BrandEngine {
         failed += 1;
 
         failures.push({
-          candidate.canonicalBrand,
-          error: JSON.stringify(error, null, 2),
-        });
+  candidate: candidate.canonicalBrand,
+  error:
+    error instanceof Error
+      ? error.stack ?? error.message
+      : JSON.stringify(error, null, 2),
+});
       }
     }
 
