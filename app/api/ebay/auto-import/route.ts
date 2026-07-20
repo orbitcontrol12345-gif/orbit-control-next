@@ -4,7 +4,6 @@ import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
-import { detectBrand as detectRegistryBrand } from '@/lib/catalog/brands/detector';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -374,26 +373,13 @@ export async function GET(req: NextRequest) {
           const partNumber = getBestPartNumber(item, title, realItemId);
 
           const aspectBrand =
-            item.localizedAspects?.find(
-              (a: any) => String(a.name || '').toLowerCase() === 'brand'
-            )?.value || '';
+  item.localizedAspects?.find(
+    (a: any) => String(a.name || '').trim().toLowerCase() === 'brand'
+  )?.value || '';
 
-          const brandInput = [
-  item.brand,
-  aspectBrand,
-  title,
-  cleanedName,
-  partNumber,
-]
-  .filter(Boolean)
-  .join(' ');
+const ebayBrand = String(item.brand || aspectBrand || '').trim();
 
-const registryBrand = await detectRegistryBrand(brandInput);
-
-const brand =
-  registryBrand !== 'UNKNOWN'
-    ? registryBrand
-    : detectIndustrialBrand(brandInput);
+const brand = ebayBrand || detectIndustrialBrand(title);
           const imageUrl =
             item.image?.imageUrl ||
             item.thumbnailImages?.[0]?.imageUrl ||
