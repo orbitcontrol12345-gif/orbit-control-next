@@ -83,35 +83,107 @@ function getRealItemId(itemId: string) {
   return String(itemId || '').split('|')[1] || String(itemId || '');
 }
 
-function getBestPartNumber(item: any, title: string, realItemId: string) {
-  const aspects = item.localizedAspects || [];
+function getBestPartNumber(
+  item: any,
+  title: string,
+  realItemId: string
+): string {
+  const aspects = Array.isArray(item?.localizedAspects)
+    ? item.localizedAspects
+    : [];
 
-  const aspectPart =
-    aspects.find((a: any) =>
-      ['mpn', 'model', 'model number', 'manufacturer part number'].includes(
-        String(a.name || '').toLowerCase()
-      )
-    )?.value || '';
+  const invalidValues = new Set([
+    '',
+    'UNKNOWN',
+    'UNBRANDED',
+    'DOES NOT APPLY',
+    'DOES NOT APPLY.',
+    'NOT APPLICABLE',
+    'N/A',
+    'NA',
+    'NONE',
+    'NO',
+    'OTHER',
+  ]);
 
-  const candidates = [
-    aspectPart,
-    extractPartNumber(title),
-    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{2,4}\b/gi) || []),
-    ...(title.match(/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/gi) || []),
-    ...(title.match(/\b[A-Z]{2,}\d{2,}[A-Z0-9\-/.]*\b/gi) || []),
-    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/gi) || []),
-  ]
-    .map((x) => String(x || '').trim().toUpperCase())
-    .filter(Boolean)
-    .filter((x) => x !== realItemId)
-    .filter((x) => {
-      if (/^27\d{10}$/.test(x)) return false;
-      if (/^\d{12,13}$/.test(x)) return false;
-      return true;
-    })
-    .filter((x) => !/\b(VAC|VDC|HZ|KW|AMP|AMPS|PCS|LOT)\b/i.test(x));
+  function cleanCandidate(value: unknown): string {
+    return String(value || '')
+      .trim()
+      .toUpperCase()
+      .replace(/^["'([{]+|["'\])}]+$/g, '')
+      .replace(/\s+/g, ' ');
+  }
 
-  return candidates[0] || 'UNKNOWN';
+  function isValidPartNumber(value: string): boolean {
+    if (!value) return false;
+    if (invalidValues.has(value)) return false;
+
+    // يمنع رقم منتج eBay
+    if (value === String(realItemId).toUpperCase()) return false;
+    if (/^27\d{10}$/.test(value)) return false;
+    if (/^\d{12,13}$/.test(value)) return false;
+
+    // يمنع القيم العامة
+    if (/^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?)$/i.test(value)) {
+      return false;
+    }
+
+    // يمنع الفولتية والتردد والقدرة فقط
+    if (
+      /^\d+(?:\.\d+)?\s*(VAC|VDC|V|HZ|KHZ|KW|W|AMP|AMPS|A)$/i.test(value)
+    ) {
+      return false;
+    }
+
+    // يجب أن يحتوي على رقم واحد على الأقل
+    if (!/\d/.test(value)) return false;
+
+    // يمنع الجمل الطويلة التي ليست بارت نمبر
+    if (value.length > 80) return false;
+    if (value.split(/\s+/).length > 5) return false;
+
+    return true;
+  }
+
+  function getAspectValue(names: string[]): string {
+    for (const name of names) {
+      const found = aspects.find(
+        (aspect: any) =>
+          String(aspect?.name || '').trim().toLowerCase() ===
+          name.toLowerCase()
+      );
+
+      const value = cleanCandidate(found?.value);
+
+      if (isValidPartNumber(value)) {
+        return value;
+      }
+    }
+
+    return '';
+  }
+
+  // الأولوية للبيانات المكتوبة يدويًا في eBay
+  const ebayPartNumber = getAspectValue([
+    'MPN',
+    'Manufacturer Part Number',
+    'Part Number',
+    'Model Number',
+    'Model',
+  ]);
+
+  if (ebayPartNumber) {
+    return ebayPartNumber;
+  }
+
+  // الاستخراج من العنوان فقط عند عدم وجود MPN صالح
+  const extracted = cleanCandidate(extractPartNumber(title));
+
+  if (isValidPartNumber(extracted)) {
+    return extracted;
+  }
+
+  return 'UNKNOWN';
 }
 
 async function createFeedTask(accessToken: string) {
