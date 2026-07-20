@@ -606,9 +606,7 @@ if (
       taskId,
       totalActiveFeedItems: feedRows.length,
       checkedNewProducts: missingRows.length,
-      inserted,
-failed,
-inserted,
+     inserted,
 failed,
 quality: {
   unknown_brand: unknownBrand,
@@ -616,6 +614,7 @@ quality: {
   missing_image: missingImage,
   uncategorized,
 },
+sample: sample.slice(0, 10),
 sample: sample.slice(0, 10),
     });
   } catch (err) {
