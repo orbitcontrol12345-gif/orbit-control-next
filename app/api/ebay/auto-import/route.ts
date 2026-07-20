@@ -600,25 +600,24 @@ if (
       })
       .eq('id', JOB_ID);
 
-    return NextResponse.json({
-      success: true,
-      stage: 'imported_new_products',
-      taskId,
-      totalActiveFeedItems: feedRows.length,
-      checkedNewProducts: missingRows.length,
-     inserted,
-failed,
-quality: {
-  unknown_brand: unknownBrand,
-  unknown_part_number: unknownPartNumber,
-  missing_image: missingImage,
-  uncategorized,
-},
-sample: sample.slice(0, 10),
-
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-
+   return NextResponse.json({
+  success: true,
+  stage: 'imported_new_products',
+  taskId,
+  totalActiveFeedItems: feedRows.length,
+  checkedNewProducts: missingRows.length,
+  inserted,
+  failed,
+  quality: {
+    unknown_brand: unknownBrand,
+    unknown_part_number: unknownPartNumber,
+    missing_image: missingImage,
+    uncategorized,
+  },
+  sample: sample.slice(0, 10),
+});
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err);
     await supabaseAdmin
       .from('sync_jobs')
       .update({
