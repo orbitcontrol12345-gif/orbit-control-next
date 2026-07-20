@@ -3,6 +3,7 @@ import {
   insertRegistryBrand,
   loadRegistryBrands,
   loadUnknownProducts,
+  updateProductsBrand,
 } from './brand-repository';
 
 import {
@@ -32,7 +33,9 @@ const MULTI_WORD_PREFIXES = new Set([
   'UNITED',
 ]);
 
-function extractCandidate(title: string): string | null {
+function extractCandidate(
+  title: string,
+): string | null {
   const words = title
     .trim()
     .replace(/\s+/g, ' ')
@@ -44,7 +47,9 @@ function extractCandidate(title: string): string | null {
     return null;
   }
 
-  const firstWord = normalizeBrand(words[0]);
+  const firstWord = normalizeBrand(
+    words[0],
+  );
 
   if (!firstWord) {
     return null;
@@ -60,7 +65,9 @@ function extractCandidate(title: string): string | null {
   return words[0];
 }
 
-function calculateConfidence(productCount: number): number {
+function calculateConfidence(
+  productCount: number,
+): number {
   if (productCount >= 20) {
     return 95;
   }
@@ -84,29 +91,77 @@ function calculateConfidence(productCount: number): number {
   return 15;
 }
 
+function getErrorMessage(
+  error: unknown,
+): string {
+  if (error instanceof Error) {
+    return (
+      error.stack ??
+      error.message
+    );
+  }
+
+  try {
+    return JSON.stringify(
+      error,
+      null,
+      2,
+    );
+  } catch {
+    return String(error);
+  }
+}
+
 export class BrandEngine {
   async learn() {
-    const extracted = await this.extract();
-    const promoted = await this.promote(
-      extracted.candidates,
-    );
+    const extracted =
+      await this.extract();
+
+    const promoted =
+      await this.promote(
+        extracted.candidates,
+      );
+
+    const resolved =
+      await this.resolve();
 
     return {
-      success: promoted.failed === 0,
+      success:
+        promoted.failed === 0 &&
+        resolved.failed === 0,
+
       unknownProducts:
         extracted.unknownProducts,
+
       knownBrands:
         extracted.knownBrands,
+
       candidates:
         extracted.candidates.length,
+
       promoted:
         promoted.inserted,
-      skipped:
+
+      promotionSkipped:
         promoted.skipped,
-      failed:
+
+      promotionFailed:
         promoted.failed,
-      failures:
+
+      resolved:
+        resolved.updatedProducts,
+
+      unresolved:
+        resolved.unresolvedProducts,
+
+      resolutionFailed:
+        resolved.failed,
+
+      promotionFailures:
         promoted.failures,
+
+      resolutionFailures:
+        resolved.failures,
     };
   }
 
@@ -137,9 +192,10 @@ export class BrandEngine {
     >();
 
     for (const product of products) {
-      const candidate = extractCandidate(
-        String(product.name ?? ''),
-      );
+      const candidate =
+        extractCandidate(
+          String(product.name ?? ''),
+        );
 
       if (!candidate) {
         continue;
@@ -152,19 +208,30 @@ export class BrandEngine {
         continue;
       }
 
-      if (knownBrands.has(normalizedBrand)) {
+      if (
+        knownBrands.has(
+          normalizedBrand,
+        )
+      ) {
         continue;
       }
 
       const current =
-        candidatesMap.get(normalizedBrand) ?? {
+        candidatesMap.get(
+          normalizedBrand,
+        ) ?? {
           canonicalBrand: candidate
             .trim()
             .toUpperCase(),
+
           normalizedBrand,
+
           productCount: 0,
+
           occurrenceCount: 0,
+
           confidence: 0,
+
           sampleProductIds: [],
         };
 
@@ -172,7 +239,8 @@ export class BrandEngine {
       current.occurrenceCount += 1;
 
       if (
-        current.sampleProductIds.length < 10
+        current.sampleProductIds
+          .length < 10
       ) {
         current.sampleProductIds.push(
           product.id,
@@ -188,17 +256,14 @@ export class BrandEngine {
     const candidates = Array.from(
       candidatesMap.values(),
     )
-      .map((candidate) => {
-        const confidence =
+      .map((candidate) => ({
+        ...candidate,
+
+        confidence:
           calculateConfidence(
             candidate.productCount,
-          );
-
-        return {
-          ...candidate,
-          confidence,
-        };
-      })
+          ),
+      }))
       .filter((candidate) => {
         const rejectionReason =
           shouldRejectCandidate(
@@ -209,18 +274,24 @@ export class BrandEngine {
             3,
           );
 
-        return rejectionReason === null;
+        return (
+          rejectionReason === null
+        );
       })
       .sort(
         (a, b) =>
-          b.confidence - a.confidence ||
-          b.productCount - a.productCount,
+          b.confidence -
+            a.confidence ||
+          b.productCount -
+            a.productCount,
       );
 
     return {
       success: true,
-      unknownProducts: products.length,
-      knownBrands: registry.length,
+      unknownProducts:
+        products.length,
+      knownBrands:
+        registry.length,
       candidates,
     };
   }
@@ -231,14 +302,15 @@ export class BrandEngine {
     const registry =
       await loadRegistryBrands();
 
-    const existingBrands = new Set(
-      registry.map((brand) =>
-        normalizeBrand(
-          brand.normalized_brand ||
-            brand.canonical_brand,
+    const existingBrands =
+      new Set(
+        registry.map((brand) =>
+          normalizeBrand(
+            brand.normalized_brand ||
+              brand.canonical_brand,
+          ),
         ),
-      ),
-    );
+      );
 
     let inserted = 0;
     let skipped = 0;
@@ -250,12 +322,6 @@ export class BrandEngine {
     }> = [];
 
     for (const candidate of candidates) {
-
-      console.log(
-     candidate.canonicalBrand,
-     candidate.normalizedBrand,
-  existingBrands.has(candidate.normalizedBrand)
-);
       if (
         existingBrands.has(
           candidate.normalizedBrand,
@@ -275,8 +341,10 @@ export class BrandEngine {
             {
               confidence:
                 candidate.confidence,
+
               occurrenceCount:
                 candidate.occurrenceCount,
+
               sampleProductIds:
                 candidate.sampleProductIds,
             },
@@ -298,12 +366,12 @@ export class BrandEngine {
         failed += 1;
 
         failures.push({
-  candidate: candidate.canonicalBrand,
-  error:
-    error instanceof Error
-      ? error.stack ?? error.message
-      : JSON.stringify(error, null, 2),
-});
+          candidate:
+            candidate.canonicalBrand,
+
+          error:
+            getErrorMessage(error),
+        });
       }
     }
 
@@ -317,11 +385,134 @@ export class BrandEngine {
   }
 
   async apply() {
-    throw new Error('Not implemented');
+    return this.resolve();
   }
 
   async resolve() {
-    throw new Error('Not implemented');
+    const products =
+      await loadUnknownProducts(5000);
+
+    const registry =
+      await loadRegistryBrands();
+
+    const registryMap = new Map<
+      string,
+      string
+    >();
+
+    for (const brand of registry) {
+      if (
+        brand.status &&
+        brand.status !== 'active'
+      ) {
+        continue;
+      }
+
+      const normalized =
+        normalizeBrand(
+          brand.normalized_brand ||
+            brand.canonical_brand,
+        );
+
+      if (!normalized) {
+        continue;
+      }
+
+      registryMap.set(
+        normalized,
+        brand.canonical_brand,
+      );
+    }
+
+    const productsByBrand =
+      new Map<string, number[]>();
+
+    let unresolvedProducts = 0;
+
+    for (const product of products) {
+      const candidate =
+        extractCandidate(
+          String(product.name ?? ''),
+        );
+
+      if (!candidate) {
+        unresolvedProducts += 1;
+        continue;
+      }
+
+      const normalizedCandidate =
+        normalizeBrand(candidate);
+
+      const canonicalBrand =
+        registryMap.get(
+          normalizedCandidate,
+        );
+
+      if (!canonicalBrand) {
+        unresolvedProducts += 1;
+        continue;
+      }
+
+      const ids =
+        productsByBrand.get(
+          canonicalBrand,
+        ) ?? [];
+
+      ids.push(product.id);
+
+      productsByBrand.set(
+        canonicalBrand,
+        ids,
+      );
+    }
+
+    let updatedProducts = 0;
+    let failed = 0;
+
+    const failures: Array<{
+      brand: string;
+      productCount: number;
+      error: string;
+    }> = [];
+
+    for (
+      const [
+        canonicalBrand,
+        productIds,
+      ] of productsByBrand
+    ) {
+      try {
+        const updated =
+          await updateProductsBrand(
+            productIds,
+            canonicalBrand,
+          );
+
+        updatedProducts += updated;
+      } catch (error) {
+        failed += 1;
+
+        failures.push({
+          brand: canonicalBrand,
+          productCount:
+            productIds.length,
+          error:
+            getErrorMessage(error),
+        });
+      }
+    }
+
+    return {
+      success: failed === 0,
+      scannedProducts:
+        products.length,
+      matchedBrands:
+        productsByBrand.size,
+      updatedProducts,
+      unresolvedProducts,
+      failed,
+      failures,
+    };
   }
 }
 
