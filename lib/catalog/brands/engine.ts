@@ -292,12 +292,8 @@ export class BrandEngine {
         failed += 1;
 
         failures.push({
-          candidate:
-            candidate.canonicalBrand,
-          error:
-            error instanceof Error
-              ? error.message
-              : String(error),
+          candidate.canonicalBrand,
+          error: JSON.stringify(error, null, 2),
         });
       }
     }
