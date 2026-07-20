@@ -1,21 +1,44 @@
-import { NextResponse } from 'next/server';
-import { extractIndustrialPartNumberV2 } from '@/lib/industrial-part-number-v2';
+import { NextRequest, NextResponse } from 'next/server';
+import { extractPartNumber } from '@/lib/part-number';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export async function GET() {
-  const samples = [
-    'VERTIV 15B10903G1 REV.2 / 15H50581 REV.A BOARD SUPPLY INTERFACE',
-    'SIEMENS 15B10621G100 REV.8 15C50416 REV.D CIRCUIT BOARD',
-    'EMERSON 710-02821-08P 15H50607 REV.A CIRCUIT BOARD',
-    'LOT OF 3 PIECES. SMITT RELAYS FDA-125 HEAVY-DUTY RELAY 125VDC',
-    'METROBILITY R643-15 CARD,10/100M TX TO 100M FX/MM-ST',
-  ];
+export async function GET(req: NextRequest) {
+  try {
+    const title = String(
+      req.nextUrl.searchParams.get('title') || ''
+    ).trim();
 
-  return NextResponse.json(
-    samples.map((title) => ({
+    if (!title) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing title parameter',
+          example:
+            '/api/test-part-number?title=Bently Nevada P/N 125840-02 Proximitor Module',
+        },
+        { status: 400 }
+      );
+    }
+
+    const partNumber = extractPartNumber(title);
+
+    return NextResponse.json({
+      success: true,
       title,
-      extracted: extractIndustrialPartNumberV2(title),
-    }))
-  );
+      partNumber: partNumber || 'UNKNOWN',
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+      { status: 500 }
+    );
+  }
 }
