@@ -196,7 +196,68 @@ export async function GET(req: NextRequest) {
 
     const candidates = await loadCandidates(limit);
     const safeUpdates = candidates.filter((item) => item.can_update);
+const apply =
+  req.nextUrl.searchParams.get('apply') === '1';
 
+if (apply) {
+  let updated = 0;
+  let failed = 0;
+
+  const results: Array<{
+    id: string | number;
+    ebay_item_id: unknown;
+    old_part_number: unknown;
+    new_part_number: string;
+    success: boolean;
+    error?: string;
+  }> = [];
+
+  for (const item of safeUpdates) {
+    const { error } = await supabaseAdmin
+      .from('products')
+      .update({
+        part_number: item.proposed_part_number,
+        model_number: item.proposed_part_number,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', item.id);
+
+    if (error) {
+      failed++;
+
+      results.push({
+        id: item.id,
+        ebay_item_id: item.ebay_item_id,
+        old_part_number: item.current_part_number,
+        new_part_number: item.proposed_part_number,
+        success: false,
+        error: error.message,
+      });
+
+      continue;
+    }
+
+    updated++;
+
+    results.push({
+      id: item.id,
+      ebay_item_id: item.ebay_item_id,
+      old_part_number: item.current_part_number,
+      new_part_number: item.proposed_part_number,
+      success: true,
+    });
+  }
+
+  return NextResponse.json({
+    success: true,
+    mode: 'apply',
+    checked: limit,
+    eligible_for_safe_update: safeUpdates.length,
+    updated,
+    failed,
+    results,
+  });
+}
     return NextResponse.json({
       success: true,
       mode: 'dry-run',
