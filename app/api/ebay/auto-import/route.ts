@@ -615,8 +615,7 @@ quality: {
   uncategorized,
 },
 sample: sample.slice(0, 10),
-sample: sample.slice(0, 10),
-    });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
