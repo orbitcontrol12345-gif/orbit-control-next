@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { normalizeBrand } from './promotion-filters';
+
 export interface UnknownProduct {
   id: number;
   name: string;
@@ -17,82 +18,74 @@ export interface RegistryBrand {
 }
 
 export async function loadUnknownProducts(limit = 5000) {
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select(
-      `
-      id,
-      name,
-      brand,
-      part_number,
-      model_number
-    `,
-    )
-    .or('brand.is.null,brand.eq.UNKNOWN')
-    .order('id')
-    .limit(limit);
-
-  if (error) throw error;
-
-  return (data ?? []) as UnknownProduct[];
-}
-
-export async function loadUnknownProducts(
-  limit = 5000,
-) {
   const pageSize = 1000;
   const allProducts: UnknownProduct[] = [];
 
   let from = 0;
 
   while (allProducts.length < limit) {
-    const remaining =
-      limit - allProducts.length;
+    const to = from + pageSize - 1;
 
-    const batchSize = Math.min(
-      pageSize,
-      remaining,
-    );
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .select(`
+        id,
+        name,
+        brand,
+        part_number,
+        model_number
+      `)
+      .or('brand.is.null,brand.eq.UNKNOWN')
+      .order('id', { ascending: true })
+      .range(from, to);
 
-    const to =
-      from + batchSize - 1;
+    if (error) throw error;
 
-    const { data, error } =
-      await supabaseAdmin
-        .from('products')
-        .select(`
-          id,
-          name,
-          brand,
-          part_number,
-          model_number
-        `)
-        .or(
-          'brand.is.null,brand.eq.UNKNOWN',
-        )
-        .order('id', {
-          ascending: true,
-        })
-        .range(from, to);
-
-    if (error) {
-      throw error;
-    }
-
-    const rows =
-      (data ?? []) as UnknownProduct[];
+    const rows = (data ?? []) as UnknownProduct[];
 
     allProducts.push(...rows);
 
-    if (rows.length < batchSize) {
+    if (rows.length < pageSize) {
       break;
     }
 
-    from += batchSize;
+    from += pageSize;
   }
 
-  return allProducts;
+  return allProducts.slice(0, limit);
 }
+
+export async function loadRegistryBrands() {
+  const pageSize = 1000;
+  const allBrands: RegistryBrand[] = [];
+
+  let from = 0;
+
+  while (true) {
+    const to = from + pageSize - 1;
+
+    const { data, error } = await supabaseAdmin
+      .from('brand_registry')
+      .select('*')
+      .order('id', { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as RegistryBrand[];
+
+    allBrands.push(...rows);
+
+    if (rows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return allBrands;
+}
+
 export async function insertRegistryBrand(
   canonicalBrand: string,
   normalizedBrand: string,
@@ -105,7 +98,7 @@ export async function insertRegistryBrand(
     .insert({
       canonical_brand: canonicalBrand,
       normalized_brand: normalizedBrand,
-     status: 'active',
+      status: 'active',
       product_count: productCount,
       source,
       metadata,
