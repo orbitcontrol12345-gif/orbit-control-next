@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-
+import { detectBrand as detectRegistryBrand } from '@/lib/catalog/brands/detector';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -253,8 +253,22 @@ export async function GET() {
     const ebayItemId = item.legacyItemId || item.itemId || '';
     const itemDetails = await getEbayItemDetails(item.itemId, accessToken);
 
+const aspectBrand = getAspect(itemDetails, [
+  'Brand',
+  'Manufacturer',
+]);
+
+const registryBrand = await detectRegistryBrand(title);
+
 const ebayBrand =
-  getAspect(itemDetails, ['Brand', 'Manufacturer']) || detectBrand(title);
+  aspectBrand &&
+  !['UNKNOWN', 'UNBRANDED', 'DOES NOT APPLY', 'N/A'].includes(
+    aspectBrand.toUpperCase(),
+  )
+    ? aspectBrand.trim().toUpperCase()
+    : registryBrand !== 'UNKNOWN'
+      ? registryBrand
+      : detectBrand(title);
 
 const modelFromEbay = getAspect(itemDetails, [
   'MPN',
