@@ -463,8 +463,13 @@ export async function GET(req: NextRequest) {
     }
 
     let inserted = 0;
-    let failed = 0;
-    const sample: any[] = [];
+let failed = 0;
+const sample: any[] = [];
+
+let unknownBrand = 0;
+let unknownPartNumber = 0;
+let missingImage = 0;
+let uncategorized = 0;
 
     for (let i = 0; i < missingRows.length; i += CONCURRENCY) {
       const chunk = missingRows.slice(i, i + CONCURRENCY);
@@ -501,14 +506,35 @@ const brand = ebayBrand || detectIndustrialBrand(title);
             item.thumbnailImages?.[0]?.imageUrl ||
             item.additionalImages?.[0]?.imageUrl ||
             null;
+const category =
+  item.categoryPath || 'Industrial Automation';
 
+if (!brand || brand.toUpperCase() === 'UNKNOWN') {
+  unknownBrand++;
+}
+
+if (!partNumber || partNumber === 'UNKNOWN') {
+  unknownPartNumber++;
+}
+
+if (!imageUrl) {
+  missingImage++;
+}
+
+if (
+  !category ||
+  category === 'Industrial Automation' ||
+  category.toUpperCase() === 'UNCATEGORIZED'
+) {
+  uncategorized++;
+}
           const product = {
             ebay_item_id: realItemId,
             sku: realItemId,
             part_number: partNumber,
             model_number: partNumber,
             brand,
-            category: item.categoryPath || 'Industrial Automation',
+            category,
             name: cleanedName,
             condition: cleanCondition(item.condition || 'Used'),
             image_url: imageUrl,
