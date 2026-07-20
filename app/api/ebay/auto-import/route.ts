@@ -115,35 +115,79 @@ function getBestPartNumber(
   }
 
   function isValidPartNumber(value: string): boolean {
-    if (!value) return false;
-    if (invalidValues.has(value)) return false;
+  const normalized = cleanCandidate(value);
+  const compact = normalized.replace(/\s+/g, '-');
 
-    // يمنع رقم منتج eBay
-    if (value === String(realItemId).toUpperCase()) return false;
-    if (/^27\d{10}$/.test(value)) return false;
-    if (/^\d{12,13}$/.test(value)) return false;
+  if (!normalized) return false;
+  if (invalidValues.has(normalized)) return false;
 
-    // يمنع القيم العامة
-    if (/^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?)$/i.test(value)) {
-      return false;
-    }
+  // يمنع رقم منتج eBay
+  if (normalized === String(realItemId).toUpperCase()) return false;
+  if (/^27\d{10}$/.test(normalized)) return false;
+  if (/^\d{12,13}$/.test(normalized)) return false;
 
-    // يمنع الفولتية والتردد والقدرة فقط
-    if (
-      /^\d+(?:\.\d+)?\s*(VAC|VDC|V|HZ|KHZ|KW|W|AMP|AMPS|A)$/i.test(value)
-    ) {
-      return false;
-    }
-
-    // يجب أن يحتوي على رقم واحد على الأقل
-    if (!/\d/.test(value)) return false;
-
-    // يمنع الجمل الطويلة التي ليست بارت نمبر
-    if (value.length > 80) return false;
-    if (value.split(/\s+/).length > 5) return false;
-
-    return true;
+  // يمنع القيم العامة
+  if (
+    /^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?|PART NUMBER)$/i.test(
+      normalized
+    )
+  ) {
+    return false;
   }
+
+  // يمنع قيمًا مثل MODEL 550 وREV 02 وNO 857822
+  if (
+    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER|ART|ARTICLE|CAT|CATALOG|REF|REFERENCE|ORDER|SERIAL|SN|LOT|QTY)[\s\-/.]+[A-Z0-9.]+$/i.test(
+      normalized
+    )
+  ) {
+    return false;
+  }
+
+  // يمنع أوصافًا مثل 8 CHANNEL و16 PORT
+  if (
+    /^\d+[\s\-]*(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)$/i.test(
+      normalized
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    /^(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)[\s\-]*\d+$/i.test(
+      normalized
+    )
+  ) {
+    return false;
+  }
+
+  // يمنع الفولتية والتردد والقدرة
+  if (
+    /^\d+(?:\.\d+)?\s*(VAC|VDC|AC|DC|V|HZ|KHZ|MHZ|KW|W|AMP|AMPS|A|MA)$/i.test(
+      normalized
+    )
+  ) {
+    return false;
+  }
+
+  // يجب أن يحتوي على رقم واحد على الأقل
+  if (!/\d/.test(normalized)) return false;
+
+  // يمنع الجمل الطويلة
+  if (normalized.length > 80) return false;
+  if (normalized.split(/\s+/).length > 5) return false;
+
+  // فحص إضافي بعد تحويل المسافات إلى شرطات
+  if (
+    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER)-[A-Z0-9.]+$/i.test(
+      compact
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
 
   function getAspectValue(names: string[]): string {
     for (const name of names) {
