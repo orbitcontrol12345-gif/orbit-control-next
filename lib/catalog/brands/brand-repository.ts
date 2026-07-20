@@ -39,8 +39,9 @@ export async function loadUnknownProducts(limit = 5000) {
 
 export async function loadRegistryBrands() {
   const { data, error } = await supabaseAdmin
-    .from('brand_registry')
-    .select('*');
+  .from('brand_registry')
+  .select('*')
+  .range(0, 10000);
 
   if (error) throw error;
 
