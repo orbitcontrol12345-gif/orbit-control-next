@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
 import { cleanProductName } from '@/lib/product-name';
+import { detectCategory } from '@/lib/category-detector';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -511,8 +512,18 @@ const brand = ebayBrand || detectIndustrialBrand(title);
             item.thumbnailImages?.[0]?.imageUrl ||
             item.additionalImages?.[0]?.imageUrl ||
             null;
+const ebayCategory = item.categoryPath || '';
+
+const detectedCategory = detectCategory(
+  title,
+  brand,
+  partNumber
+);
+
 const category =
-  item.categoryPath || 'Industrial Automation';
+  detectedCategory !== 'Industrial Automation'
+    ? detectedCategory
+    : (ebayCategory || 'Industrial Automation');
 
 if (!brand || brand.toUpperCase() === 'UNKNOWN') {
   unknownBrand++;
