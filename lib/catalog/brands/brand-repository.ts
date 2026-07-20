@@ -121,7 +121,7 @@ export async function insertEvidence(
     .from('brand_evidence')
     .insert({
       brand_id: brandId,
-      evidence_type: 'promotion-engine',
+      evidence_type: 'brand-name',
       evidence_value: candidate,
       normalized_value: normalizeBrand(candidate),
       occurrence_count: occurrenceCount,
