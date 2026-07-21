@@ -452,9 +452,19 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const total = count || 0;
     const nextOffset = offset + rows.length;
-    const completed = rows.length === 0 || nextOffset >= total;
+
+// بعض إصدارات Supabase قد تعيد count بقيمة null رغم وجود البيانات.
+// لذلك نعتبر العملية منتهية فقط عندما تكون الدفعة أقل من limit.
+const completed = rows.length < limit;
+
+// للعرض في النتيجة فقط، ولا نعتمد عليه لتحديد نهاية المعالجة.
+const total =
+  typeof count === 'number'
+    ? count
+    : completed
+      ? nextOffset
+      : null;
 
     await supabaseAdmin
       .from('sync_jobs')
