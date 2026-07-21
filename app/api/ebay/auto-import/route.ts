@@ -1,19 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
+
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
 import { cleanProductName } from '@/lib/product-name';
 import { detectCategory } from '@/lib/category-detector';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const JOB_ID = 'ebay-auto-import';
 const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 100;
 const CONCURRENCY = 8;
 
-function slugify(text: string) {
+type FeedRow = {
+  ebay_item_id: string;
+  sku: string | null;
+  quantity: number;
+};
+
+type ExistingProduct = {
+  id: string;
+  ebay_item_id: string | null;
+  sku: string | null;
+
+  part_number: string | null;
+  model_number: string | null;
+
+  brand: string | null;
+  category: string | null;
+  name: string | null;
+  condition: string | null;
+  description: string | null;
+
+  image_url: string | null;
+  ebay_image_url: string | null;
+  ebay_gallery_urls: string[] | null;
+
+  r2_image_url: string | null;
+  r2_gallery_urls: string[] | null;
+
+  image_status: string | null;
+  image_count: number | null;
+
+  seller: string | null;
+  source: string | null;
+  source_type: string | null;
+  marketplace: string | null;
+
+  slug: string | null;
+};
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function normalizeText(value: unknown): string {
+  return String(value || '').trim();
+}
+
+function normalizeUpper(value: unknown): string {
+  return normalizeText(value).toUpperCase();
+}
+
+function slugify(text: string): string {
   return String(text || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -21,67 +74,135 @@ function slugify(text: string) {
     .slice(0, 180);
 }
 
-function getTag(xml: string, tag: string) {
-  const match = xml.match(new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 's'));
+function getTag(xml: string, tag: string): string | null {
+  const match = xml.match(
+    new RegExp(`<${tag}[^>]*>(.*?)</${tag}>`, 's')
+  );
+
   return match?.[1]?.trim() || null;
 }
 
-function cleanTitle(title: string) {
-  return String(title || '')
-    // حالة المنتج والعلبة
-    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
-    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bNO\s+BOX\b/gi, ' ')
-    .replace(/\bW\/?O\s+BOX\b/gi, ' ')
-    .replace(/\bOPEN\s+BOX\b/gi, ' ')
-    .replace(/\bOLD\s+STOCK\b/gi, ' ')
+function getRealItemId(itemId: unknown): string {
+  const value = normalizeText(itemId);
 
-    // الإكسسوارات
-    .replace(/\bWITHOUT\s+(?:ANY\s+)?ACCESSORIES\b/gi, ' ')
-    .replace(/\bW\/?O\s+ACCESSORIES\b/gi, ' ')
+  if (!value) return '';
 
-    // حالة التشغيل
-    .replace(/\bFOR\s+PARTS(?:\s+OR\s+NOT\s+WORKING)?\b/gi, ' ')
-    .replace(/\bNOT\s+WORKING\b/gi, ' ')
-    .replace(/\bTESTED\s*(?:&|AND)\s*WORKING\b/gi, ' ')
-    .replace(/\bTESTED\s+OK\b/gi, ' ')
-    .replace(/\bREFURBISHED\b/gi, ' ')
+  const parts = value.split('|');
 
-    // الكميات والـLots
-    .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
-    .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
-    .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?)\b/gi, ' ')
-
-    // الكلمات العامة
-    .replace(/\bNEW\b/gi, ' ')
-    .replace(/\bUSED\b/gi, ' ')
-
-    // تنظيف علامات زائدة بعد حذف الكلمات
-    .replace(/\(\s*\)/g, ' ')
-    .replace(/\[\s*\]/g, ' ')
-    .replace(/\{\s*\}/g, ' ')
-    .replace(/^[\s\-|,:;]+/g, '')
-    .replace(/[\s\-|,:;]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return parts[1] || value;
 }
 
-function cleanCondition(condition: string) {
-  const c = String(condition || '').toLowerCase();
+function cleanCondition(condition: unknown): string {
+  const value = normalizeText(condition);
+  const normalized = value.toLowerCase();
 
-  if (c.includes('refurb')) return 'Refurbished';
-  if (c.includes('open box')) return 'New – Open box';
-  if (c.includes('new')) return 'New';
-  if (c.includes('parts') || c.includes('not working')) return 'For parts';
-  if (c.includes('used')) return 'Used';
+  /*
+   * يجب فحص For Parts قبل New وUsed، لأن بعض نصوص eBay
+   * قد تحتوي على أكثر من كلمة تخص الحالة.
+   */
+  if (
+    normalized.includes('for parts') ||
+    normalized.includes('not working') ||
+    normalized.includes('parts only') ||
+    normalized.includes('spares or repair')
+  ) {
+    return 'For parts';
+  }
 
-  return condition || 'Used';
+  if (
+    normalized.includes('seller refurbished') ||
+    normalized.includes('manufacturer refurbished') ||
+    normalized.includes('certified refurbished') ||
+    normalized.includes('refurb')
+  ) {
+    return 'Refurbished';
+  }
+
+  if (
+    normalized.includes('open box') ||
+    normalized.includes('new other')
+  ) {
+    return 'New – Open box';
+  }
+
+  if (
+    normalized.includes('new without box') ||
+    normalized.includes('new no box')
+  ) {
+    return 'New Without Box';
+  }
+
+  if (normalized.includes('new')) {
+    return 'New';
+  }
+
+  if (
+    normalized.includes('pre-owned') ||
+    normalized.includes('preowned') ||
+    normalized.includes('used')
+  ) {
+    return 'Used';
+  }
+
+  return value || 'Used';
 }
 
-function getRealItemId(itemId: string) {
-  return String(itemId || '').split('|')[1] || String(itemId || '');
+function isUnknownValue(value: unknown): boolean {
+  const normalized = normalizeUpper(value);
+
+  return new Set([
+    '',
+    'UNKNOWN',
+    'UNBRANDED',
+    'DOES NOT APPLY',
+    'DOES NOT APPLY.',
+    'NOT APPLICABLE',
+    'N/A',
+    'NA',
+    'NONE',
+    'NO',
+    'OTHER',
+  ]).has(normalized);
+}
+
+function isManualProduct(
+  product: ExistingProduct | undefined
+): boolean {
+  if (!product) return false;
+
+  const source = normalizeText(product.source).toLowerCase();
+  const sourceType = normalizeText(product.source_type).toLowerCase();
+
+  return (
+    source === 'manual' ||
+    sourceType === 'manual' ||
+    source.includes('manual') ||
+    sourceType.includes('manual')
+  );
+}
+
+function normalizeUrlArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(
+    new Set(
+      value
+        .map((item) => normalizeText(item))
+        .filter(Boolean)
+    )
+  );
+}
+
+function sameStringArray(
+  first: string[] | null | undefined,
+  second: string[] | null | undefined
+): boolean {
+  const a = normalizeUrlArray(first);
+  const b = normalizeUrlArray(second);
+
+  if (a.length !== b.length) return false;
+
+  return a.every((value, index) => value === b[index]);
 }
 
 function getBestPartNumber(
@@ -116,85 +237,120 @@ function getBestPartNumber(
   }
 
   function isValidPartNumber(value: string): boolean {
-  const normalized = cleanCandidate(value);
-  const compact = normalized.replace(/\s+/g, '-');
+    const normalized = cleanCandidate(value);
+    const compact = normalized.replace(/\s+/g, '-');
 
-  if (!normalized) return false;
-  if (invalidValues.has(normalized)) return false;
+    if (!normalized) return false;
+    if (invalidValues.has(normalized)) return false;
 
-  // يمنع رقم منتج eBay
-  if (normalized === String(realItemId).toUpperCase()) return false;
-  if (/^27\d{10}$/.test(normalized)) return false;
-  if (/^\d{12,13}$/.test(normalized)) return false;
+    /*
+     * ممنوع استخدام eBay Item ID كرقم قطعة.
+     */
+    if (
+      normalized === normalizeUpper(realItemId)
+    ) {
+      return false;
+    }
 
-  // يمنع القيم العامة
-  if (
-    /^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?|PART NUMBER)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
+    if (/^27\d{10}$/.test(normalized)) {
+      return false;
+    }
+
+    if (/^\d{12,13}$/.test(normalized)) {
+      return false;
+    }
+
+    /*
+     * يمنع الكلمات العامة من أن تصبح Part Number.
+     */
+    if (
+      /^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?|PART NUMBER)$/i.test(
+        normalized
+      )
+    ) {
+      return false;
+    }
+
+    /*
+     * يمنع قيمًا مثل:
+     * MODEL 550
+     * REV 02
+     * NO 857822
+     */
+    if (
+      /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER|ART|ARTICLE|CAT|CATALOG|REF|REFERENCE|ORDER|SERIAL|SN|LOT|QTY)[\s\-/.]+[A-Z0-9.]+$/i.test(
+        normalized
+      )
+    ) {
+      return false;
+    }
+
+    /*
+     * يمنع أوصافًا مثل:
+     * 8 CHANNEL
+     * 16 PORTS
+     */
+    if (
+      /^\d+[\s\-]*(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)$/i.test(
+        normalized
+      )
+    ) {
+      return false;
+    }
+
+    if (
+      /^(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)[\s\-]*\d+$/i.test(
+        normalized
+      )
+    ) {
+      return false;
+    }
+
+    /*
+     * يمنع الفولتية والتردد والقدرة.
+     */
+    if (
+      /^\d+(?:\.\d+)?\s*(VAC|VDC|AC|DC|V|HZ|KHZ|MHZ|KW|W|AMP|AMPS|A|MA)$/i.test(
+        normalized
+      )
+    ) {
+      return false;
+    }
+
+    /*
+     * رقم القطعة يجب أن يحتوي على رقم واحد على الأقل.
+     */
+    if (!/\d/.test(normalized)) {
+      return false;
+    }
+
+    /*
+     * يمنع الجمل الطويلة من أن تصبح رقم قطعة.
+     */
+    if (normalized.length > 80) {
+      return false;
+    }
+
+    if (normalized.split(/\s+/).length > 5) {
+      return false;
+    }
+
+    if (
+      /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER)-[A-Z0-9.]+$/i.test(
+        compact
+      )
+    ) {
+      return false;
+    }
+
+    return true;
   }
-
-  // يمنع قيمًا مثل MODEL 550 وREV 02 وNO 857822
-  if (
-    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER|ART|ARTICLE|CAT|CATALOG|REF|REFERENCE|ORDER|SERIAL|SN|LOT|QTY)[\s\-/.]+[A-Z0-9.]+$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يمنع أوصافًا مثل 8 CHANNEL و16 PORT
-  if (
-    /^\d+[\s\-]*(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    /^(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)[\s\-]*\d+$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يمنع الفولتية والتردد والقدرة
-  if (
-    /^\d+(?:\.\d+)?\s*(VAC|VDC|AC|DC|V|HZ|KHZ|MHZ|KW|W|AMP|AMPS|A|MA)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يجب أن يحتوي على رقم واحد على الأقل
-  if (!/\d/.test(normalized)) return false;
-
-  // يمنع الجمل الطويلة
-  if (normalized.length > 80) return false;
-  if (normalized.split(/\s+/).length > 5) return false;
-
-  // فحص إضافي بعد تحويل المسافات إلى شرطات
-  if (
-    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER)-[A-Z0-9.]+$/i.test(
-      compact
-    )
-  ) {
-    return false;
-  }
-
-  return true;
-}
 
   function getAspectValue(names: string[]): string {
     for (const name of names) {
       const found = aspects.find(
         (aspect: any) =>
-          String(aspect?.name || '').trim().toLowerCase() ===
+          normalizeText(aspect?.name).toLowerCase() ===
           name.toLowerCase()
       );
 
@@ -208,7 +364,9 @@ function getBestPartNumber(
     return '';
   }
 
-  // الأولوية للبيانات المكتوبة يدويًا في eBay
+  /*
+   * الأولوية لرقم القطعة المكتوب في بيانات eBay.
+   */
   const ebayPartNumber = getAspectValue([
     'MPN',
     'Manufacturer Part Number',
@@ -221,8 +379,12 @@ function getBestPartNumber(
     return ebayPartNumber;
   }
 
-  // الاستخراج من العنوان فقط عند عدم وجود MPN صالح
-  const extracted = cleanCandidate(extractPartNumber(title));
+  /*
+   * إذا لم نجد MPN صالحًا، نحاول الاستخراج من العنوان.
+   */
+  const extracted = cleanCandidate(
+    extractPartNumber(title)
+  );
 
   if (isValidPartNumber(extracted)) {
     return extracted;
@@ -231,49 +393,210 @@ function getBestPartNumber(
   return 'UNKNOWN';
 }
 
-async function createFeedTask(accessToken: string) {
-  const res = await fetch('https://api.ebay.com/sell/feed/v1/inventory_task', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'Accept-Language': 'en-US',
-    },
-    body: JSON.stringify({
-      feedType: 'LMS_ACTIVE_INVENTORY_REPORT',
-      schemaVersion: '1.0',
-    }),
-  });
+function getBrand(item: any, title: string): string {
+  const aspects = Array.isArray(item?.localizedAspects)
+    ? item.localizedAspects
+    : [];
 
-  const location = res.headers.get('location');
+  const aspectBrand =
+    aspects.find(
+      (aspect: any) =>
+        normalizeText(aspect?.name).toLowerCase() === 'brand'
+    )?.value || '';
+
+  const ebayBrand = normalizeText(
+    item?.brand || aspectBrand
+  );
+
+  if (!isUnknownValue(ebayBrand)) {
+    return ebayBrand;
+  }
+
+  return detectIndustrialBrand(title) || 'UNKNOWN';
+}
+
+function getGalleryUrls(item: any): string[] {
+  const urls = [
+    item?.image?.imageUrl,
+
+    ...(Array.isArray(item?.additionalImages)
+      ? item.additionalImages.map(
+          (image: any) => image?.imageUrl
+        )
+      : []),
+
+    ...(Array.isArray(item?.thumbnailImages)
+      ? item.thumbnailImages.map(
+          (image: any) => image?.imageUrl
+        )
+      : []),
+  ];
+
+  return normalizeUrlArray(urls);
+}
+
+function getSeller(
+  item: any,
+  existing?: ExistingProduct
+): string {
+  return (
+    normalizeText(item?.seller?.username) ||
+    normalizeText(item?.seller?.userId) ||
+    normalizeText(existing?.seller) ||
+    'orbitcontrol'
+  );
+}
+
+function getDescription(item: any, title: string): string {
+  return (
+    normalizeText(item?.shortDescription) ||
+    normalizeText(item?.description) ||
+    title
+  );
+}
+
+function getSafePartNumber(
+  incomingPartNumber: string,
+  existing?: ExistingProduct
+): string {
+  /*
+   * لا نمسح Part Number صحيحًا ونستبدله بـ UNKNOWN.
+   */
+  if (
+    incomingPartNumber &&
+    incomingPartNumber !== 'UNKNOWN'
+  ) {
+    return incomingPartNumber;
+  }
+
+  const existingPartNumber = normalizeText(
+    existing?.part_number
+  );
+
+  if (
+    existingPartNumber &&
+    existingPartNumber.toUpperCase() !== 'UNKNOWN'
+  ) {
+    return existingPartNumber;
+  }
+
+  return 'UNKNOWN';
+}
+
+function getSafeBrand(
+  incomingBrand: string,
+  existing?: ExistingProduct
+): string {
+  /*
+   * لا نستبدل براند صحيحًا بـ UNKNOWN.
+   */
+  if (!isUnknownValue(incomingBrand)) {
+    return incomingBrand;
+  }
+
+  const existingBrand = normalizeText(existing?.brand);
+
+  if (!isUnknownValue(existingBrand)) {
+    return existingBrand;
+  }
+
+  return 'UNKNOWN';
+}
+
+function getSafeCategory(
+  incomingCategory: string,
+  existing?: ExistingProduct
+): string {
+  const incoming = normalizeText(incomingCategory);
+  const existingCategory = normalizeText(existing?.category);
+
+  const incomingIsGeneric =
+    !incoming ||
+    incoming === 'Industrial Automation' ||
+    incoming.toUpperCase() === 'UNCATEGORIZED';
+
+  const existingIsUseful =
+    existingCategory &&
+    existingCategory !== 'Industrial Automation' &&
+    existingCategory.toUpperCase() !== 'UNCATEGORIZED';
+
+  /*
+   * لا نستبدل تصنيفًا صحيحًا بتصنيف عام.
+   */
+  if (incomingIsGeneric && existingIsUseful) {
+    return existingCategory;
+  }
+
+  return incoming || existingCategory || 'Industrial Automation';
+}
+
+async function createFeedTask(
+  accessToken: string
+): Promise<string> {
+  const response = await fetch(
+    'https://api.ebay.com/sell/feed/v1/inventory_task',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept-Language': 'en-US',
+      },
+      body: JSON.stringify({
+        feedType: 'LMS_ACTIVE_INVENTORY_REPORT',
+        schemaVersion: '1.0',
+      }),
+    }
+  );
+
+  const location = response.headers.get('location');
   const taskId = location?.split('/').pop() || null;
 
-  if (!res.ok || !taskId) {
-    throw new Error(`Failed to create feed task: ${res.status}`);
+  if (!response.ok || !taskId) {
+    const responseText = await response
+      .text()
+      .catch(() => '');
+
+    throw new Error(
+      `Failed to create feed task: ${response.status} ${responseText}`
+    );
   }
 
   return taskId;
 }
 
-async function getTaskStatus(accessToken: string, taskId: string) {
-  const res = await fetch(`https://api.ebay.com/sell/feed/v1/task/${taskId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Accept-Language': 'en-US',
-    },
-  });
+async function getTaskStatus(
+  accessToken: string,
+  taskId: string
+): Promise<string> {
+  const response = await fetch(
+    `https://api.ebay.com/sell/feed/v1/task/${taskId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Accept-Language': 'en-US',
+      },
+    }
+  );
 
-  const data = await res.json().catch(() => null);
+  const data = await response
+    .json()
+    .catch(() => null);
 
-  if (!res.ok) {
-    throw new Error(`Failed to check task: ${res.status}`);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to check feed task: ${response.status}`
+    );
   }
 
   return data?.status || data?.taskStatus || 'UNKNOWN';
 }
 
-async function downloadFeedRows(accessToken: string, taskId: string) {
-  const res = await fetch(
+async function downloadFeedRows(
+  accessToken: string,
+  taskId: string
+): Promise<FeedRow[]> {
+  const response = await fetch(
     `https://api.ebay.com/sell/feed/v1/task/${taskId}/download_result_file`,
     {
       headers: {
@@ -283,68 +606,67 @@ async function downloadFeedRows(accessToken: string, taskId: string) {
     }
   );
 
-  if (!res.ok) {
-    throw new Error(`Failed to download feed: ${res.status}`);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download feed: ${response.status}`
+    );
   }
 
-  const buffer = Buffer.from(await res.arrayBuffer());
+  const buffer = Buffer.from(
+    await response.arrayBuffer()
+  );
+
   const zip = await JSZip.loadAsync(buffer);
-  const fileName = Object.keys(zip.files)[0];
+
+  const fileName = Object.keys(zip.files).find(
+    (name) => !zip.files[name].dir
+  );
+
+  if (!fileName) {
+    throw new Error('The downloaded eBay feed is empty.');
+  }
+
   const xml = await zip.files[fileName].async('string');
 
-  const blocks = xml.match(/<SKUDetails>[\s\S]*?<\/SKUDetails>/g) || [];
+  const blocks =
+    xml.match(
+      /<SKUDetails>[\s\S]*?<\/SKUDetails>/g
+    ) || [];
 
   return blocks
-    .map((block) => {
-      const ebay_item_id = getTag(block, 'ItemID');
-      if (!ebay_item_id) return null;
+    .map((block): FeedRow | null => {
+      const ebayItemId = getTag(block, 'ItemID');
 
-      const priceMatch = block.match(
-        /<Price currencyID="([^"]+)">([^<]+)<\/Price>/
-      );
+      if (!ebayItemId) {
+        return null;
+      }
 
       return {
-  ebay_item_id,
-  sku: getTag(block, 'SKU'),
-  quantity: Number(getTag(block, 'Quantity') || 0),
-};
+        ebay_item_id: ebayItemId,
+        sku: getTag(block, 'SKU'),
+        quantity: Number(
+          getTag(block, 'Quantity') || 0
+        ),
+      };
     })
-    .filter((row): row is any => row !== null)
+    .filter(
+      (row): row is FeedRow => row !== null
+    )
+    /*
+     * نزامن المنتجات النشطة فقط.
+     * اختفاء المنتج من هذه القائمة لا يحذفه من الموقع.
+     */
     .filter((row) => row.quantity > 0);
 }
 
-async function findMissingRows(rows: any[], limit: number) {
-  const missing: any[] = [];
-
-  for (let i = 0; i < rows.length; i += 500) {
-    const chunk = rows.slice(i, i + 500);
-    const ids = chunk.map((row) => String(row.ebay_item_id));
-
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('ebay_item_id')
-      .in('ebay_item_id', ids);
-
-    if (error) throw error;
-
-    const existing = new Set(
-      (data || []).map((row) => String(row.ebay_item_id))
-    );
-
-    for (const row of chunk) {
-      if (!existing.has(String(row.ebay_item_id))) {
-        missing.push(row);
-        if (missing.length >= limit) return missing;
-      }
-    }
-  }
-
-  return missing;
-}
-
-async function fetchEbayItem(accessToken: string, ebayItemId: string) {
-  const res = await fetch(
-    `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${ebayItemId}`,
+async function fetchEbayItem(
+  accessToken: string,
+  ebayItemId: string
+): Promise<any | null> {
+  const response = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${encodeURIComponent(
+      ebayItemId
+    )}`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -354,54 +676,172 @@ async function fetchEbayItem(accessToken: string, ebayItemId: string) {
     }
   );
 
-  if (!res.ok) return null;
-  return res.json();
+  if (!response.ok) {
+    return null;
+  }
+
+  return response.json();
 }
 
-async function ensureJob() {
-  const { data } = await supabaseAdmin
+async function loadExistingProducts(
+  rows: FeedRow[]
+): Promise<Map<string, ExistingProduct>> {
+  const products = new Map<string, ExistingProduct>();
+
+  for (
+    let index = 0;
+    index < rows.length;
+    index += 500
+  ) {
+    const chunk = rows.slice(index, index + 500);
+
+    const itemIds = chunk.map((row) =>
+      String(row.ebay_item_id)
+    );
+
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .select(`
+        id,
+        ebay_item_id,
+        sku,
+        part_number,
+        model_number,
+        brand,
+        category,
+        name,
+        condition,
+        description,
+        image_url,
+        ebay_image_url,
+        ebay_gallery_urls,
+        r2_image_url,
+        r2_gallery_urls,
+        image_status,
+        image_count,
+        seller,
+        source,
+        source_type,
+        marketplace,
+        slug
+      `)
+      .in('ebay_item_id', itemIds);
+
+    if (error) {
+      throw error;
+    }
+
+    for (const product of data || []) {
+      const itemId = normalizeText(
+        product.ebay_item_id
+      );
+
+      if (itemId) {
+        products.set(
+          itemId,
+          product as ExistingProduct
+        );
+      }
+    }
+  }
+
+  return products;
+}
+
+async function ensureJob(): Promise<any> {
+  const { data, error } = await supabaseAdmin
     .from('sync_jobs')
     .select('*')
     .eq('id', JOB_ID)
     .maybeSingle();
 
-  if (data) return data;
+  if (error) {
+    throw error;
+  }
 
-  const { data: created, error } = await supabaseAdmin
-    .from('sync_jobs')
-    .insert({
-      id: JOB_ID,
-      status: 'idle',
-      stage: 'idle',
-      offset_value: 0,
-      batch_size: DEFAULT_LIMIT,
-      processed: 0,
-      updated: 0,
-      failed: 0,
-    })
-    .select('*')
-    .single();
+  if (data) {
+    return data;
+  }
 
-  if (error) throw error;
+  const { data: created, error: createError } =
+    await supabaseAdmin
+      .from('sync_jobs')
+      .insert({
+        id: JOB_ID,
+        status: 'idle',
+        stage: 'idle',
+        offset_value: 0,
+        batch_size: DEFAULT_LIMIT,
+        processed: 0,
+        inserted: 0,
+        updated: 0,
+        failed: 0,
+      })
+      .select('*')
+      .single();
+
+  if (createError) {
+    throw createError;
+  }
+
   return created;
+}
+
+async function updateJobError(
+  message: string
+): Promise<void> {
+  await supabaseAdmin
+    .from('sync_jobs')
+    .update({
+      status: 'error',
+      last_error: message,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', JOB_ID);
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const limit = Math.min(
-      Number(req.nextUrl.searchParams.get('limit') || DEFAULT_LIMIT),
-      100
+    const requestedLimit = Number(
+      req.nextUrl.searchParams.get('limit') ||
+        DEFAULT_LIMIT
+    );
+
+    const limit = Math.max(
+      1,
+      Math.min(
+        Number.isFinite(requestedLimit)
+          ? requestedLimit
+          : DEFAULT_LIMIT,
+        MAX_LIMIT
+      )
     );
 
     const now = new Date().toISOString();
+
     const { access_token } = await getEbayToken();
-    const accessToken = String(access_token).trim();
+    const accessToken = normalizeText(access_token);
+
+    if (!accessToken) {
+      throw new Error(
+        'Unable to retrieve an eBay access token.'
+      );
+    }
 
     const job = await ensureJob();
 
-    let taskId = job.feed_task_id as string | null;
+    let taskId = normalizeText(
+      job.feed_task_id
+    ) || null;
 
-    if (!taskId || job.stage === 'idle' || job.stage === 'done') {
+    /*
+     * عند عدم وجود Feed Task، ننشئ واحدة جديدة.
+     */
+    if (
+      !taskId ||
+      job.stage === 'idle' ||
+      job.stage === 'done'
+    ) {
       taskId = await createFeedTask(accessToken);
 
       await supabaseAdmin
@@ -410,9 +850,12 @@ export async function GET(req: NextRequest) {
           status: 'running',
           stage: 'waiting_feed',
           feed_task_id: taskId,
+          offset_value: 0,
+          batch_size: limit,
           last_error: null,
+          started_at: now,
+          finished_at: null,
           updated_at: now,
-          started_at: job.started_at || now,
         })
         .eq('id', JOB_ID);
 
@@ -420,31 +863,63 @@ export async function GET(req: NextRequest) {
         success: true,
         stage: 'created_feed_task',
         taskId,
-        message: 'Feed task created. Next cron run will check completion.',
+        message:
+          'Feed task created. The next cron run will check its status.',
       });
     }
 
-    const status = await getTaskStatus(accessToken, taskId);
+    const taskStatus = await getTaskStatus(
+      accessToken,
+      taskId
+    );
 
-    if (status !== 'COMPLETED') {
+    if (taskStatus !== 'COMPLETED') {
+      await supabaseAdmin
+        .from('sync_jobs')
+        .update({
+          status: 'running',
+          stage: 'waiting_feed',
+          updated_at: now,
+        })
+        .eq('id', JOB_ID);
+
       return NextResponse.json({
         success: true,
         stage: 'waiting_feed',
         taskId,
-        ebayStatus: status,
+        ebayStatus: taskStatus,
       });
     }
 
-    const feedRows = await downloadFeedRows(accessToken, taskId);
+    const feedRows = await downloadFeedRows(
+      accessToken,
+      taskId
+    );
 
-    const missingRows = await findMissingRows(feedRows, limit);
+    /*
+     * offset_value يسمح لنا بمزامنة Feed كاملة على دفعات،
+     * بدل معالجة المنتجات الجديدة فقط.
+     */
+    const currentOffset = Math.max(
+      0,
+      Number(job.offset_value || 0)
+    );
 
-    if (!missingRows.length) {
+    const batchRows = feedRows.slice(
+      currentOffset,
+      currentOffset + limit
+    );
+
+    /*
+     * انتهت كل الدفعات.
+     */
+    if (!batchRows.length) {
       await supabaseAdmin
         .from('sync_jobs')
         .update({
           status: 'idle',
           stage: 'done',
+          offset_value: 0,
           feed_task_id: null,
           finished_at: now,
           updated_at: now,
@@ -453,253 +928,500 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        stage: 'done',
-        taskId,
+        stage: 'sync_completed',
         totalActiveFeedItems: feedRows.length,
-        imported: 0,
-        message: 'No new eBay products found.',
+        inserted: 0,
+        updated: 0,
+        skippedManual: 0,
+        failed: 0,
+        message:
+          'eBay synchronization completed. No products were deleted or hidden.',
       });
     }
 
+    const existingProducts =
+      await loadExistingProducts(batchRows);
+
     let inserted = 0;
-let failed = 0;
-const sample: any[] = [];
+    let updated = 0;
+    let unchanged = 0;
+    let skippedManual = 0;
+    let failed = 0;
 
-let unknownBrand = 0;
-let unknownPartNumber = 0;
-let missingImage = 0;
-let uncategorized = 0;
+    let unknownBrand = 0;
+    let unknownPartNumber = 0;
+    let missingImage = 0;
+    let uncategorized = 0;
 
-    for (let i = 0; i < missingRows.length; i += CONCURRENCY) {
-      const chunk = missingRows.slice(i, i + CONCURRENCY);
+    const sample: any[] = [];
 
-      const details = await Promise.all(
-        chunk.map((row) => fetchEbayItem(accessToken, row.ebay_item_id))
+    for (
+      let index = 0;
+      index < batchRows.length;
+      index += CONCURRENCY
+    ) {
+      const chunk = batchRows.slice(
+        index,
+        index + CONCURRENCY
       );
 
-      for (let index = 0; index < chunk.length; index++) {
-        const row = chunk[index];
-        const item = details[index];
+      const details = await Promise.all(
+        chunk.map((row) =>
+          fetchEbayItem(
+            accessToken,
+            row.ebay_item_id
+          )
+        )
+      );
+
+      for (
+        let itemIndex = 0;
+        itemIndex < chunk.length;
+        itemIndex++
+      ) {
+        const row = chunk[itemIndex];
+        const item = details[itemIndex];
 
         try {
           if (!item?.title) {
             failed++;
+
+            sample.push({
+              ebayItemId: row.ebay_item_id,
+              action: 'failed',
+              error:
+                'The Browse API did not return product details.',
+            });
+
             continue;
           }
 
-          const realItemId = getRealItemId(item.itemId) || row.ebay_item_id;
-          const title = String(item.title || '').trim();
-          
-          const partNumber = getBestPartNumber(item, title, realItemId);
+          const realItemId =
+            getRealItemId(item.itemId) ||
+            row.ebay_item_id;
 
-          const aspectBrand =
-  item.localizedAspects?.find(
-    (a: any) => String(a.name || '').trim().toLowerCase() === 'brand'
-  )?.value || '';
+          const existing =
+            existingProducts.get(realItemId) ||
+            existingProducts.get(
+              row.ebay_item_id
+            );
 
-const ebayBrand = String(item.brand || aspectBrand || '').trim();
+          /*
+           * أي منتج يدوي لا يلمسه المستورد.
+           */
+          if (isManualProduct(existing)) {
+            skippedManual++;
 
-const invalidBrands = new Set([
-  '',
-  'UNKNOWN',
-  'UNBRANDED',
-  'DOES NOT APPLY',
-  'DOES NOT APPLY.',
-  'NOT APPLICABLE',
-  'N/A',
-  'NA',
-  'NONE',
-  'OTHER',
-]);
+            sample.push({
+              ebayItemId: realItemId,
+              action: 'skipped_manual',
+            });
 
-const detectedBrand = detectIndustrialBrand(title);
+            continue;
+          }
 
-const brand = !invalidBrands.has(ebayBrand.toUpperCase())
-  ? ebayBrand
-  : detectedBrand || 'UNKNOWN';
+          const title = normalizeText(item.title);
 
-const brand =
-  ebayBrand &&
-  !['UNKNOWN', 'UNBRANDED', 'DOES NOT APPLY', 'N/A']
-    .includes(ebayBrand.toUpperCase())
-    ? ebayBrand
-    : detectedBrand || 'UNKNOWN';
-          const cleanedName = cleanProductName({
-  title,
-  brand,
-  partNumber,
-});
-          const galleryUrls = Array.from(
-  new Set(
-    [
-      item.image?.imageUrl,
-      ...(Array.isArray(item.additionalImages)
-        ? item.additionalImages.map((image: any) => image?.imageUrl)
-        : []),
-      ...(Array.isArray(item.thumbnailImages)
-        ? item.thumbnailImages.map((image: any) => image?.imageUrl)
-        : []),
-    ].filter(
-      (url): url is string =>
-        typeof url === 'string' && url.trim().length > 0
-    )
-  )
-);
+          const incomingPartNumber =
+            getBestPartNumber(
+              item,
+              title,
+              realItemId
+            );
 
-const imageUrl = galleryUrls[0] || null;
-const ebayCategory = item.categoryPath || '';
+          const incomingBrand = getBrand(
+            item,
+            title
+          );
 
-const detectedCategory = detectCategory(
-  title,
-  brand,
-  partNumber
-);
+          const partNumber = getSafePartNumber(
+            incomingPartNumber,
+            existing
+          );
 
-const category =
-  detectedCategory !== 'Industrial Automation'
-    ? detectedCategory
-    : (ebayCategory || 'Industrial Automation');
+          const brand = getSafeBrand(
+            incomingBrand,
+            existing
+          );
 
-if (!brand || brand.toUpperCase() === 'UNKNOWN') {
-  unknownBrand++;
-}
+          const detectedCategory =
+            detectCategory(
+              title,
+              brand,
+              partNumber
+            );
 
-if (!partNumber || partNumber === 'UNKNOWN') {
-  unknownPartNumber++;
-}
+          const ebayCategory = normalizeText(
+            item.categoryPath
+          );
 
-if (!imageUrl) {
-  missingImage++;
-}
+          const incomingCategory =
+            detectedCategory &&
+            detectedCategory !==
+              'Industrial Automation'
+              ? detectedCategory
+              : ebayCategory ||
+                'Industrial Automation';
 
-if (
-  !category ||
-  category === 'Industrial Automation' ||
-  category.toUpperCase() === 'UNCATEGORIZED'
-) {
-  uncategorized++;
-}
-          if (!imageUrl) {
-  failed++;
-  continue;
-}
+          const category = getSafeCategory(
+            incomingCategory,
+            existing
+          );
+
+          const cleanedName =
+            cleanProductName({
+              title,
+              brand,
+              partNumber,
+            }) || title;
+
+          const condition = cleanCondition(
+            item.condition || 'Used'
+          );
+
+          const galleryUrls =
+            getGalleryUrls(item);
+
+          const ebayImageUrl =
+            galleryUrls[0] || null;
+
+          const description = getDescription(
+            item,
+            title
+          );
+
+          const seller = getSeller(
+            item,
+            existing
+          );
+
+          if (
+            !brand ||
+            brand.toUpperCase() === 'UNKNOWN'
+          ) {
+            unknownBrand++;
+          }
+
+          if (
+            !partNumber ||
+            partNumber === 'UNKNOWN'
+          ) {
+            unknownPartNumber++;
+          }
+
+          if (!ebayImageUrl) {
+            missingImage++;
+          }
+
+          if (
+            !category ||
+            category ===
+              'Industrial Automation' ||
+            category.toUpperCase() ===
+              'UNCATEGORIZED'
+          ) {
+            uncategorized++;
+          }
+
+          /*
+           * منتج موجود: تحديث الحقول المسموح بها فقط.
+           *
+           * ممنوع:
+           * - حذف المنتج.
+           * - تعطيل المنتج.
+           * - إخفاء المنتج.
+           * - تصفير روابط R2.
+           */
+          if (existing) {
+            const imagesChanged =
+              existing.ebay_image_url !==
+                ebayImageUrl ||
+              !sameStringArray(
+                existing.ebay_gallery_urls,
+                galleryUrls
+              );
+
+            const updatePayload: Record<
+              string,
+              unknown
+            > = {
+              name: cleanedName,
+              part_number: partNumber,
+              model_number: partNumber,
+              brand,
+              category,
+              condition,
+              description,
+              seller,
+              marketplace: 'EBAY_US',
+              last_seen_at: now,
+              updated_at: now,
+            };
+
+            /*
+             * عند تغير صور eBay:
+             * - نحدث روابط eBay.
+             * - لا نمسح روابط R2 الحالية.
+             * - نضع pending لتعمل مزامنة الصور الموجودة.
+             *
+             * image_url يبقى كما هو للمنتج الموجود،
+             * حتى لا نستبدل صورة R2 بصورة eBay مؤقتًا.
+             */
+            if (imagesChanged) {
+              updatePayload.ebay_image_url =
+                ebayImageUrl;
+
+              updatePayload.ebay_gallery_urls =
+                galleryUrls;
+
+              updatePayload.image_count =
+                galleryUrls.length;
+
+              updatePayload.image_status =
+                ebayImageUrl
+                  ? 'pending'
+                  : 'missing';
+
+              updatePayload.images_sync_error =
+                null;
+            }
+
+            const { error: updateError } =
+              await supabaseAdmin
+                .from('products')
+                .update(updatePayload)
+                .eq('id', existing.id);
+
+            if (updateError) {
+              throw updateError;
+            }
+
+            updated++;
+
+            sample.push({
+              ebayItemId: realItemId,
+              action: 'updated',
+              brand,
+              partNumber,
+              condition,
+              imagesChanged,
+            });
+
+            continue;
+          }
+
+          /*
+           * منتج جديد: إدخاله في قاعدة البيانات.
+           */
           const product = {
-  ebay_item_id: realItemId,
+            ebay_item_id: realItemId,
 
-  // SKU يبقى رقم eBay داخليًا فقط، ولا يستخدم كـ Part Number
-  sku: realItemId,
+            /*
+             * SKU يبقى رقم eBay داخليًا فقط،
+             * ولا يستخدم أبدًا كـ Part Number.
+             */
+            sku:
+              normalizeText(row.sku) ||
+              realItemId,
 
-  part_number: partNumber,
-  model_number: partNumber,
+            part_number: partNumber,
+            model_number: partNumber,
 
-  brand,
-  category,
-  name: cleanedName,
+            brand,
+            category,
+            name: cleanedName,
+            condition,
 
-  condition: cleanCondition(item.condition || 'Used'),
+            /*
+             * المنتج الجديد يستخدم صورة eBay مؤقتًا
+             * حتى تكتمل عملية النسخ إلى R2.
+             */
+            image_url: ebayImageUrl,
+            ebay_image_url: ebayImageUrl,
+            ebay_gallery_urls: galleryUrls,
 
-  image_url: imageUrl,
-  ebay_image_url: imageUrl,
-  ebay_gallery_urls: galleryUrls,
+            r2_image_url: null,
+            r2_gallery_urls: [],
 
-  r2_image_url: null,
-  r2_gallery_urls: [],
+            image_status: ebayImageUrl
+              ? 'pending'
+              : 'missing',
 
-  image_status: imageUrl ? 'pending' : 'missing',
-  image_count: galleryUrls.length,
-  images_sync_error: null,
+            image_count: galleryUrls.length,
+            images_sync_error: null,
 
-  description:
-    String(item.shortDescription || '').trim() ||
-    String(item.description || '').trim() ||
-    title,
+            description,
 
-  slug: slugify(
-    `${realItemId}-${partNumber !== 'UNKNOWN' ? partNumber : cleanedName}`
-  ),
+            slug: slugify(
+              `${realItemId}-${
+                partNumber !== 'UNKNOWN'
+                  ? partNumber
+                  : cleanedName
+              }`
+            ),
 
-  marketplace: 'EBAY_US',
-  seller: 'orbitcontrol',
-  source: 'ebay-auto-import',
-  source_type: 'ebay',
+            marketplace: 'EBAY_US',
+            seller,
+            source: 'ebay-auto-import',
+            source_type: 'ebay',
 
-  is_active: true,
-  is_catalog_visible: true,
-  catalog_visible: true,
+            is_active: true,
+            is_catalog_visible: true,
+            catalog_visible: true,
 
-  last_seen_at: now,
-  updated_at: now,
-};
+            last_seen_at: now,
+            updated_at: now,
+          };
 
-          const { error } = await supabaseAdmin
-            .from('products')
-            .upsert(product, { onConflict: 'ebay_item_id' });
+          const { error: insertError } =
+            await supabaseAdmin
+              .from('products')
+              .insert(product);
 
-          if (error) throw error;
+          if (insertError) {
+            throw insertError;
+          }
 
           inserted++;
 
           sample.push({
             ebayItemId: realItemId,
+            action: 'inserted',
             brand,
             partNumber,
-            title,
+            condition,
           });
-        } catch (err) {
+        } catch (error) {
           failed++;
+
           sample.push({
             ebayItemId: row.ebay_item_id,
-            error: err instanceof Error ? err.message : String(err),
+            action: 'failed',
+            error: getErrorMessage(error),
           });
         }
       }
     }
 
+    const nextOffset =
+      currentOffset + batchRows.length;
+
+    const completed =
+      nextOffset >= feedRows.length;
+
+    /*
+     * عند نهاية Feed:
+     * - لا نحذف المنتجات غير الموجودة.
+     * - لا نخفيها.
+     * - نعيد offset إلى صفر للدورة القادمة.
+     */
     await supabaseAdmin
       .from('sync_jobs')
       .update({
-        status: 'running',
-        stage: 'importing',
-        processed: (job.processed || 0) + missingRows.length,
-        updated: (job.updated || 0) + inserted,
-        failed: (job.failed || 0) + failed,
+        status: completed
+          ? 'idle'
+          : 'running',
+
+        stage: completed
+          ? 'done'
+          : 'syncing',
+
+        offset_value: completed
+          ? 0
+          : nextOffset,
+
+        feed_task_id: completed
+          ? null
+          : taskId,
+
+        batch_size: limit,
+
+        processed:
+          Number(job.processed || 0) +
+          batchRows.length,
+
+        inserted:
+          Number(job.inserted || 0) +
+          inserted,
+
+        updated:
+          Number(job.updated || 0) +
+          updated,
+
+        failed:
+          Number(job.failed || 0) +
+          failed,
+
+        finished_at: completed
+          ? now
+          : null,
+
+        last_error: null,
         updated_at: now,
       })
       .eq('id', JOB_ID);
 
-   return NextResponse.json({
-  success: true,
-  stage: 'imported_new_products',
-  taskId,
-  totalActiveFeedItems: feedRows.length,
-  checkedNewProducts: missingRows.length,
-  inserted,
-  failed,
-  quality: {
-    unknown_brand: unknownBrand,
-    unknown_part_number: unknownPartNumber,
-    missing_image: missingImage,
-    uncategorized,
-  },
-  sample: sample.slice(0, 10),
-});
-} catch (err) {
-  const message = err instanceof Error ? err.message : String(err);
-    await supabaseAdmin
-      .from('sync_jobs')
-      .update({
-        status: 'error',
-        last_error: message,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', JOB_ID);
+    return NextResponse.json({
+      success: true,
+
+      stage: completed
+        ? 'sync_completed'
+        : 'sync_batch',
+
+      taskId,
+
+      totalActiveFeedItems:
+        feedRows.length,
+
+      currentOffset,
+
+      nextOffset: completed
+        ? 0
+        : nextOffset,
+
+      completed,
+
+      checkedProducts:
+        batchRows.length,
+
+      inserted,
+      updated,
+      unchanged,
+      skippedManual,
+      failed,
+
+      deletionPolicy:
+        'Products are never deleted, disabled, or hidden.',
+
+      manualProductPolicy:
+        'Manual products are never modified.',
+
+      r2Policy:
+        'Existing R2 image URLs are never cleared.',
+
+      quality: {
+        unknown_brand: unknownBrand,
+        unknown_part_number:
+          unknownPartNumber,
+        missing_image: missingImage,
+        uncategorized,
+      },
+
+      sample: sample.slice(0, 10),
+    });
+  } catch (error) {
+    const message = getErrorMessage(error);
+
+    await updateJobError(message);
 
     return NextResponse.json(
       {
         success: false,
         error: message,
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
