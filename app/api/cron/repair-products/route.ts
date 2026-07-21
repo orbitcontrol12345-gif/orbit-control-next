@@ -411,10 +411,9 @@ export async function GET(req: NextRequest) {
       count,
     } = await supabaseAdmin
       .from('products')
-      .select(
-        'id, ebay_item_id, title, brand, part_number, model_number, name, category, slug, description',
-        { count: 'exact' }
-      )
+     .select(
+'id, ebay_item_id, brand, part_number, model_number, name, category, slug, description'
+)
       .order('id', { ascending: true })
       .range(offset, offset + limit - 1);
 
