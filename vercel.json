@@ -21,10 +21,6 @@
       "schedule": "9,29,49 * * * *"
     },
     {
-      "path": "/api/cron/repair-products",
-      "schedule": "5,15,25,35,45,55 * * * *"
-    },
-    {
       "path": "/api/ebay/auto-import?limit=200",
       "schedule": "15 */2 * * *"
     },
