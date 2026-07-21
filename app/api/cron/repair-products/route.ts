@@ -157,14 +157,15 @@ function isValidPartNumber(
 
 function getRepairSource(product: ProductRow): string {
   const description = normalizeText(product.description);
+  const name = normalizeText(product.name);
 
-  if (description.length >= 4) {
+  if (description.length >= 4 && description.length <= 500) {
     return description;
   }
 
-  return normalizeText(product.name);
+  return name;
 }
-  
+
 function getPartNumber(product: ProductRow, sourceTitle: string): string {
   const ebayItemId = normalizeText(product.ebay_item_id);
   const currentPartNumber = normalizeUpper(product.part_number);
@@ -308,21 +309,7 @@ function isAuthorized(req: NextRequest): boolean {
 
   return req.headers.get('authorization') === `Bearer ${cronSecret}`;
 }
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
 
-  if (typeof error === 'string') {
-    return error;
-  }
-
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return String(error);
-  }
-}
 async function ensureJob(limit: number) {
   const { data, error } = await supabaseAdmin
     .from('sync_jobs')
@@ -411,9 +398,10 @@ export async function GET(req: NextRequest) {
       count,
     } = await supabaseAdmin
       .from('products')
-     .select(
-'id, ebay_item_id, brand, part_number, model_number, name, category, slug, description'
-)
+      .select(
+        'id, ebay_item_id, brand, part_number, model_number, name, category, slug, description',
+        { count: 'exact' }
+      )
       .order('id', { ascending: true })
       .range(offset, offset + limit - 1);
 
@@ -447,24 +435,14 @@ export async function GET(req: NextRequest) {
       } catch (error) {
         errorDetails.push({
           id: product.id,
-          error: getErrorMessage(error),
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
 
+    const total = count || 0;
     const nextOffset = offset + rows.length;
-
-// بعض إصدارات Supabase قد تعيد count بقيمة null رغم وجود البيانات.
-// لذلك نعتبر العملية منتهية فقط عندما تكون الدفعة أقل من limit.
-const completed = rows.length < limit;
-
-// للعرض في النتيجة فقط، ولا نعتمد عليه لتحديد نهاية المعالجة.
-const total =
-  typeof count === 'number'
-    ? count
-    : completed
-      ? nextOffset
-      : null;
+    const completed = rows.length === 0 || nextOffset >= total;
 
     await supabaseAdmin
       .from('sync_jobs')
@@ -509,7 +487,8 @@ const total =
       }
     );
   } catch (error) {
-    const message = getErrorMessage(error);
+    const message = error instanceof Error ? error.message : String(error);
+
     await supabaseAdmin
       .from('sync_jobs')
       .update({
