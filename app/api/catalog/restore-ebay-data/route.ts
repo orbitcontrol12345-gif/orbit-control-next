@@ -81,16 +81,37 @@ function isManualProduct(product: ProductRow): boolean {
  * الهدف الآن هو استرجاع عنوان eBay الحقيقي.
  */
 function cleanOriginalEbayTitle(value: unknown): string {
-  return normalizeText(value)
-    .replace(
-      /\b(FREE SHIPPING|FAST SHIPPING|WORLDWIDE SHIPPING|SAME DAY SHIPPING|READY TO SHIP)\b/gi,
-      ' '
-    )
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 180);
-}
+  return String(value || '')
 
+    // إزالة LOT
+    .replace(/^\s*LOT\s*(OF)?\s*\d+\s*/gi, '')
+    .replace(/^\s*\d+\s*LOT\s*/gi, '')
+
+    // إزالة الكمية
+    .replace(/^\s*\d+\s*(PCS?|PIECES?|UNITS?)\s*/gi, '')
+    .replace(/\bQTY[: ]*\d+\b/gi, '')
+
+    // إزالة حالة المنتج
+    .replace(/\s*[-–—]\s*NEW\s+WITHOUT\s+BOX\b/gi, '')
+    .replace(/\s*[-–—]\s*NEW\s+WITH\s+BOX\b/gi, '')
+    .replace(/\s*[-–—]\s*NEW\s+OPEN\s+BOX\b/gi, '')
+    .replace(/\s*[-–—]\s*OPEN\s+BOX\b/gi, '')
+    .replace(/\s*[-–—]\s*USED\b/gi, '')
+    .replace(/\s*[-–—]\s*TESTED\b/gi, '')
+    .replace(/\s*[-–—]\s*TRIED\s*&\s*TESTED\b/gi, '')
+    .replace(/\s*[-–—]\s*PULLED\s+FROM\s+WORKING\s+UNIT\b/gi, '')
+    .replace(/\s*[-–—]\s*WITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
+
+    // إزالة عبارات الشحن
+    .replace(/\bFREE\s+SHIPPING\b/gi, '')
+    .replace(/\bFAST\s+SHIPPING\b/gi, '')
+    .replace(/\bWORLDWIDE\s+SHIPPING\b/gi, '')
+
+    // تنظيف الفراغات والشرطات
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s*[-–—]\s*$/g, '')
+    .trim();
+}
 async function fetchEbayItem(
   accessToken: string,
   ebayItemId: string
