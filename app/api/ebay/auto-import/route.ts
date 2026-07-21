@@ -304,15 +304,13 @@ async function downloadFeedRows(accessToken: string, taskId: string) {
       );
 
       return {
-        ebay_item_id,
-        sku: getTag(block, 'SKU'),
-        price: priceMatch?.[2] ? Number(priceMatch[2]) : null,
-        currency: priceMatch?.[1] || 'USD',
-        quantity: Number(getTag(block, 'Quantity') || 0),
-      };
+  ebay_item_id,
+  sku: getTag(block, 'SKU'),
+  quantity: Number(getTag(block, 'Quantity') || 0),
+};
     })
     .filter((row): row is any => row !== null)
-    .filter((row) => row.currency === 'USD' && row.quantity > 0);
+    .filter((row) => row.quantity > 0);
 }
 
 async function findMissingRows(rows: any[], limit: number) {
@@ -501,7 +499,24 @@ let uncategorized = 0;
 
 const ebayBrand = String(item.brand || aspectBrand || '').trim();
 
+const invalidBrands = new Set([
+  '',
+  'UNKNOWN',
+  'UNBRANDED',
+  'DOES NOT APPLY',
+  'DOES NOT APPLY.',
+  'NOT APPLICABLE',
+  'N/A',
+  'NA',
+  'NONE',
+  'OTHER',
+]);
+
 const detectedBrand = detectIndustrialBrand(title);
+
+const brand = !invalidBrands.has(ebayBrand.toUpperCase())
+  ? ebayBrand
+  : detectedBrand || 'UNKNOWN';
 
 const brand =
   ebayBrand &&
@@ -514,11 +529,24 @@ const brand =
   brand,
   partNumber,
 });
-          const imageUrl =
-            item.image?.imageUrl ||
-            item.thumbnailImages?.[0]?.imageUrl ||
-            item.additionalImages?.[0]?.imageUrl ||
-            null;
+          const galleryUrls = Array.from(
+  new Set(
+    [
+      item.image?.imageUrl,
+      ...(Array.isArray(item.additionalImages)
+        ? item.additionalImages.map((image: any) => image?.imageUrl)
+        : []),
+      ...(Array.isArray(item.thumbnailImages)
+        ? item.thumbnailImages.map((image: any) => image?.imageUrl)
+        : []),
+    ].filter(
+      (url): url is string =>
+        typeof url === 'string' && url.trim().length > 0
+    )
+  )
+);
+
+const imageUrl = galleryUrls[0] || null;
 const ebayCategory = item.categoryPath || '';
 
 const detectedCategory = detectCategory(
@@ -556,37 +584,52 @@ if (
   continue;
 }
           const product = {
-            ebay_item_id: realItemId,
-            sku: realItemId,
-            part_number: partNumber,
-            model_number: partNumber,
-            brand,
-            category,
-            name: cleanedName,
-            condition: cleanCondition(item.condition || 'Used'),
-            image_url: imageUrl,
-            ebay_image_url: imageUrl,
-            ebay_gallery_urls: [],
-            r2_image_url: null,
-            r2_gallery_urls: [],
-            image_status: 'pending',
-            image_count: 0,
-            description: title,
-            slug: slugify(
-  `${realItemId}-${partNumber !== 'UNKNOWN' ? partNumber : cleanedName}`
-),
-            marketplace: 'EBAY_US',
-            seller: 'orbitcontrol',
-            source: 'ebay-auto-import',
-            source_type: 'ebay',
-            quantity: row.quantity,
-            price: row.price,
-            currency: row.currency || 'USD',
-            is_active: true,
-            catalog_visible: true,
-            last_seen_at: now,
-            updated_at: now,
-          };
+  ebay_item_id: realItemId,
+
+  // SKU يبقى رقم eBay داخليًا فقط، ولا يستخدم كـ Part Number
+  sku: realItemId,
+
+  part_number: partNumber,
+  model_number: partNumber,
+
+  brand,
+  category,
+  name: cleanedName,
+
+  condition: cleanCondition(item.condition || 'Used'),
+
+  image_url: imageUrl,
+  ebay_image_url: imageUrl,
+  ebay_gallery_urls: galleryUrls,
+
+  r2_image_url: null,
+  r2_gallery_urls: [],
+
+  image_status: imageUrl ? 'pending' : 'missing',
+  image_count: galleryUrls.length,
+  images_sync_error: null,
+
+  description:
+    String(item.shortDescription || '').trim() ||
+    String(item.description || '').trim() ||
+    title,
+
+  slug: slugify(
+    `${realItemId}-${partNumber !== 'UNKNOWN' ? partNumber : cleanedName}`
+  ),
+
+  marketplace: 'EBAY_US',
+  seller: 'orbitcontrol',
+  source: 'ebay-auto-import',
+  source_type: 'ebay',
+
+  is_active: true,
+  is_catalog_visible: true,
+  catalog_visible: true,
+
+  last_seen_at: now,
+  updated_at: now,
+};
 
           const { error } = await supabaseAdmin
             .from('products')
