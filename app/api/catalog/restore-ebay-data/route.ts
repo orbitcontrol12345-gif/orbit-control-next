@@ -157,33 +157,7 @@ export async function GET(req: NextRequest) {
      * حماية اختيارية عند تشغيل المسار من Cron.
      * إذا لم يوجد CRON_SECRET فلن يمنع التشغيل اليدوي.
      */
-    const cronSecret = normalizeText(
-      process.env.CRON_SECRET
-    );
-
-    const authorization = normalizeText(
-      req.headers.get('authorization')
-    );
-
-    const secretFromQuery = normalizeText(
-      req.nextUrl.searchParams.get('secret')
-    );
-
-    if (
-      cronSecret &&
-      authorization !== `Bearer ${cronSecret}` &&
-      secretFromQuery !== cronSecret
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized.',
-        },
-        {
-          status: 401,
-        }
-      );
-    }
+    
 
     const requestedOffset = Number(
       req.nextUrl.searchParams.get('offset') || 0
