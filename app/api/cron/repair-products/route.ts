@@ -157,9 +157,17 @@ function isValidPartNumber(
 
 function getRepairSource(product: ProductRow): string {
   const description = normalizeText(product.description);
+
+  if (description.length >= 4) {
+    return description;
+  }
+
+  return normalizeText(product.name);
+}
+  const description = normalizeText(product.description);
   const name = normalizeText(product.name);
 
-  if (description.length >= 4 && description.length <= 500) {
+  if (description.length >= 4) {
     return description;
   }
 
@@ -399,7 +407,7 @@ export async function GET(req: NextRequest) {
     } = await supabaseAdmin
       .from('products')
       .select(
-        'id, ebay_item_id, brand, part_number, model_number, name, category, slug, description',
+        'id, ebay_item_id, title, brand, part_number, model_number, name, category, slug, description',
         { count: 'exact' }
       )
       .order('id', { ascending: true })
