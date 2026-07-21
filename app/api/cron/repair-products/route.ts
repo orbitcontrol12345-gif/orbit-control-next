@@ -308,7 +308,21 @@ function isAuthorized(req: NextRequest): boolean {
 
   return req.headers.get('authorization') === `Bearer ${cronSecret}`;
 }
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
 
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
 async function ensureJob(limit: number) {
   const { data, error } = await supabaseAdmin
     .from('sync_jobs')
@@ -434,7 +448,7 @@ export async function GET(req: NextRequest) {
       } catch (error) {
         errorDetails.push({
           id: product.id,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         });
       }
     }
@@ -486,8 +500,7 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-
+    const message = getErrorMessage(error);
     await supabaseAdmin
       .from('sync_jobs')
       .update({
