@@ -501,7 +501,14 @@ let uncategorized = 0;
 
 const ebayBrand = String(item.brand || aspectBrand || '').trim();
 
-const brand = ebayBrand || detectIndustrialBrand(title);
+const detectedBrand = detectIndustrialBrand(title);
+
+const brand =
+  ebayBrand &&
+  !['UNKNOWN', 'UNBRANDED', 'DOES NOT APPLY', 'N/A']
+    .includes(ebayBrand.toUpperCase())
+    ? ebayBrand
+    : detectedBrand || 'UNKNOWN';
           const cleanedName = cleanProductName({
   title,
   brand,
@@ -544,6 +551,10 @@ if (
 ) {
   uncategorized++;
 }
+          if (!imageUrl) {
+  failed++;
+  continue;
+}
           const product = {
             ebay_item_id: realItemId,
             sku: realItemId,
@@ -561,7 +572,9 @@ if (
             image_status: 'pending',
             image_count: 0,
             description: title,
-            slug: slugify(`${realItemId}-${cleanedName}`),
+            slug: slugify(
+  `${realItemId}-${partNumber !== 'UNKNOWN' ? partNumber : cleanedName}`
+),
             marketplace: 'EBAY_US',
             seller: 'orbitcontrol',
             source: 'ebay-auto-import',
