@@ -164,16 +164,7 @@ function getRepairSource(product: ProductRow): string {
 
   return normalizeText(product.name);
 }
-  const description = normalizeText(product.description);
-  const name = normalizeText(product.name);
-
-  if (description.length >= 4) {
-    return description;
-  }
-
-  return name;
-}
-
+  
 function getPartNumber(product: ProductRow, sourceTitle: string): string {
   const ebayItemId = normalizeText(product.ebay_item_id);
   const currentPartNumber = normalizeUpper(product.part_number);
