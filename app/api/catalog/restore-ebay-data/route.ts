@@ -249,13 +249,11 @@ export async function GET(request: NextRequest) {
       )
       .not('ebay_item_id', 'is', null)
       .or(
-        [
-          'name.ilike.%reply as soon%',
-          'description.ilike.%reply as soon%',
-          'name.ilike.%not included in the item price%',
-          'description.ilike.%not included in the item price%',
-        ].join(',')
-      )
+  [
+    'name.ilike.%reply as soon%',
+    'name.ilike.%not included in the item price%',
+  ].join(',')
+)
       .order('id', { ascending: true })
       .limit(limit);
 
@@ -362,38 +360,9 @@ export async function GET(request: NextRequest) {
         }
 
         const currentName = normalizeText(product.name);
-        const currentDescription = normalizeText(
-          product.description
-        );
+       
 
-        const cleanedCurrentName = cleanEbayTitle(currentName);
-
-const nameNeedsRepair =
-  isCorruptedText(currentName) ||
-  cleanedCurrentName !== currentName;
-        const descriptionNeedsRepair =
-          isCorruptedText(currentDescription);
-
-        const nextName = isCorruptedText(currentName)
-  ? ebayTitle
-  : cleanedCurrentName;
-
-        const safeTitleForDescription =
-  !isCorruptedText(currentName) && currentName
-    ? currentName
-    : ebayTitle;
-
-const nextDescription = descriptionNeedsRepair
-  ? repairDescription(
-      currentDescription,
-      safeTitleForDescription
-    )
-  : currentDescription;
-
-        if (
-          !nameNeedsRepair &&
-          !descriptionNeedsRepair
-        ) {
+        if (!nameNeedsRepair) {
           unchanged++;
 
           results.push({
@@ -406,20 +375,18 @@ const nextDescription = descriptionNeedsRepair
           continue;
         }
 
-        if (dryRun) {
-          results.push({
-            id: product.id,
-            ebayItemId,
-            action: 'dry_run',
-            beforeName: currentName,
-            afterName: nextName,
-            beforeDescription: currentDescription,
-            afterDescription: nextDescription,
-          });
+       if (dryRun) {
+  results.push({
+    id: product.id,
+    ebayItemId,
+    action: 'dry_run',
+    beforeName: currentName,
+    afterName: nextName,
+  });
 
-          await wait(DELAY_MS);
-          continue;
-        }
+  await wait(DELAY_MS);
+  continue;
+}
 
         const updatePayload: {
           name?: string;
@@ -439,11 +406,13 @@ const nextDescription = descriptionNeedsRepair
         }
 
         const { error: updateError } =
-          await supabaseAdmin
-            .from('products')
-            .update(updatePayload)
-            .eq('id', product.id);
-
+  await supabaseAdmin
+    .from('products')
+    .update({
+      name: nextName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', product.id);
         if (updateError) {
           throw updateError;
         }
@@ -451,14 +420,12 @@ const nextDescription = descriptionNeedsRepair
         updated++;
 
         results.push({
-          id: product.id,
-          ebayItemId,
-          action: 'updated',
-          beforeName: currentName,
-          afterName: nextName,
-          beforeDescription: currentDescription,
-          afterDescription: nextDescription,
-        });
+  id: product.id,
+  ebayItemId,
+  action: 'updated',
+  beforeName: currentName,
+  afterName: nextName,
+});
 
         await wait(DELAY_MS);
       } catch (error) {
