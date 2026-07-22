@@ -115,6 +115,8 @@ function cleanEbayTitle(value: unknown): string {
     .replace(/\bFREE\s+SHIPPING\b/gi, '')
     .replace(/\bFAST\s+SHIPPING\b/gi, '')
     .replace(/\bWORLDWIDE\s+SHIPPING\b/gi, '')
+    .replace(/\bNEW\s+WITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi, '')
+   .replace(/\bWITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi, '')
     .replace(/^\s*[-–—|,:;]+\s*/g, '')
     .replace(/\s*[-–—|,:;]+\s*$/g, '')
     .replace(/\s+/g, ' ')
@@ -383,15 +385,17 @@ export async function GET(request: NextRequest) {
           product.description
         );
 
-        const nameNeedsRepair =
-          isCorruptedText(currentName);
+        const cleanedCurrentName = cleanEbayTitle(currentName);
 
+const nameNeedsRepair =
+  isCorruptedText(currentName) ||
+  cleanedCurrentName !== currentName;
         const descriptionNeedsRepair =
           isCorruptedText(currentDescription);
 
-        const nextName = nameNeedsRepair
-          ? ebayTitle
-          : currentName;
+        const nextName = isCorruptedText(currentName)
+  ? ebayTitle
+  : cleanedCurrentName;
 
         const safeTitleForDescription =
   !isCorruptedText(currentName) && currentName
