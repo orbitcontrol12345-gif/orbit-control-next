@@ -481,10 +481,13 @@ export async function GET(req: NextRequest) {
             await supabaseAdmin
               .from('products')
               .update({
-                name: originalEbayTitle,
-                updated_at:
-                  new Date().toISOString(),
-              })
+  name: originalEbayTitle,
+  description:
+    response.item.shortDescription ||
+    response.item.description ||
+    originalEbayTitle,
+  updated_at: new Date().toISOString(),
+})
               .eq('id', product.id);
 
           if (updateError) {
