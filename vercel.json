@@ -3,8 +3,7 @@
     {
       "path": "/api/migration/save-bridge",
       "schedule": "*/2 * * * *"
-    },
-    
+    }, 
     {
       "path": "/api/catalog/fix-part-numbers-auto",
       "schedule": "3,13,23,33,43,53 * * * *"
