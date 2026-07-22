@@ -156,14 +156,25 @@ function isValidPartNumber(
 }
 
 function getRepairSource(product: ProductRow): string {
-  const description = normalizeText(product.description);
   const name = normalizeText(product.name);
+  const description = normalizeText(product.description);
 
-  if (description.length >= 4 && description.length <= 500) {
+  /*
+   * الاسم الحالي أولى من الوصف.
+   * الوصف لا يُستخدم كمصدر لاسم المنتج إلا عند غياب الاسم تمامًا.
+   */
+  if (name.length >= 4) {
+    return name;
+  }
+
+  if (
+    description.length >= 4 &&
+    !/reply\s+as\s+soon\s+as\s+possible/i.test(description)
+  ) {
     return description;
   }
 
-  return name;
+  return '';
 }
 
 function getPartNumber(product: ProductRow, sourceTitle: string): string {
@@ -345,12 +356,17 @@ async function ensureJob(limit: number) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
+  return NextResponse.json(
+    {
+      success: false,
+      disabled: true,
+      message:
+        'repair-products is disabled because it previously used product descriptions as product titles.',
+    },
+    {
+      status: 410,
+    }
+  );
 
   const requestedLimit = parsePositiveInteger(
     req.nextUrl.searchParams.get('limit'),
