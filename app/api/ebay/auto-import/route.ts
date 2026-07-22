@@ -678,7 +678,7 @@ async function fetchEbayItem(
 
 if (!response.ok) {
   console.error(
-    'Browse API Error:',
+    `Browse API Error for ${ebayItemId}:`,
     response.status,
     await response.text()
   );
