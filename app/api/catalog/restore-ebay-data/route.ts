@@ -95,31 +95,16 @@ function cleanEbayTitle(value: unknown): string {
       /^\s*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\s*[-–—:,]?\s*/i,
       ''
     )
-    .replace(/^\s*\d+\s*[X×]\s*/i, '')
-    .replace(/\bNEW\s+WITHOUT\s+BOX\b/gi, '')
-    .replace(/\bNEW\s+WITH\s+BOX\b/gi, '')
-    .replace(/\bNEW\s+OPEN\s+BOX\b/gi, '')
-    .replace(/\bOPEN\s+BOX\b/gi, '')
-    .replace(/\bNEW\s+OLD\s+STOCK\b/gi, '')
-    .replace(/\bNEW\s+SEALED\b/gi, '')
-    .replace(/\bREFURBISHED\b/gi, '')
-    .replace(/\bUSED\b/gi, '')
-    .replace(/\bTESTED\s+OK\b/gi, '')
-    .replace(/\bTRIED\s*(?:&|AND)\s*TESTED\b/gi, '')
-    .replace(/\bWITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
-    .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
-    .replace(/\bNO\s+ACCESSORIES\b/gi, '')
-    .replace(/\bWITHOUT\s+BOX\b/gi, '')
-    .replace(/\bNO\s+BOX\b/gi, '')
-    .replace(/\bNO\s+ORIGINAL\s+BOX\b/gi, '')
-    .replace(/\bFREE\s+SHIPPING\b/gi, '')
-    .replace(/\bFAST\s+SHIPPING\b/gi, '')
-    .replace(/\bWORLDWIDE\s+SHIPPING\b/gi, '')
-    .replace(/\bNEW\s+WITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi, '')
-   .replace(/\bWITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi, '')
+    .replace(
+  /\b(?:NEW|USED)?\s*(?:WITH\s+)?(?:MISSING|BROKEN|DAMAGED|OLD|FILTHY)\s+(?:COVER|BOX|PACKAGING|PARTS?|BACK\s+PLATE|FRONT\s+COVER)(?:\s*&\s*WITHOUT\s+BOX)?\b/gi,
+  ''
+)
+.replace(/\bWITHOUT\s+BOX\b/gi, '')
+.replace(/\bNO\s+BOX\b/gi, '')
+.replace(/\bW\/O\s+BOX\b/gi, '')
     .replace(/^\s*[-–—|,:;]+\s*/g, '')
-    .replace(/\s*[-–—|,:;]+\s*$/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\s*&\s*$/g, '')
+.replace(/\s*-\s*$/g, '')
     .trim();
 }
 function repairDescription(
