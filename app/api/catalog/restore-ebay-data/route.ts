@@ -11,7 +11,7 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const REQUEST_DELAY_MS = 900;
 
-const ROUTE_VERSION = 'RESTORE-EBAY-DATA-V1-SAFE';
+const ROUTE_VERSION = 'RESTORE-EBAY-DATA-V1-SAFE-2';
 
 type ProductRow = {
   id: string | number;
