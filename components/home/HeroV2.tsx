@@ -102,17 +102,17 @@ export default function HeroV2() {
       <div className="absolute right-[-160px] top-10 -z-10 h-[440px] w-[440px] rounded-full bg-amber-400/10 blur-[110px]" />
 
       <div className="page-container flex min-h-[92vh] items-center py-28 lg:py-32">
-        <div className="grid w-full items-center gap-14 lg:grid-cols-[1.12fr_0.88fr] xl:gap-20">
-          {/* Left side */}
-          <div>
-            <div className="mb-7 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/[0.08] px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-100 backdrop-blur-xl">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              </span>
+        <div className="grid w-full items-center gap-14 lg:grid-cols-[1.02fr_0.98fr] xl:gap-10">
+  {/* Left side */}
+  <div>
+    {/* يبقى المحتوى الموجود كما هو */}
+  </div>
 
-              UAE Industrial Supply Hub
-            </div>
+  {/* Right side */}
+  <div className="hidden lg:block">
+    <HeroGlobe />
+  </div>
+</div>
 
             <h1 className="max-w-5xl text-5xl font-black leading-[0.98] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl xl:text-[84px]">
               Industrial Automation
