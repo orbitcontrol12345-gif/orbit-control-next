@@ -153,6 +153,36 @@ function cleanProductTitle(value: unknown): string {
     .trim();
 }
 
+function stripHtml(html: string): string {
+  return String(html || '')
+    // Remove script/style
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+
+    // Convert common breaks to spaces
+    .replace(/<\/?(div|p|br|li|tr|td|font|span|b|strong|i|u)[^>]*>/gi, ' ')
+
+    // Remove any remaining HTML
+    .replace(/<[^>]+>/g, ' ')
+
+    // Decode common entities
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+
+    // Remove unicode escaped tags left from JSON
+    .replace(/\\u003c/gi, '<')
+    .replace(/\\u003e/gi, '>')
+    .replace(/\\u0026nbsp;/gi, ' ')
+    .replace(/\\u0026quot;/gi, '"')
+
+    // Final cleanup
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 async function wait(milliseconds: number): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(resolve, milliseconds);
