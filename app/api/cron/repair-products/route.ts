@@ -504,9 +504,8 @@ export async function GET(req: NextRequest) {
         headers: { 'Cache-Control': 'no-store' },
       }
     );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-
+  } catch (error: any) {
+  const message = String(error?.message ?? error);
     await supabaseAdmin
       .from('sync_jobs')
       .update({
