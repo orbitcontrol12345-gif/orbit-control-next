@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 const JOB_ID = 'ebay-auto-import';
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
-const CONCURRENCY = 2;
+const CONCURRENCY = 1;
 
 type FeedRow = {
   ebay_item_id: string;
@@ -677,15 +677,22 @@ async function fetchEbayItem(
 );
 
 if (!response.ok) {
+  const text = await response.text();
+
   console.error(
     `Browse API Error for ${ebayItemId}:`,
     response.status,
-    await response.text()
+    text
   );
+
+  if (response.status === 429) {
+    await new Promise((r) => setTimeout(r, 5000));
+
+    return fetchEbayItem(accessToken, ebayItemId);
+  }
 
   return null;
 }
-
 return response.json();
 }
 
