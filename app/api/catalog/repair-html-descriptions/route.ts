@@ -235,9 +235,9 @@ function cleanDescription(value: unknown): string {
 
  return withoutDuplicates
   .replace(
-    /\s*Industrial equipment available for quotation and worldwide shipping\.?/gi,
-    ''
-  )
+  /Industrial equipment available[\s\S]{0,80}?shipping\.?/gi,
+  ''
+)
   .replace(/^[\s.,:;|/\\\-–—]+/g, '')
   .replace(/[\s|/\\\-–—]+$/g, '')
   .replace(/\s+([,.;:])/g, '$1')
