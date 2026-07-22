@@ -368,9 +368,14 @@ export async function GET(request: NextRequest) {
           ? ebayTitle
           : currentName;
 
-        const nextDescription = descriptionNeedsRepair
-          ? buildDescription(ebayTitle)
-          : currentDescription;
+        const safeTitleForDescription =
+  !isCorruptedText(currentName) && currentName
+    ? currentName
+    : ebayTitle;
+
+const nextDescription = descriptionNeedsRepair
+  ? buildDescription(safeTitleForDescription)
+  : currentDescription;
 
         if (
           !nameNeedsRepair &&
