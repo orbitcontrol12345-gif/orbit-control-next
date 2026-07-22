@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 const JOB_ID = 'ebay-auto-import';
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
-const CONCURRENCY = 8;
+const CONCURRENCY = 2;
 
 type FeedRow = {
   ebay_item_id: string;
