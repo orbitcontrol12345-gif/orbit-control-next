@@ -128,15 +128,11 @@ function repairDescription(
   // Ensure it ends with a period
   text = text.replace(/\.*$/, '.');
 
-  return (
-    text +
-    ' Industrial equipment available for quotation and worldwide shipping.'
-  );
+  return text;
 }
 function buildDescription(title: string): string {
-  return `${title}. Industrial equipment available for quotation and worldwide shipping.`;
+  return `${title}.`;
 }
-
 async function wait(milliseconds: number): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(resolve, milliseconds);
