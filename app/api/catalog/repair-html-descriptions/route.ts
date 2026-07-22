@@ -111,28 +111,24 @@ function stripHtml(value: unknown): string {
 /**
  * يحذف رسائل الرد الخاطئة.
  */
-function cleanDescription(value: unknown): string {
-  const plainText = stripHtml(value);
-
-  const withoutMessages =
-    removeCorruptedMessages(plainText)
-      .replace(
-        /\s*Industrial equipment available for quotation(?:\s+and\s+worldwide\s+shipping)?\.?/gi,
-        ' '
-      )
-      .replace(/\s+/g, ' ')
-      .trim();
-
-  const withoutPolicies =
-    cutSellerPolicy(withoutMessages);
-
-  const withoutDuplicates =
-    removeDuplicateHalves(withoutPolicies);
-
-  return withoutDuplicates
-    .replace(/^[\s.,:;|/\\\-–—]+/g, '')
-    .replace(/[\s.,:;|/\\\-–—]+$/g, '')
-    .replace(/\s+([,.;:])/g, '$1')
+function removeCorruptedMessages(value: string): string {
+  return value
+    .replace(
+      /we(?:'|’)?ll\s+reply\s+as\s+soon\s+as\s+possible[.!…]*/gi,
+      ' '
+    )
+    .replace(
+      /we\s+will\s+reply\s+as\s+soon\s+as\s+possible[.!…]*/gi,
+      ' '
+    )
+    .replace(
+      /they\s+are\s+not\s+included\s+in\s+the\s+item\s+price[.!…]*/gi,
+      ' '
+    )
+    .replace(
+      /not\s+included\s+in\s+the\s+item\s+price[.!…]*/gi,
+      ' '
+    )
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -228,13 +224,14 @@ function removeDuplicateHalves(value: string): string {
 function cleanDescription(value: unknown): string {
   const plainText = stripHtml(value);
 
-  console.log('==========================');
-  console.log('RAW DESCRIPTION');
-  console.log(plainText);
-  console.log('==========================');
-
   const withoutMessages =
-    removeCorruptedMessages(plainText);
+  removeCorruptedMessages(plainText)
+    .replace(
+      /Industrial equipment available for quotation\s+and\s+worldwide\s+shipping\.?/gi,
+      ''
+    )
+    .replace(/\s+/g, ' ')
+    .trim();
 
   const withoutPolicies =
     cutSellerPolicy(withoutMessages);
@@ -243,11 +240,9 @@ function cleanDescription(value: unknown): string {
     removeDuplicateHalves(withoutPolicies);
 
   return withoutDuplicates
-    .replace(
-      /Industrial equipment available[\s\S]{0,80}?shipping\.?/gi,
-      ''
-    )
-    .replace(/[|,.;]+$/g, '')
+    .replace(/^[\s.,:;|/\\\-–—]+/g, '')
+    .replace(/[\s.,:;|/\\\-–—]+$/g, '')
+    .replace(/\s+([,.;:])/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }
