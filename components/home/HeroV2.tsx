@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HeroGlobe from '@/components/home/HeroGlobe';
 import {
   ArrowRight,
   CheckCircle2,
@@ -233,9 +234,10 @@ export default function HeroV2() {
                       </div>
 
                       <h2 className="mt-3 text-3xl font-black tracking-tight text-white">
-                        From Part Number
-                        <span className="block text-slate-400">
-                          to Worldwide Delivery.
+                        {/* Right side */}
+<div className="hidden lg:block">
+  <HeroGlobe />
+</div>
                         </span>
                       </h2>
                     </div>
