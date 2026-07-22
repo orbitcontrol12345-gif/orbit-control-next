@@ -120,7 +120,32 @@ function cleanEbayTitle(value: unknown): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+function repairDescription(
+  originalDescription: string,
+  fallbackTitle: string
+): string {
+  let text = normalizeText(originalDescription);
 
+  // Remove the corrupted sentences only
+  text = text
+    .replace(/We'll reply as soon as possible\.?/gi, '')
+    .replace(/They are not included in the item price\.?/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // If description became empty, use the title
+  if (!text) {
+    text = fallbackTitle;
+  }
+
+  // Ensure it ends with a period
+  text = text.replace(/\.*$/, '.');
+
+  return (
+    text +
+    ' Industrial equipment available for quotation and worldwide shipping.'
+  );
+}
 function buildDescription(title: string): string {
   return `${title}. Industrial equipment available for quotation and worldwide shipping.`;
 }
@@ -374,7 +399,10 @@ export async function GET(request: NextRequest) {
     : ebayTitle;
 
 const nextDescription = descriptionNeedsRepair
-  ? buildDescription(safeTitleForDescription)
+  ? repairDescription(
+      currentDescription,
+      safeTitleForDescription
+    )
   : currentDescription;
 
         if (
