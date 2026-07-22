@@ -686,9 +686,9 @@ if (!response.ok) {
   );
 
   if (response.status === 429) {
-    await new Promise((r) => setTimeout(r, 5000));
-
-    return fetchEbayItem(accessToken, ebayItemId);
+    await new Promise((resolve) =>
+      setTimeout(resolve, 5000)
+    );
   }
 
   return null;
