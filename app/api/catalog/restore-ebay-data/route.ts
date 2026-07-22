@@ -9,18 +9,19 @@ export const maxDuration = 300;
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 20;
-const DELAY_MS = 1000;
+const DELAY_MS = 900;
+
+const ROUTE_VERSION = 'RESTORE-EBAY-TITLES-V3-CLEAN';
 
 type ProductRow = {
   id: string | number;
   ebay_item_id: string | null;
   name: string | null;
-  description: string | null;
   source: string | null;
   source_type: string | null;
 };
 
-type EbayResult = {
+type EbayResponse = {
   item: Record<string, unknown> | null;
   status: number;
   error?: string;
@@ -39,19 +40,19 @@ function getErrorMessage(error: unknown): string {
 }
 
 function getLegacyItemId(value: unknown): string {
-  const normalized = normalizeText(value);
+  const text = normalizeText(value);
 
-  if (!normalized) {
+  if (!text) {
     return '';
   }
 
-  if (normalized.includes('|')) {
-    const parts = normalized.split('|');
+  if (text.includes('|')) {
+    const parts = text.split('|');
 
     return normalizeText(parts[1] || parts[0]);
   }
 
-  return normalized;
+  return text;
 }
 
 function isManualProduct(product: ProductRow): boolean {
@@ -68,71 +69,90 @@ function isManualProduct(product: ProductRow): boolean {
   );
 }
 
-function isCorruptedText(value: unknown): boolean {
+function containsCorruptedText(value: unknown): boolean {
   const text = normalizeText(value).toLowerCase();
 
-  if (!text) {
-    return true;
-  }
-
   return (
+    !text ||
     text.includes('reply as soon as possible') ||
     text.includes('not included in the item price')
   );
 }
 
-function cleanEbayTitle(value: unknown): string {
+function cleanProductTitle(value: unknown): string {
   return normalizeText(value)
+    // Remove quantity / lot text from the beginning.
     .replace(
-      /^\s*LOTS?\s*(?:OF\s*)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?\s*[-–—:,]?\s*/i,
+      /^\s*LOTS?\s*(?:OF\s*)?\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)?[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)\s*[-–—:,]?\s*/i,
+      /^\s*\d+\s*(?:PCS?|PIECES?|UNITS?|ITEMS?)[\s:,.–—-]*/i,
       ''
     )
     .replace(
-      /^\s*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\s*[-–—:,]?\s*/i,
+      /^\s*(?:QTY|QUANTITY)\s*[:#-]?\s*\d+[\s:,.–—-]*/i,
       ''
     )
-    .replace(
-  /\b(?:NEW|USED)?\s*(?:WITH\s+)?(?:MISSING|BROKEN|DAMAGED|OLD|FILTHY)\s+(?:COVER|BOX|PACKAGING|PARTS?|BACK\s+PLATE|FRONT\s+COVER)(?:\s*&\s*WITHOUT\s+BOX)?\b/gi,
-  ''
-)
-.replace(/\bWITHOUT\s+BOX\b/gi, '')
-.replace(/\bNO\s+BOX\b/gi, '')
-.replace(/\bW\/O\s+BOX\b/gi, '')
-    .replace(/^\s*[-–—|,:;]+\s*/g, '')
-    .replace(/\s*&\s*$/g, '')
-.replace(/\s*-\s*$/g, '')
-    .trim();
-}
-function repairDescription(
-  originalDescription: string,
-  fallbackTitle: string
-): string {
-  let text = normalizeText(originalDescription);
+    .replace(/^\s*\d+\s*[X×]\s*/i, '')
 
-  // Remove the corrupted sentences only
-  text = text
-    .replace(/We'll reply as soon as possible\.?/gi, '')
-    .replace(/They are not included in the item price\.?/gi, '')
+    // Remove condition text.
+    .replace(/\bNEW\s+OPEN\s+BOX\b/gi, '')
+    .replace(/\bNEW\s+WITHOUT\s+BOX\b/gi, '')
+    .replace(/\bNEW\s+WITH\s+BOX\b/gi, '')
+    .replace(/\bOPEN\s+BOX\b/gi, '')
+    .replace(/\bNEW\s+OLD\s+STOCK\b/gi, '')
+    .replace(/\bNEW\s+SEALED\b/gi, '')
+    .replace(/\bREFURBISHED\b/gi, '')
+    .replace(/\bTESTED\s+OK\b/gi, '')
+    .replace(/\bTRIED\s*(?:&|AND)\s*TESTED\b/gi, '')
+    .replace(/\bUSED\b/gi, '')
+
+    // Remove complete packaging / damaged-item phrases.
+    .replace(
+      /\bNEW\s+WITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi,
+      ''
+    )
+    .replace(
+      /\bWITH\s+MISSING\s+COVER\s*&\s*WITHOUT\s+BOX\b/gi,
+      ''
+    )
+    .replace(
+      /\b(?:NEW\s+)?WITH\s+(?:MISSING|BROKEN|DAMAGED)\s+(?:COVER|BOX|PARTS?)\b/gi,
+      ''
+    )
+    .replace(/\bWITHOUT\s+ANY\s+ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT\s+ACCESSORIES\b/gi, '')
+    .replace(/\bNO\s+ACCESSORIES\b/gi, '')
+    .replace(/\bWITHOUT\s+BOX\b/gi, '')
+    .replace(/\bNO\s+ORIGINAL\s+BOX\b/gi, '')
+    .replace(/\bNO\s+BOX\b/gi, '')
+    .replace(/\bW\/O\s+BOX\b/gi, '')
+    .replace(/\bMISSING\s+COVER\b/gi, '')
+    .replace(/\bBROKEN\s+COVER\b/gi, '')
+    .replace(/\bDAMAGED\s+BOX\b/gi, '')
+    .replace(/\bBROKEN\s+BOX\b/gi, '')
+
+    // Remove shipping text.
+    .replace(/\bFREE\s+SHIPPING\b/gi, '')
+    .replace(/\bFAST\s+SHIPPING\b/gi, '')
+    .replace(/\bWORLDWIDE\s+SHIPPING\b/gi, '')
+
+    // Remove leftover standalone NEW.
+    .replace(/\bNEW\b/gi, '')
+
+    // Final cleanup.
+    .replace(/\(\s*\)/g, '')
+    .replace(/\[\s*\]/g, '')
+    .replace(/\s*&\s*$/g, '')
+    .replace(/\s*[-–—]+\s*$/g, '')
+    .replace(/^[\s.,:;|/\\\-–—]+/g, '')
+    .replace(/[\s.,:;|/\\\-–—]+$/g, '')
+    .replace(/\s+([,.;:])/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
-
-  // If description became empty, use the title
-  if (!text) {
-    text = fallbackTitle;
-  }
-
-  // Ensure it ends with a period
-  text = text.replace(/\.*$/, '.');
-
-  return text;
 }
-function buildDescription(title: string): string {
-  return `${title}.`;
-}
+
 async function wait(milliseconds: number): Promise<void> {
   await new Promise<void>((resolve) => {
     setTimeout(resolve, milliseconds);
@@ -142,7 +162,7 @@ async function wait(milliseconds: number): Promise<void> {
 async function fetchEbayItem(
   accessToken: string,
   ebayItemId: string
-): Promise<EbayResult> {
+): Promise<EbayResponse> {
   const legacyItemId = getLegacyItemId(ebayItemId);
 
   if (!legacyItemId) {
@@ -169,7 +189,7 @@ async function fetchEbayItem(
   });
 
   if (!response.ok) {
-    const responseText = await response
+    const errorText = await response
       .text()
       .catch(() => '');
 
@@ -177,7 +197,7 @@ async function fetchEbayItem(
       item: null,
       status: response.status,
       error:
-        responseText ||
+        errorText ||
         `eBay returned status ${response.status}.`,
     };
   }
@@ -242,18 +262,20 @@ export async function GET(request: NextRequest) {
           id,
           ebay_item_id,
           name,
-          description,
           source,
           source_type
         `
       )
       .not('ebay_item_id', 'is', null)
       .or(
-  [
-    'name.ilike.%reply as soon%',
-    'name.ilike.%not included in the item price%',
-  ].join(',')
-)
+        [
+          'name.ilike.%reply as soon%',
+          'name.ilike.%not included in the item price%',
+          'name.ilike.%without box%',
+          'name.ilike.%no box%',
+          'name.ilike.%missing cover%',
+        ].join(',')
+      )
       .order('id', { ascending: true })
       .limit(limit);
 
@@ -342,11 +364,14 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        const ebayTitle = cleanEbayTitle(
+        const ebayTitle = cleanProductTitle(
           ebayResponse.item.title
         );
 
-        if (!ebayTitle || isCorruptedText(ebayTitle)) {
+        if (
+          !ebayTitle ||
+          containsCorruptedText(ebayTitle)
+        ) {
           failed++;
 
           results.push({
@@ -360,99 +385,54 @@ export async function GET(request: NextRequest) {
         }
 
         const currentName = normalizeText(product.name);
-const cleanedCurrentName = cleanEbayTitle(currentName);
 
-const nameNeedsRepair =
-  isCorruptedText(currentName) ||
-  cleanedCurrentName !== currentName;
+        const cleanedCurrentName =
+          cleanProductTitle(currentName);
 
-const nextName = isCorruptedText(currentName)
-  ? ebayTitle
-  : cleanedCurrentName;
-const cleanedCurrentName = cleanEbayTitle(currentName);
+        const currentNameIsCorrupted =
+          containsCorruptedText(currentName);
 
-const nameNeedsRepair =
-  isCorruptedText(currentName) ||
-  cleanedCurrentName !== currentName;
+        const nextName = currentNameIsCorrupted
+          ? ebayTitle
+          : cleanedCurrentName || ebayTitle;
 
-const nextName = isCorruptedText(currentName)
-  ? ebayTitle
-  : cleanedCurrentName;
+        if (nextName === currentName) {
+          unchanged++;
 
-if (!nameNeedsRepair) {
-  unchanged++;
+          results.push({
+            id: product.id,
+            ebayItemId,
+            action: 'unchanged',
+            beforeName: currentName,
+            afterName: nextName,
+          });
 
-  results.push({
-    id: product.id,
-    ebayItemId,
-    action: 'unchanged',
-  });
-
-  await wait(DELAY_MS);
-  continue;
-}
-
-if (dryRun) {
-  results.push({
-    id: product.id,
-    ebayItemId,
-    action: 'dry_run',
-    beforeName: currentName,
-    afterName: nextName,
-  });
-
-  await wait(DELAY_MS);
-  continue;
-}
-
-const { error: updateError } =
-  await supabaseAdmin
-    .from('products')
-    .update({
-      name: nextName,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', product.id);
-
-if (updateError) {
-  throw updateError;
-}
-
-updated++;
-
-results.push({
-  id: product.id,
-  ebayItemId,
-  action: 'updated',
-  beforeName: currentName,
-  afterName: nextName,
-});
-
-  await wait(DELAY_MS);
-  continue;
-}
-
-        const updatePayload: {
-          name?: string;
-          description?: string;
-          updated_at: string;
-        } = {
-          updated_at: new Date().toISOString(),
-        };
-
-        if (nameNeedsRepair) {
-          updatePayload.name = nextName;
+          await wait(DELAY_MS);
+          continue;
         }
 
-       
+        if (dryRun) {
+          results.push({
+            id: product.id,
+            ebayItemId,
+            action: 'dry_run',
+            beforeName: currentName,
+            afterName: nextName,
+          });
+
+          await wait(DELAY_MS);
+          continue;
+        }
+
         const { error: updateError } =
-  await supabaseAdmin
-    .from('products')
-    .update({
-      name: nextName,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', product.id);
+          await supabaseAdmin
+            .from('products')
+            .update({
+              name: nextName,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', product.id);
+
         if (updateError) {
           throw updateError;
         }
@@ -460,12 +440,12 @@ results.push({
         updated++;
 
         results.push({
-  id: product.id,
-  ebayItemId,
-  action: 'updated',
-  beforeName: currentName,
-  afterName: nextName,
-});
+          id: product.id,
+          ebayItemId,
+          action: 'updated',
+          beforeName: currentName,
+          afterName: nextName,
+        });
 
         await wait(DELAY_MS);
       } catch (error) {
@@ -484,8 +464,23 @@ results.push({
 
     return NextResponse.json({
       success: true,
-      routeVersion: 'RESTORE-EBAY-DATA-V2-CLEAN',
+      routeVersion: ROUTE_VERSION,
       dryRun,
+      safety: {
+        updatesOnly: ['name', 'updated_at'],
+        neverUpdates: [
+          'description',
+          'part_number',
+          'model_number',
+          'brand',
+          'category',
+          'condition',
+          'sku',
+          'slug',
+          'images',
+          'ebay_item_id',
+        ],
+      },
       summary: {
         loaded: rows.length,
         processed,
@@ -502,7 +497,7 @@ results.push({
     return NextResponse.json(
       {
         success: false,
-        routeVersion: 'RESTORE-EBAY-DATA-V2-CLEAN',
+        routeVersion: ROUTE_VERSION,
         error: getErrorMessage(error),
       },
       {
