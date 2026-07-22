@@ -360,7 +360,15 @@ export async function GET(request: NextRequest) {
         }
 
         const currentName = normalizeText(product.name);
+const cleanedCurrentName = cleanEbayTitle(currentName);
 
+const nameNeedsRepair =
+  isCorruptedText(currentName) ||
+  cleanedCurrentName !== currentName;
+
+const nextName = isCorruptedText(currentName)
+  ? ebayTitle
+  : cleanedCurrentName;
 const cleanedCurrentName = cleanEbayTitle(currentName);
 
 const nameNeedsRepair =
