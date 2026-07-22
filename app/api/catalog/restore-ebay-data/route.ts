@@ -360,22 +360,31 @@ export async function GET(request: NextRequest) {
         }
 
         const currentName = normalizeText(product.name);
-       
 
-        if (!nameNeedsRepair) {
-          unchanged++;
+const cleanedCurrentName = cleanEbayTitle(currentName);
 
-          results.push({
-            id: product.id,
-            ebayItemId,
-            action: 'unchanged',
-          });
+const nameNeedsRepair =
+  isCorruptedText(currentName) ||
+  cleanedCurrentName !== currentName;
 
-          await wait(DELAY_MS);
-          continue;
-        }
+const nextName = isCorruptedText(currentName)
+  ? ebayTitle
+  : cleanedCurrentName;
 
-       if (dryRun) {
+if (!nameNeedsRepair) {
+  unchanged++;
+
+  results.push({
+    id: product.id,
+    ebayItemId,
+    action: 'unchanged',
+  });
+
+  await wait(DELAY_MS);
+  continue;
+}
+
+if (dryRun) {
   results.push({
     id: product.id,
     ebayItemId,
@@ -383,6 +392,33 @@ export async function GET(request: NextRequest) {
     beforeName: currentName,
     afterName: nextName,
   });
+
+  await wait(DELAY_MS);
+  continue;
+}
+
+const { error: updateError } =
+  await supabaseAdmin
+    .from('products')
+    .update({
+      name: nextName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', product.id);
+
+if (updateError) {
+  throw updateError;
+}
+
+updated++;
+
+results.push({
+  id: product.id,
+  ebayItemId,
+  action: 'updated',
+  beforeName: currentName,
+  afterName: nextName,
+});
 
   await wait(DELAY_MS);
   continue;
@@ -400,11 +436,7 @@ export async function GET(request: NextRequest) {
           updatePayload.name = nextName;
         }
 
-        if (descriptionNeedsRepair) {
-          updatePayload.description =
-            nextDescription;
-        }
-
+       
         const { error: updateError } =
   await supabaseAdmin
     .from('products')
