@@ -947,7 +947,10 @@ export async function GET(req: NextRequest) {
 
     const existingProducts =
       await loadExistingProducts(batchRows);
-
+const newRows = batchRows.filter((row) => {
+  const itemId = normalizeText(row.ebay_item_id);
+  return itemId && !existingProducts.has(itemId);
+});
     let inserted = 0;
     let updated = 0;
     let unchanged = 0;
@@ -962,14 +965,14 @@ export async function GET(req: NextRequest) {
     const sample: any[] = [];
 
     for (
-      let index = 0;
-      index < batchRows.length;
-      index += CONCURRENCY
-    ) {
-      const chunk = batchRows.slice(
-        index,
-        index + CONCURRENCY
-      );
+  let index = 0;
+  index < newRows.length;
+  index += CONCURRENCY
+) {
+  const chunk = newRows.slice(
+    index,
+    index + CONCURRENCY
+  );
 
       const details = await Promise.all(
         chunk.map((row) =>
