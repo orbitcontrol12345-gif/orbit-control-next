@@ -233,12 +233,16 @@ function cleanDescription(value: unknown): string {
   const withoutDuplicates =
     removeDuplicateHalves(withoutPolicies);
 
-  return withoutDuplicates
-    .replace(/^[\s.,:;|/\\\-–—]+/g, '')
-    .replace(/[\s|/\\\-–—]+$/g, '')
-    .replace(/\s+([,.;:])/g, '$1')
-    .replace(/\s+/g, ' ')
-    .trim();
+ return withoutDuplicates
+  .replace(
+    /\s*Industrial equipment available for quotation and worldwide shipping\.?/gi,
+    ''
+  )
+  .replace(/^[\s.,:;|/\\\-–—]+/g, '')
+  .replace(/[\s|/\\\-–—]+$/g, '')
+  .replace(/\s+([,.;:])/g, '$1')
+  .replace(/\s+/g, ' ')
+  .trim();
 }
 
 function buildFallbackDescription(
