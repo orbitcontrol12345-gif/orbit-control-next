@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const DEFAULT_LIMIT = 5;
+const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 20;
 const DELAY_MS = 900;
 
