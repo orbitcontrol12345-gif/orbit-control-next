@@ -455,7 +455,7 @@ export async function GET(req: NextRequest) {
         });
       }
     }
-
+  }
     const total = count || 0;
     const nextOffset = offset + rows.length;
     const completed = rows.length === 0 || nextOffset >= total;
