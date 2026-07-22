@@ -119,6 +119,7 @@ async function fetchEbayItem(
   item: any | null;
   status: number;
   error?: string;
+  retryAfter?: string | null;
 }> {
   const legacyItemId = getLegacyItemId(ebayItemId);
 
@@ -127,8 +128,46 @@ async function fetchEbayItem(
       item: null,
       status: 400,
       error: 'Missing eBay Item ID.',
+      retryAfter: null,
     };
   }
+
+  const url =
+    'https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id' +
+    `?legacy_item_id=${encodeURIComponent(legacyItemId)}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
+      'Accept-Language': 'en-US',
+      Accept: 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  const retryAfter = response.headers.get('retry-after');
+
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    return {
+      item: null,
+      status: response.status,
+      error: errorText || `eBay request failed with status ${response.status}`,
+      retryAfter,
+    };
+  }
+
+  const item = await response.json();
+
+  return {
+    item,
+    status: response.status,
+    retryAfter,
+  };
+}
 
   const url =
     'https://api.ebay.com/buy/browse/v1/item/' +
@@ -287,33 +326,57 @@ export async function GET(req: NextRequest) {
         index + CONCURRENCY
       );
 
-      const fetchedItems =
-        await Promise.all(
-          chunk.map(async (product) => {
-            if (isManualProduct(product)) {
-              return {
-                product,
-                response: null,
-                manual: true,
-              };
-            }
+     const batchResults: Array<{
+  product: any;
+  response: Awaited<ReturnType<typeof fetchEbayItem>> | null;
+  manual: boolean;
+}> = [];
 
-            const ebayItemId =
-              getLegacyItemId(
-                product.ebay_item_id
-              );
+for (const product of rows) {
+  if (!product.ebay_item_id) {
+    batchResults.push({
+      product,
+      response: null,
+      manual: true,
+    });
 
-            const response =
-              await fetchEbayItem(
-                accessToken,
-                ebayItemId
-              );
+    continue;
+  }
 
-            return {
-              product,
-              response,
-              manual: false,
-            };
+  const response = await fetchEbayItem(
+    accessToken,
+    product.ebay_item_id
+  );
+
+  batchResults.push({
+    product,
+    response,
+    manual: false,
+  });
+
+  // توقف فورًا إذا eBay أعاد Rate Limit
+  if (response.status === 429) {
+    break;
+  }
+
+  // انتظار بين كل طلب والطلب التالي
+  await new Promise((resolve) =>
+    setTimeout(resolve, 1200)
+  );
+}
+
+         
+
+           const response = await fetchEbayItem(
+  accessToken,
+  product.ebay_item_id
+);
+
+return {
+  product,
+  response,
+  manual: false,
+};
           })
         );
 
