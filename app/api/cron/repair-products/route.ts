@@ -448,14 +448,29 @@ export async function GET(req: NextRequest) {
 
         if (updateError) throw updateError;
         updated++;
-      } catch (error) {
-        errorDetails.push({
-          id: product.id,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+      } catch (caughtError: unknown) {
+  let errorMessage = 'Unknown error';
+
+  if (
+    typeof caughtError === 'object' &&
+    caughtError !== null &&
+    'message' in caughtError
+  ) {
+    errorMessage = String(
+      (caughtError as { message?: unknown }).message ||
+        'Unknown error'
+    );
+  } else {
+    errorMessage = String(caughtError);
   }
+
+  errorDetails.push({
+    id: product.id,
+    error: errorMessage,
+  });
+}
+    }
+  
     const total = count || 0;
     const nextOffset = offset + rows.length;
     const completed = rows.length === 0 || nextOffset >= total;
