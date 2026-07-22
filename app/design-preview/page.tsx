@@ -1,3 +1,4 @@
+import HeaderV2 from '@/components/layout/HeaderV2';
 import HeroV2 from '@/components/home/HeroV2';
 
 export const metadata = {
@@ -11,7 +12,11 @@ export const metadata = {
 export default function DesignPreviewPage() {
   return (
     <main className="min-h-screen bg-[#030914]">
-      <HeroV2 />
+      <HeaderV2 />
+
+      <div className="pt-[74px] lg:pt-[106px]">
+        <HeroV2 />
+      </div>
     </main>
   );
 }
