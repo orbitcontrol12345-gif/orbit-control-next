@@ -4,8 +4,7 @@ import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
-import { cleanProductName } from '@/lib/product-name';
-import { detectCategory } from '@/lib/category-detector';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -84,151 +83,35 @@ function getRealItemId(itemId: string) {
   return String(itemId || '').split('|')[1] || String(itemId || '');
 }
 
-function getBestPartNumber(
-  item: any,
-  title: string,
-  realItemId: string
-): string {
-  const aspects = Array.isArray(item?.localizedAspects)
-    ? item.localizedAspects
-    : [];
+function getBestPartNumber(item: any, title: string, realItemId: string) {
+  const aspects = item.localizedAspects || [];
 
-  const invalidValues = new Set([
-    '',
-    'UNKNOWN',
-    'UNBRANDED',
-    'DOES NOT APPLY',
-    'DOES NOT APPLY.',
-    'NOT APPLICABLE',
-    'N/A',
-    'NA',
-    'NONE',
-    'NO',
-    'OTHER',
-  ]);
+  const aspectPart =
+    aspects.find((a: any) =>
+      ['mpn', 'model', 'model number', 'manufacturer part number'].includes(
+        String(a.name || '').toLowerCase()
+      )
+    )?.value || '';
 
-  function cleanCandidate(value: unknown): string {
-    return String(value || '')
-      .trim()
-      .toUpperCase()
-      .replace(/^["'([{]+|["'\])}]+$/g, '')
-      .replace(/\s+/g, ' ');
-  }
+  const candidates = [
+    aspectPart,
+    extractPartNumber(title),
+    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{2,4}\b/gi) || []),
+    ...(title.match(/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/gi) || []),
+    ...(title.match(/\b[A-Z]{2,}\d{2,}[A-Z0-9\-/.]*\b/gi) || []),
+    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/gi) || []),
+  ]
+    .map((x) => String(x || '').trim().toUpperCase())
+    .filter(Boolean)
+    .filter((x) => x !== realItemId)
+    .filter((x) => {
+      if (/^27\d{10}$/.test(x)) return false;
+      if (/^\d{12,13}$/.test(x)) return false;
+      return true;
+    })
+    .filter((x) => !/\b(VAC|VDC|HZ|KW|AMP|AMPS|PCS|LOT)\b/i.test(x));
 
-  function isValidPartNumber(value: string): boolean {
-  const normalized = cleanCandidate(value);
-  const compact = normalized.replace(/\s+/g, '-');
-
-  if (!normalized) return false;
-  if (invalidValues.has(normalized)) return false;
-
-  // يمنع رقم منتج eBay
-  if (normalized === String(realItemId).toUpperCase()) return false;
-  if (/^27\d{10}$/.test(normalized)) return false;
-  if (/^\d{12,13}$/.test(normalized)) return false;
-
-  // يمنع القيم العامة
-  if (
-    /^(NEW|USED|REFURBISHED|OPEN BOX|LOT|PCS?|PART NUMBER)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يمنع قيمًا مثل MODEL 550 وREV 02 وNO 857822
-  if (
-    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER|ART|ARTICLE|CAT|CATALOG|REF|REFERENCE|ORDER|SERIAL|SN|LOT|QTY)[\s\-/.]+[A-Z0-9.]+$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يمنع أوصافًا مثل 8 CHANNEL و16 PORT
-  if (
-    /^\d+[\s\-]*(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    /^(CHANNELS?|PORTS?|WAYS?|FOLDS?|PHASES?|POLES?|INPUTS?|OUTPUTS?)[\s\-]*\d+$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يمنع الفولتية والتردد والقدرة
-  if (
-    /^\d+(?:\.\d+)?\s*(VAC|VDC|AC|DC|V|HZ|KHZ|MHZ|KW|W|AMP|AMPS|A|MA)$/i.test(
-      normalized
-    )
-  ) {
-    return false;
-  }
-
-  // يجب أن يحتوي على رقم واحد على الأقل
-  if (!/\d/.test(normalized)) return false;
-
-  // يمنع الجمل الطويلة
-  if (normalized.length > 80) return false;
-  if (normalized.split(/\s+/).length > 5) return false;
-
-  // فحص إضافي بعد تحويل المسافات إلى شرطات
-  if (
-    /^(REV|REVISION|VER|VERSION|MODEL|TYPE|NO|NUMBER)-[A-Z0-9.]+$/i.test(
-      compact
-    )
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-  function getAspectValue(names: string[]): string {
-    for (const name of names) {
-      const found = aspects.find(
-        (aspect: any) =>
-          String(aspect?.name || '').trim().toLowerCase() ===
-          name.toLowerCase()
-      );
-
-      const value = cleanCandidate(found?.value);
-
-      if (isValidPartNumber(value)) {
-        return value;
-      }
-    }
-
-    return '';
-  }
-
-  // الأولوية للبيانات المكتوبة يدويًا في eBay
-  const ebayPartNumber = getAspectValue([
-    'MPN',
-    'Manufacturer Part Number',
-    'Part Number',
-    'Model Number',
-    'Model',
-  ]);
-
-  if (ebayPartNumber) {
-    return ebayPartNumber;
-  }
-
-  // الاستخراج من العنوان فقط عند عدم وجود MPN صالح
-  const extracted = cleanCandidate(extractPartNumber(title));
-
-  if (isValidPartNumber(extracted)) {
-    return extracted;
-  }
-
-  return 'UNKNOWN';
+  return candidates[0] || 'UNKNOWN';
 }
 
 async function createFeedTask(accessToken: string) {
@@ -464,13 +347,8 @@ export async function GET(req: NextRequest) {
     }
 
     let inserted = 0;
-let failed = 0;
-const sample: any[] = [];
-
-let unknownBrand = 0;
-let unknownPartNumber = 0;
-let missingImage = 0;
-let uncategorized = 0;
+    let failed = 0;
+    const sample: any[] = [];
 
     for (let i = 0; i < missingRows.length; i += CONCURRENCY) {
       const chunk = missingRows.slice(i, i + CONCURRENCY);
@@ -491,66 +369,33 @@ let uncategorized = 0;
 
           const realItemId = getRealItemId(item.itemId) || row.ebay_item_id;
           const title = String(item.title || '').trim();
-          
+          const cleanedName = cleanTitle(title);
           const partNumber = getBestPartNumber(item, title, realItemId);
 
           const aspectBrand =
-  item.localizedAspects?.find(
-    (a: any) => String(a.name || '').trim().toLowerCase() === 'brand'
-  )?.value || '';
+            item.localizedAspects?.find(
+              (a: any) => String(a.name || '').toLowerCase() === 'brand'
+            )?.value || '';
 
-const ebayBrand = String(item.brand || aspectBrand || '').trim();
+          const brand = detectIndustrialBrand(
+            [item.brand, aspectBrand, title, cleanedName, partNumber]
+              .filter(Boolean)
+              .join(' ')
+          );
 
-const brand = ebayBrand || detectIndustrialBrand(title);
-          const cleanedName = cleanProductName({
-  title,
-  brand,
-  partNumber,
-});
           const imageUrl =
             item.image?.imageUrl ||
             item.thumbnailImages?.[0]?.imageUrl ||
             item.additionalImages?.[0]?.imageUrl ||
             null;
-const ebayCategory = item.categoryPath || '';
 
-const detectedCategory = detectCategory(
-  title,
-  brand,
-  partNumber
-);
-
-const category =
-  detectedCategory !== 'Industrial Automation'
-    ? detectedCategory
-    : (ebayCategory || 'Industrial Automation');
-
-if (!brand || brand.toUpperCase() === 'UNKNOWN') {
-  unknownBrand++;
-}
-
-if (!partNumber || partNumber === 'UNKNOWN') {
-  unknownPartNumber++;
-}
-
-if (!imageUrl) {
-  missingImage++;
-}
-
-if (
-  !category ||
-  category === 'Industrial Automation' ||
-  category.toUpperCase() === 'UNCATEGORIZED'
-) {
-  uncategorized++;
-}
           const product = {
             ebay_item_id: realItemId,
             sku: realItemId,
             part_number: partNumber,
             model_number: partNumber,
             brand,
-            category,
+            category: item.categoryPath || 'Industrial Automation',
             name: cleanedName,
             condition: cleanCondition(item.condition || 'Used'),
             image_url: imageUrl,
@@ -611,24 +456,19 @@ if (
       })
       .eq('id', JOB_ID);
 
-   return NextResponse.json({
-  success: true,
-  stage: 'imported_new_products',
-  taskId,
-  totalActiveFeedItems: feedRows.length,
-  checkedNewProducts: missingRows.length,
-  inserted,
-  failed,
-  quality: {
-    unknown_brand: unknownBrand,
-    unknown_part_number: unknownPartNumber,
-    missing_image: missingImage,
-    uncategorized,
-  },
-  sample: sample.slice(0, 10),
-});
-} catch (err) {
-  const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({
+      success: true,
+      stage: 'imported_new_products',
+      taskId,
+      totalActiveFeedItems: feedRows.length,
+      checkedNewProducts: missingRows.length,
+      inserted,
+      failed,
+      sample: sample.slice(0, 10),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+
     await supabaseAdmin
       .from('sync_jobs')
       .update({
