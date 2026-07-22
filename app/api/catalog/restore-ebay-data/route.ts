@@ -228,22 +228,29 @@ export async function GET(req: NextRequest) {
      * لأن هذا المسار لن يلمسها نهائيًا.
      */
     const {
-      data: products,
-      error: productsError,
-    } = await supabaseAdmin
-      .from('products')
-      .select(`
-        id,
-        ebay_item_id,
-        name,
-        source,
-        source_type
-      `)
-      .not('ebay_item_id', 'is', null)
-      .order('id', {
-        ascending: true,
-      })
-      .range(
+  data: products,
+  error: productsError,
+} = await supabaseAdmin
+  .from('products')
+  .select(`
+    id,
+    ebay_item_id,
+    name,
+    description,
+    source,
+    source_type
+  `)
+  .not('ebay_item_id', 'is', null)
+  .or(
+    [
+      "name.ilike.%We'll reply as soon as possible%",
+      "description.ilike.%We'll reply as soon as possible%",
+      "name.ilike.%reply as soon%",
+      "description.ilike.%reply as soon%"
+    ].join(',')
+  )
+  .order('id', { ascending: true })
+  .range(offset, offset + limit - 1);
         offset,
         offset + limit - 1
       );
