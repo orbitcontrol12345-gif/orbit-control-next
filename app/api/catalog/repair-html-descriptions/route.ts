@@ -224,6 +224,11 @@ function removeDuplicateHalves(value: string): string {
 function cleanDescription(value: unknown): string {
   const plainText = stripHtml(value);
 
+  console.log('==========================');
+  console.log('RAW DESCRIPTION');
+  console.log(plainText);
+  console.log('==========================');
+
   const withoutMessages =
     removeCorruptedMessages(plainText);
 
@@ -233,18 +238,15 @@ function cleanDescription(value: unknown): string {
   const withoutDuplicates =
     removeDuplicateHalves(withoutPolicies);
 
- return withoutDuplicates
-  .replace(
-  /Industrial equipment available[\s\S]{0,80}?shipping\.?/gi,
-  ''
-)
-  .replace(/^[\s.,:;|/\\\-–—]+/g, '')
-  .replace(/[\s|/\\\-–—]+$/g, '')
-  .replace(/\s+([,.;:])/g, '$1')
-  .replace(/\s+/g, ' ')
-  .trim();
+  return withoutDuplicates
+    .replace(
+      /Industrial equipment available[\s\S]{0,80}?shipping\.?/gi,
+      ''
+    )
+    .replace(/[|,.;]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
-
 function buildFallbackDescription(
   productName: unknown
 ): string {
