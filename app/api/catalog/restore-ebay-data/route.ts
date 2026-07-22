@@ -327,12 +327,14 @@ export async function GET(req: NextRequest) {
       );
 
      const batchResults: Array<{
-  product: any;
-  response: Awaited<ReturnType<typeof fetchEbayItem>> | null;
+  product: ProductRow;
+  response: Awaited<
+    ReturnType<typeof fetchEbayItem>
+  > | null;
   manual: boolean;
 }> = [];
 
-for (const product of rows) {
+for (const product of chunk) {
   if (!product.ebay_item_id) {
     batchResults.push({
       product,
@@ -354,17 +356,14 @@ for (const product of rows) {
     manual: false,
   });
 
-  // توقف فورًا إذا eBay أعاد Rate Limit
   if (response.status === 429) {
     break;
   }
 
-  // انتظار بين كل طلب والطلب التالي
-  await new Promise((resolve) =>
-    setTimeout(resolve, 1200)
-  );
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 1200);
+  });
 }
-
          
 
            const response = await fetchEbayItem(
