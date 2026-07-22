@@ -111,24 +111,28 @@ function stripHtml(value: unknown): string {
 /**
  * يحذف رسائل الرد الخاطئة.
  */
-function removeCorruptedMessages(value: string): string {
-  return value
-    .replace(
-      /we(?:'|’)?ll\s+reply\s+as\s+soon\s+as\s+possible[.!…]*/gi,
-      ' '
-    )
-    .replace(
-      /we\s+will\s+reply\s+as\s+soon\s+as\s+possible[.!…]*/gi,
-      ' '
-    )
-    .replace(
-      /they\s+are\s+not\s+included\s+in\s+the\s+item\s+price[.!…]*/gi,
-      ' '
-    )
-    .replace(
-      /not\s+included\s+in\s+the\s+item\s+price[.!…]*/gi,
-      ' '
-    )
+function cleanDescription(value: unknown): string {
+  const plainText = stripHtml(value);
+
+  const withoutMessages =
+    removeCorruptedMessages(plainText)
+      .replace(
+        /\s*Industrial equipment available for quotation(?:\s+and\s+worldwide\s+shipping)?\.?/gi,
+        ' '
+      )
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const withoutPolicies =
+    cutSellerPolicy(withoutMessages);
+
+  const withoutDuplicates =
+    removeDuplicateHalves(withoutPolicies);
+
+  return withoutDuplicates
+    .replace(/^[\s.,:;|/\\\-–—]+/g, '')
+    .replace(/[\s.,:;|/\\\-–—]+$/g, '')
+    .replace(/\s+([,.;:])/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }
