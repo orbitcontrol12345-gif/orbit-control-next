@@ -251,9 +251,6 @@ export async function GET(req: NextRequest) {
   )
   .order('id', { ascending: true })
   .range(offset, offset + limit - 1);
-        offset,
-        offset + limit - 1
-      );
 
     if (productsError) {
       throw productsError;
