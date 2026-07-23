@@ -16,7 +16,6 @@ import {
   Battery,
   Settings,
   Archive,
-  CheckCircle,
   Search,
   Factory,
   MapPin,
@@ -26,6 +25,8 @@ import {
 } from 'lucide-react';
 
 import HeroSearchBar from '@/components/shared/HeroSearchBar';
+import HeroGlobe from '@/components/home/HeroGlobe';
+import TrustedBrands from '@/components/home/TrustedBrands';
 import ProductCard from '@/components/products/ProductCard';
 import { CATEGORIES, BRANDS } from '@/lib/data';
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
@@ -177,94 +178,12 @@ export default async function HomePage() {
           </div>
 
           <div className="hidden lg:block">
-            <div className="relative">
-              <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-cyan-400/25 via-white/5 to-amber-400/25 blur-xl" />
-
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#081827]/90 p-6 shadow-2xl shadow-black/40 backdrop-blur">
-                <div className="absolute right-[-70px] top-[-70px] h-48 w-48 rounded-full bg-cyan-300/10 blur-3xl" />
-
-                <div className="flex items-start justify-between gap-6">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
-                      RFQ Workflow
-                    </p>
-                    <h3 className="mt-2 text-2xl font-black text-white">
-                      Fast Industrial Sourcing
-                    </h3>
-                  </div>
-
-                  <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-emerald-300">
-                    Online
-                  </div>
-                </div>
-
-                <div className="mt-7 space-y-4">
-                  {PROCESS_ITEMS.map(([num, Icon, title, desc]: any, index) => (
-                    <div key={title} className="relative">
-                      {index < PROCESS_ITEMS.length - 1 && (
-                        <div className="absolute left-[22px] top-12 h-8 w-px bg-gradient-to-b from-cyan-300/50 to-transparent" />
-                      )}
-
-                      <div className="group flex gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition-all duration-300 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-                          <Icon size={18} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-amber-300">{num}</span>
-                            <p className="font-black text-white">{title}</p>
-                          </div>
-                          <p className="mt-1 text-sm leading-6 text-slate-400">{desc}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  {['New', 'Used', 'Refurbished', 'Obsolete'].map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-2xl border border-amber-300/15 bg-amber-300/10 px-4 py-3 text-center text-xs font-black uppercase tracking-wider text-amber-200"
-                    >
-                      {item} Parts
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <HeroGlobe />
           </div>
         </div>
       </section>
 
-      {/* MARQUEE */}
-      <section className="overflow-hidden border-y border-cyan-500/10 bg-[#061421] py-3">
-        <div className="flex w-max gap-12 whitespace-nowrap animate-[marquee_30s_linear_infinite] text-sm font-black uppercase tracking-wider text-cyan-100">
-          {[
-            'PLC SYSTEMS',
-            'HMI PANELS',
-            'VFD DRIVES',
-            'CIRCUIT BREAKERS',
-            'INDUSTRIAL BOARDS',
-            'OBSOLETE PARTS',
-            'WORLDWIDE SHIPPING',
-            'FAST RFQ RESPONSE',
-            'PLC SYSTEMS',
-            'HMI PANELS',
-            'VFD DRIVES',
-            'CIRCUIT BREAKERS',
-            'INDUSTRIAL BOARDS',
-            'OBSOLETE PARTS',
-            'WORLDWIDE SHIPPING',
-            'FAST RFQ RESPONSE',
-          ].map((item, index) => (
-            <span key={`${item}-${index}`} className="inline-flex items-center gap-2">
-              <CheckCircle size={14} className="text-emerald-300" />
-              {item}
-            </span>
-          ))}
-        </div>
-      </section>
+      <TrustedBrands />
 
       {/* TRUST BOXES */}
       <section className="border-b border-white/10 bg-[#071827] py-12">
