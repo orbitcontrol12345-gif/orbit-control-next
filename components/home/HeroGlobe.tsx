@@ -83,8 +83,75 @@ export default function HeroGlobe() {
             </div>
           ))}
 
-          {/* UAE point */}
+                   {/* UAE point */}
           <div className="absolute left-[61%] top-[43%] z-30">
             <span className="absolute -inset-6 animate-ping rounded-full border border-amber-300/50" />
 
-            <span className
+            <span className="absolute -inset-3 rounded-full border border-cyan-300/35" />
+
+            <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-white/70 bg-amber-300 shadow-[0_0_30px_rgba(252,211,77,1)]">
+              <span className="h-2 w-2 rounded-full bg-white" />
+            </span>
+          </div>
+
+          {/* Glass reflection */}
+          <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(115deg,rgba(255,255,255,0.14),transparent_26%,transparent_68%,rgba(14,165,233,0.09))]" />
+
+          <div className="pointer-events-none absolute inset-0 animate-[spin_60s_linear_infinite] rounded-full border border-dashed border-cyan-200/[0.14]" />
+        </div>
+
+        {/* Globe orbit lines */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[125%] -translate-x-1/2 -translate-y-1/2 rotate-[18deg] rounded-[50%] border border-amber-300/35" />
+
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[190px] w-[118%] -translate-x-1/2 -translate-y-1/2 -rotate-[15deg] rounded-[50%] border border-cyan-300/20" />
+
+        {/* Holographic base */}
+        <div className="absolute -bottom-16 left-1/2 h-[92px] w-[128%] -translate-x-1/2 rounded-[50%] border border-cyan-300/30 bg-cyan-400/[0.025] shadow-[0_0_55px_rgba(14,165,233,0.22)]" />
+
+        <div className="absolute -bottom-10 left-1/2 h-[55px] w-[105%] -translate-x-1/2 rounded-[50%] border border-amber-300/30" />
+
+        <div className="absolute -bottom-5 left-1/2 h-[28px] w-[78%] -translate-x-1/2 rounded-[50%] bg-cyan-300/[0.12] blur-md" />
+
+        <div className="absolute -bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-cyan-200 shadow-[0_0_45px_18px_rgba(34,211,238,0.9)]" />
+      </div>
+
+      {/* Ajman card */}
+      <div className="absolute right-[-10px] top-[40%] z-40 hidden w-[215px] rounded-xl border border-cyan-200/25 bg-[#051524]/92 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.6)] backdrop-blur-xl xl:block">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-300/[0.08]">
+            <div className="relative h-6 w-6 rounded-full border border-amber-300">
+              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-200">
+              Supply Hub
+            </p>
+
+            <p className="mt-1 text-sm font-black uppercase text-white">
+              Ajman, UAE
+            </p>
+
+            <p className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400">
+              <span>🇦🇪</span>
+              Global Distribution
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom label */}
+      <div className="absolute bottom-[4px] left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-cyan-300/15 bg-[#06111d]/88 px-4 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-xl">
+        <Globe2 size={14} className="text-cyan-200" />
+        Global Industrial Supply Network
+      </div>
+
+      {/* Decorative location label */}
+      <div className="absolute left-[11%] top-[24%] hidden items-center gap-2 rounded-full border border-white/10 bg-[#06111d]/75 px-3 py-2 text-[10px] text-slate-400 backdrop-blur lg:flex">
+        <MapPin size={13} className="text-amber-300" />
+        Worldwide Supply
+      </div>
+    </div>
+  );
+}
