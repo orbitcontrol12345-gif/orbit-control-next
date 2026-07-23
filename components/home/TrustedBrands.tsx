@@ -48,4 +48,31 @@ export default function TrustedBrands() {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
               TRUSTED BY
-           
+            </p>
+
+            <h2 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">
+              200+ Leading Industrial Brands
+            </h2>
+          </div>
+
+          <div className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
+            GLOBAL BRANDS
+          </div>
+        </div>
+      </div>
+
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-28 bg-gradient-to-r from-[#030b14] to-transparent" />
+
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-28 bg-gradient-to-l from-[#030b14] to-transparent" />
+
+        <div className="overflow-hidden rounded-2xl border border-cyan-300/10 bg-[#06101a]/80 shadow-[0_0_50px_rgba(0,180,255,0.05)]">
+          <div className="flex w-max animate-[brandScroll_55s_linear_infinite]">
+            <BrandRow />
+            <BrandRow />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
