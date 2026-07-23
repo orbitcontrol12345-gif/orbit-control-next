@@ -1,5 +1,6 @@
 import HeaderV2 from '@/components/layout/HeaderV2';
 import HeroV2 from '@/components/home/HeroV2';
+import TrustedBrands from '@/components/home/TrustedBrands';
 
 export const metadata = {
   title: 'Orbit Control V2 Preview',
@@ -16,6 +17,7 @@ export default function DesignPreviewPage() {
 
       <div className="pt-[74px] lg:pt-[106px]">
         <HeroV2 />
+        <TrustedBrands />
       </div>
     </main>
   );
