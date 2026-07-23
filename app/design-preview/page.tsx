@@ -31,6 +31,7 @@ export default function DesignPreviewPage() {
     <StatisticsV2 />
     <IndustriesV2 />
     <GlobalPresenceV2 />
+    <CtaSectionV2 />
      </div>
 </main>
   );
