@@ -2,6 +2,9 @@ import HeaderV2 from '@/components/layout/HeaderV2';
 import HeroV2 from '@/components/home/HeroV2';
 import TrustedBrands from '@/components/home/TrustedBrands';
 
+// سيتم إضافتها
+import CategoriesV2 from '@/components/home/CategoriesV2';
+
 export const metadata = {
   title: 'Orbit Control V2 Preview',
   robots: {
@@ -18,6 +21,9 @@ export default function DesignPreviewPage() {
       <div className="pt-[74px] lg:pt-[106px]">
         <HeroV2 />
         <TrustedBrands />
+
+        {/* NEW */}
+        <CategoriesV2 />
       </div>
     </main>
   );
