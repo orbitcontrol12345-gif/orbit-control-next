@@ -2,6 +2,7 @@ import HeaderV2 from '@/components/layout/HeaderV2';
 import HeroV2 from '@/components/home/HeroV2';
 import TrustedBrands from '@/components/home/TrustedBrands';
 import WhyOrbit from '@/components/home/WhyOrbit';
+import FeaturedShowcase from '@/components/home/FeaturedShowcase';
 // سيتم إضافتها
 import CategoriesV2 from '@/components/home/CategoriesV2';
 
@@ -23,6 +24,7 @@ export default function DesignPreviewPage() {
     <TrustedBrands />
     <CategoriesV2 />
     <WhyOrbit />
+    <FeaturedShowcase />
   </div>
 </main>
   );
