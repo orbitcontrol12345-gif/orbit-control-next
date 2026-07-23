@@ -21,21 +21,21 @@ export const metadata = {
 
 export default function DesignPreviewPage() {
   return (
-    <main className="min-h-screen bg-[#030914]">
-  <HeaderV2 />
+    <main className="min-h-screen bg-[#020711] text-white">
+      <HeaderV2 />
 
-  <div className="pt-[74px] lg:pt-[106px]">
-    <HeroV2 />
-    <TrustedBrands />
-    <CategoriesV2 />
-    <WhyOrbit />
-    <FeaturedShowcase />
-    <StatisticsV2 />
-    <IndustriesV2 />
-    <GlobalPresenceV2 />
-    <CtaSectionV2 />
-    <FooterV2 />
-     </div>
-</main>
+      <div className="pt-[76px] xl:pt-[122px]">
+        <HeroV2 />
+        <TrustedBrands />
+        <CategoriesV2 />
+        <WhyOrbit />
+        <FeaturedShowcase />
+        <StatisticsV2 />
+        <IndustriesV2 />
+        <GlobalPresenceV2 />
+        <CtaSectionV2 />
+        <FooterV2 />
+      </div>
+    </main>
   );
 }
