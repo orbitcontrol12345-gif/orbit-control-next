@@ -4,6 +4,7 @@ import TrustedBrands from '@/components/home/TrustedBrands';
 import WhyOrbit from '@/components/home/WhyOrbit';
 import FeaturedShowcase from '@/components/home/FeaturedShowcase';
 import StatisticsV2 from '@/components/home/StatisticsV2';
+import IndustriesV2 from '@/components/home/IndustriesV2';
 // سيتم إضافتها
 import CategoriesV2 from '@/components/home/CategoriesV2';
 
@@ -27,6 +28,7 @@ export default function DesignPreviewPage() {
     <WhyOrbit />
     <FeaturedShowcase />
     <StatisticsV2 />
+    <IndustriesV2 />
      </div>
 </main>
   );
