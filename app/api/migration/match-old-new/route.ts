@@ -957,36 +957,58 @@ function classifyCandidates(
     };
   }
 
-  // Part number appears in the old page, brand appears too, and title is strong.
-  if (
-    best.reasons.includes('new_part_number_found_in_old_page') &&
-    best.reasons.includes('brand_found_in_old_page') &&
-    best.titleSimilarity >= 0.75 &&
-    best.score >= 900 &&
-    scoreGap >= 250
-  ) {
-    return {
-      level: 'EXACT_MATCH',
-      best,
-      review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
-      scoreGap,
-      equivalentTopCandidates,
-    };
-  }
+ // Part number appears in the old page, brand appears too, and title is strong.
+if (
+  best.reasons.includes('new_part_number_found_in_old_page') &&
+  best.reasons.includes('brand_found_in_old_page') &&
+  best.titleSimilarity >= 0.75 &&
+  best.score >= 900 &&
+  scoreGap >= 250
+) {
+  return {
+    level: 'EXACT_MATCH',
+    best,
+    review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+    scoreGap,
+    equivalentTopCandidates,
+  };
+}
 
-  if (
-    hasExactPageIdentifier &&
-    best.score >= 1200 &&
-    scoreGap >= 180
-  ) {
-    return {
-      level: 'STRONG_MATCH',
-      best,
-      review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
-      scoreGap,
-      equivalentTopCandidates,
-    };
-  }
+/*
+ * Very high-confidence match with a smaller score gap.
+ */
+if (
+  best.reasons.includes('new_part_number_found_in_old_page') &&
+  (
+    hasExactBrand ||
+    best.reasons.includes('brand_found_in_old_page')
+  ) &&
+  best.titleSimilarity >= 0.95 &&
+  best.score >= 1200 &&
+  scoreGap >= 100
+) {
+  return {
+    level: 'STRONG_MATCH',
+    best,
+    review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+    scoreGap,
+    equivalentTopCandidates,
+  };
+}
+
+if (
+  hasExactPageIdentifier &&
+  best.score >= 1200 &&
+  scoreGap >= 180
+) {
+  return {
+    level: 'STRONG_MATCH',
+    best,
+    review: sorted.slice(0, MAX_REVIEW_CANDIDATES),
+    scoreGap,
+    equivalentTopCandidates,
+  };
+}
 
   if (
     best.score >= 850 &&
