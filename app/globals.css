@@ -50,7 +50,21 @@
     @apply font-semibold tracking-tight;
   }
 }
+@keyframes brandScroll {
+  from {
+    transform: translateX(0);
+  }
 
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[brandScroll_36s_linear_infinite\] {
+    animation: none !important;
+  }
+}
 @layer utilities {
   .text-gold {
     color: #c9a84c;
