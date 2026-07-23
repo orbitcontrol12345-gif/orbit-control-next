@@ -4,20 +4,67 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   ChevronDown,
+  Globe2,
+  MapPin,
   Menu,
+  PackageCheck,
   Search,
   ShoppingBag,
+  Truck,
   X,
+  Zap,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { label: 'Products', href: '/products' },
-  { label: 'Brands', href: '/brands' },
-  { label: 'Categories', href: '/categories' },
-  { label: 'Industries', href: '/industries' },
-  { label: 'RFQ', href: '/rfq' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  {
+    label: 'Products',
+    href: '/products',
+    hasDropdown: true,
+  },
+  {
+    label: 'Brands',
+    href: '/brands',
+  },
+  {
+    label: 'Categories',
+    href: '/categories',
+    hasDropdown: true,
+  },
+  {
+    label: 'Industries',
+    href: '/industries',
+  },
+  {
+    label: 'RFQ',
+    href: '/rfq',
+  },
+  {
+    label: 'About Us',
+    href: '/about',
+  },
+  {
+    label: 'Contact',
+    href: '/contact',
+  },
+];
+
+const TOP_BAR_ITEMS = [
+  {
+    label: 'Worldwide Supplier of Industrial Automation Parts',
+    icon: Globe2,
+  },
+  {
+    label: 'Fast RFQ Response',
+    icon: Zap,
+  },
+  {
+    label: 'DHL & FedEx Shipping',
+    icon: Truck,
+  },
+  {
+    label: '14,000+ Parts In Stock',
+    icon: PackageCheck,
+  },
 ];
 
 export default function HeaderV2() {
@@ -26,11 +73,14 @@ export default function HeaderV2() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 16);
     };
 
     handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    window.addEventListener('scroll', handleScroll, {
+      passive: true,
+    });
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -50,27 +100,41 @@ export default function HeaderV2() {
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'border-b border-white/10 bg-[#030914]/88 shadow-2xl shadow-black/30 backdrop-blur-2xl'
-            : 'border-b border-white/[0.07] bg-[#030914]/72 backdrop-blur-xl'
+            ? 'border-b border-cyan-400/15 bg-[#020711]/95 shadow-[0_15px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl'
+            : 'border-b border-white/[0.07] bg-[#020711]/90 backdrop-blur-lg'
         }`}
       >
-        {/* Top bar */}
-        <div className="hidden border-b border-white/[0.06] bg-black/20 lg:block">
-          <div className="page-container flex h-8 items-center justify-between text-[11px] text-slate-400">
-            <div className="flex items-center gap-5">
-              <span>Worldwide Supplier of Industrial Automation Parts</span>
-              <span className="text-amber-300">•</span>
-              <span>Fast RFQ Response</span>
-              <span className="text-amber-300">•</span>
-              <span>DHL & FedEx Shipping</span>
+        {/* Top information bar */}
+        <div className="hidden border-b border-white/[0.06] bg-black/35 xl:block">
+          <div className="page-container flex h-10 items-center justify-between">
+            <div className="flex items-center gap-8">
+              {TOP_BAR_ITEMS.map(({ label, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 text-[11px] font-medium text-slate-300"
+                >
+                  <Icon
+                    size={13}
+                    strokeWidth={2}
+                    className="text-amber-400"
+                  />
+
+                  <span>{label}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="flex items-center gap-4">
-              <span>Ajman, UAE</span>
-              <span className="h-3 w-px bg-white/10" />
+            <div className="flex items-center gap-4 text-[11px] text-slate-300">
+              <div className="flex items-center gap-2">
+                <MapPin size={13} className="text-cyan-400" />
+                <span>Ajman, UAE</span>
+              </div>
+
+              <span className="h-4 w-px bg-white/10" />
+
               <button
                 type="button"
-                className="flex items-center gap-1 transition hover:text-white"
+                className="flex items-center gap-1.5 transition hover:text-white"
               >
                 English
                 <ChevronDown size={12} />
@@ -80,64 +144,76 @@ export default function HeaderV2() {
         </div>
 
         {/* Main navigation */}
-        <div className="page-container flex h-[74px] items-center justify-between gap-6">
+        <div className="page-container flex h-[76px] items-center justify-between gap-5 lg:h-[82px]">
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-3"
-            aria-label="Orbit Control Home"
+            aria-label="Orbit Control Automation Home"
+            className="group flex shrink-0 items-center gap-3"
           >
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-full border border-amber-300/25 bg-amber-300/[0.08]">
-              <div className="absolute h-7 w-7 rounded-full border-2 border-amber-300" />
-              <div className="absolute h-[2px] w-10 -rotate-[28deg] bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
-              <div className="absolute right-1 top-2 h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />
+            <div className="relative flex h-12 w-12 items-center justify-center">
+              <div className="absolute inset-[5px] rounded-full border-2 border-amber-400 transition group-hover:shadow-[0_0_24px_rgba(251,191,36,0.35)]" />
+
+              <div className="absolute h-[2px] w-[52px] -rotate-[38deg] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+
+              <div className="absolute right-0 top-1 h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.9)]" />
+
+              <div className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.85)]" />
             </div>
 
-            <div>
-              <div className="text-[18px] font-black uppercase tracking-[0.08em] text-white">
+            <div className="leading-none">
+              <div className="text-[18px] font-black uppercase tracking-[0.07em] text-white lg:text-[20px]">
                 Orbit Control
               </div>
-              <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.42em] text-slate-400">
+
+              <div className="mt-2 text-[8px] font-bold uppercase tracking-[0.48em] text-slate-400">
                 Automation
               </div>
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 xl:flex">
+          <nav className="hidden items-center gap-0.5 xl:flex">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.05] hover:text-white"
+                className="group flex h-11 items-center gap-1 rounded-lg px-3 text-[13px] font-semibold text-slate-300 transition hover:bg-white/[0.05] hover:text-white"
               >
-                {item.label}
+                <span>{item.label}</span>
+
+                {item.hasDropdown && (
+                  <ChevronDown
+                    size={13}
+                    className="mt-0.5 text-slate-500 transition group-hover:text-amber-400"
+                  />
+                )}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             <Link
               href="/products"
-              aria-label="Search products"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.08] hover:text-cyan-100"
+              aria-label="Search industrial parts"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/[0.035] text-slate-300 transition hover:border-cyan-400/40 hover:bg-cyan-400/[0.08] hover:text-cyan-200"
             >
               <Search size={18} />
             </Link>
 
             <Link
               href="/rfq"
-              aria-label="RFQ basket"
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-amber-300/30 hover:bg-amber-300/[0.08] hover:text-amber-100"
+              aria-label="Open RFQ basket"
+              className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/[0.035] text-slate-300 transition hover:border-amber-400/40 hover:bg-amber-400/[0.08] hover:text-amber-200"
             >
               <ShoppingBag size={18} />
 
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[9px] font-black text-[#111827]">
+              <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-[#020711] bg-amber-400 px-1 text-[9px] font-black leading-none text-black">
                 0
               </span>
             </Link>
 
             <Link
               href="/rfq"
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 px-5 text-sm font-black text-[#111827] shadow-lg shadow-amber-950/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-900/30"
+              className="ml-1 inline-flex h-11 items-center justify-center rounded-lg bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 px-5 text-[13px] font-black text-[#111827] shadow-[0_8px_30px_rgba(245,158,11,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_35px_rgba(245,158,11,0.35)]"
             >
               Request a Quote
             </Link>
@@ -148,54 +224,83 @@ export default function HeaderV2() {
             aria-label="Open navigation menu"
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-white transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.08] lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.08] lg:hidden"
           >
-            <Menu size={21} />
+            <Menu size={22} />
           </button>
         </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
       </header>
 
-      {/* Mobile overlay */}
+      {/* Mobile background */}
       <div
-        className={`fixed inset-0 z-[60] bg-black/65 backdrop-blur-sm transition duration-300 lg:hidden ${
+        aria-hidden="true"
+        onClick={() => setMobileOpen(false)}
+        className={`fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
           mobileOpen
             ? 'pointer-events-auto opacity-100'
             : 'pointer-events-none opacity-0'
         }`}
-        onClick={() => setMobileOpen(false)}
       />
 
-      {/* Mobile panel */}
+      {/* Mobile navigation */}
       <aside
-        className={`fixed right-0 top-0 z-[70] h-full w-[88%] max-w-sm border-l border-white/10 bg-[#06111d] shadow-2xl shadow-black/60 transition-transform duration-300 lg:hidden ${
+        className={`fixed right-0 top-0 z-[70] h-dvh w-[90%] max-w-sm overflow-y-auto border-l border-cyan-400/15 bg-[#030b16] shadow-2xl shadow-black/80 transition-transform duration-300 lg:hidden ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex h-[74px] items-center justify-between border-b border-white/10 px-5">
-          <span className="font-black uppercase tracking-[0.08em] text-white">
-            Orbit Control
-          </span>
+        <div className="flex h-[76px] items-center justify-between border-b border-white/10 px-5">
+          <Link
+            href="/"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3"
+          >
+            <div className="relative flex h-10 w-10 items-center justify-center">
+              <div className="absolute inset-1 rounded-full border-2 border-amber-400" />
+              <div className="absolute h-[2px] w-10 -rotate-[38deg] bg-cyan-400" />
+              <div className="h-2 w-2 rounded-full bg-cyan-400" />
+            </div>
+
+            <div>
+              <div className="text-sm font-black uppercase tracking-[0.08em] text-white">
+                Orbit Control
+              </div>
+
+              <div className="mt-1 text-[7px] font-bold uppercase tracking-[0.4em] text-slate-500">
+                Automation
+              </div>
+            </div>
+          </Link>
 
           <button
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setMobileOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="p-5">
-          <div className="mb-5 flex items-center rounded-xl border border-white/10 bg-white/[0.04] px-4">
-            <Search size={18} className="shrink-0 text-slate-500" />
+          <form
+            action="/products"
+            method="get"
+            className="mb-5 flex overflow-hidden rounded-xl border border-cyan-400/20 bg-black/25"
+          >
+            <Search
+              size={18}
+              className="ml-4 shrink-0 self-center text-cyan-400"
+            />
 
             <input
               type="search"
+              name="search"
               placeholder="Search part number..."
-              className="h-12 w-full bg-transparent px-3 text-sm text-white outline-none placeholder:text-slate-600"
+              className="h-12 min-w-0 flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-slate-600"
             />
-          </div>
+          </form>
 
           <nav className="space-y-1">
             {NAV_ITEMS.map((item) => (
@@ -203,10 +308,20 @@ export default function HeaderV2() {
                 key={item.label}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-between rounded-xl border border-transparent px-4 py-3.5 text-sm font-bold text-slate-300 transition hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                className="group flex items-center justify-between rounded-xl border border-transparent px-4 py-3.5 text-sm font-bold text-slate-300 transition hover:border-cyan-400/15 hover:bg-cyan-400/[0.05] hover:text-white"
               >
-                {item.label}
-                <span className="text-slate-600">→</span>
+                <span>{item.label}</span>
+
+                {item.hasDropdown ? (
+                  <ChevronDown
+                    size={15}
+                    className="text-slate-600 group-hover:text-amber-400"
+                  />
+                ) : (
+                  <span className="text-slate-600 group-hover:text-cyan-400">
+                    →
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -214,20 +329,28 @@ export default function HeaderV2() {
           <Link
             href="/rfq"
             onClick={() => setMobileOpen(false)}
-            className="mt-6 flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 text-sm font-black text-[#111827]"
+            className="mt-6 flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 text-sm font-black text-[#111827] shadow-lg shadow-amber-950/30"
           >
             Request a Quote
           </Link>
 
-          <div className="mt-6 rounded-2xl border border-cyan-300/10 bg-cyan-300/[0.05] p-4">
-            <p className="text-xs font-black uppercase tracking-[0.15em] text-cyan-200">
-              Global Industrial Supply
-            </p>
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <div className="space-y-4 text-xs text-slate-400">
+              <div className="flex items-center gap-3">
+                <MapPin size={15} className="text-cyan-400" />
+                <span>Ajman, United Arab Emirates</span>
+              </div>
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              PLCs, HMIs, VFDs, breakers, sensors, industrial boards and
-              obsolete automation parts.
-            </p>
+              <div className="flex items-center gap-3">
+                <Truck size={15} className="text-amber-400" />
+                <span>DHL & FedEx Worldwide Shipping</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <PackageCheck size={15} className="text-cyan-400" />
+                <span>14,000+ Industrial Parts</span>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
