@@ -164,24 +164,29 @@ export default async function HomePage() {
             </div>
 
             <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
-              {[
-                ['64,000+', 'Industrial Items', 'Live inventory'],
-                ['200+', 'Global Brands', 'Automation supply'],
-                ['24h', 'RFQ Target', 'Fast response'],
-              ].map(([value, label, note]) => (
-                <div
-                  key={label}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.06] p-3 sm:p-4 lg:p-5 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] lg:p-5"
-                >
-                  <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white">{value}</div>
-                  <div className="mt-1 text-[9px] leading-tight sm:text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-200">
-                    {label}
-                  </div>
-                  <div className="mt-2 hidden text-[9px] leading-tight text-slate-400 sm:block sm:text-[10px] lg:text-xs">
-  {note}
+  {[
+    ['64,000+', 'Industrial Items', 'Live inventory'],
+    ['200+', 'Global Brands', 'Automation supply'],
+    ['24h', 'RFQ Target', 'Fast response'],
+  ].map(([value, label, note]) => (
+    <div
+      key={label}
+      className="group rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] sm:p-4 lg:p-5"
+    >
+      <div className="text-xl font-black text-white sm:text-2xl lg:text-3xl">
+        {value}
+      </div>
+
+      <div className="mt-1 text-[9px] font-black uppercase leading-tight tracking-wider text-cyan-200 sm:text-[10px] lg:text-xs">
+        {label}
+      </div>
+
+      <div className="mt-2 hidden text-[9px] leading-tight text-slate-400 sm:block sm:text-[10px] lg:text-xs">
+        {note}
+      </div>
+    </div>
+  ))}
 </div>
-              ))}
-            </div>
           </div>
 
           <div className="hidden lg:block">
