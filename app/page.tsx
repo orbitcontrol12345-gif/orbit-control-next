@@ -159,7 +159,7 @@ export default async function HomePage() {
 
             <div className="mt-12 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
               {[
-                ['14,000+', 'Industrial Items', 'Live inventory'],
+                ['64,000+', 'Industrial Items', 'Live inventory'],
                 ['200+', 'Global Brands', 'Automation supply'],
                 ['24h', 'RFQ Target', 'Fast response'],
               ].map(([value, label, note]) => (
