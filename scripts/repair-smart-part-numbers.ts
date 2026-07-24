@@ -116,11 +116,15 @@ async function main() {
         continue;
       }
 
-      const source =
-        String(product.description || '').trim() ||
-        String(product.name || '').trim();
+            const namePart = extractSmartPartNumber(
+        String(product.name || '').trim()
+      );
 
-      const newPart = extractSmartPartNumber(source);
+      const descriptionPart = extractSmartPartNumber(
+        String(product.description || '').trim()
+      );
+
+      const newPart = namePart || descriptionPart;
       const oldPart = String(product.part_number || '').trim();
 
       if (!newPart || newPart.toUpperCase() === oldPart.toUpperCase()) {
