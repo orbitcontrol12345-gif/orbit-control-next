@@ -160,7 +160,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-12 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="mt-10 grid grid-cols-2 gap-3 lg:mt-12 lg:max-w-3xl lg:grid-cols-3 lg:gap-4">
               {[
                 ['64,000+', 'Industrial Items', 'Live inventory'],
                 ['200+', 'Global Brands', 'Automation supply'],
@@ -168,13 +168,13 @@ export default async function HomePage() {
               ].map(([value, label, note]) => (
                 <div
                   key={label}
-                  className="group rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07]"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] lg:p-5"
                 >
-                  <div className="text-3xl font-black text-white">{value}</div>
-                  <div className="mt-1 text-xs font-black uppercase tracking-wider text-cyan-200">
+                  <div className="text-2xl lg:text-3xl font-black text-white">{value}</div>
+                  <div className="mt-1 text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-200">
                     {label}
                   </div>
-                  <div className="mt-2 text-xs text-slate-400">{note}</div>
+                  <div className="mt-2 text-[10px] lg:text-xs text-slate-400">{note}</div>
                 </div>
               ))}
             </div>
