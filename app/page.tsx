@@ -123,14 +123,14 @@ export default async function HomePage() {
               Orbit Control Automation — UAE
             </div>
 
-            <h1 className="max-w-5xl text-4xl font-black leading-[1.02] tracking-tight text-white md:text-6xl lg:text-7xl">
+            <h1 className="max-w-5xl text-[38px] font-black leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
               Industrial Automation
               <span className="block bg-gradient-to-r from-cyan-200 via-white to-amber-200 bg-clip-text text-transparent">
                 Parts Delivered Worldwide.
               </span>
             </h1>
 
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
+            <p className="mt-5 max-w-xl text-[15px] leading-7 text-slate-300 sm:mt-7 sm:max-w-2xl sm:text-lg sm:leading-8">
               Source PLCs, HMIs, VFDs, sensors, relays, circuit breakers, control boards,
               obsolete and surplus automation spare parts with fast RFQ support.
             </p>
@@ -145,13 +145,16 @@ export default async function HomePage() {
               <HeroSearchBar />
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/rfq" className="btn-gold shadow-xl shadow-amber-950/30">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link
+  href="/rfq"
+  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30 sm:w-auto"
+>
                 <FileText size={18} />
                 Request a Quote
               </Link>
 
-              <Link href="/products" className="btn-outline-slate">
+              <Link href="/products" className="btn-outline-slate w-full justify-center sm:w-auto">
                 Browse Inventory
                 <ArrowRight size={18} />
               </Link>
