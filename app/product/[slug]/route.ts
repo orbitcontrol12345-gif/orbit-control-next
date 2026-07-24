@@ -3,13 +3,24 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V2-SAFE';
+const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V3-FALLBACK';
 
 type RouteContext = {
   params: Promise<{
     slug: string;
   }>;
+};
+
+type RedirectRow = {
+  id: number;
+  old_url: string | null;
+  old_path: string | null;
+  new_url: string | null;
+  match_level: string | null;
+  is_active: boolean | null;
+  redirect_enabled: boolean | null;
 };
 
 function normalizePath(pathname: string): string {
@@ -28,39 +39,85 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
+    const decodedSlug = decodeURIComponent(slug);
+
     const oldPath = normalizePath(
-      `/product/${slug}`
+      `/product/${decodedSlug}`
     );
 
-    const pathWithoutTrailingSlash =
+    const oldPathWithoutSlash =
       oldPath.replace(/\/+$/, '');
 
     const candidatePaths = Array.from(
       new Set([
         oldPath,
-        pathWithoutTrailingSlash,
+        oldPathWithoutSlash,
       ])
     );
 
-    const { data: redirectRow, error } =
-      await supabaseAdmin
+    const canonicalOldUrls = [
+      `https://www.orbit-surplus.com${oldPath}`,
+      `https://www.orbit-surplus.com${oldPathWithoutSlash}`,
+      `https://orbit-surplus.com${oldPath}`,
+      `https://orbit-surplus.com${oldPathWithoutSlash}`,
+    ];
+
+    let redirectRow: RedirectRow | null = null;
+
+    /*
+     * First attempt: search by old_path.
+     */
+    const pathResult = await supabaseAdmin
+      .from('migration_redirects')
+      .select(`
+        id,
+        old_url,
+        old_path,
+        new_url,
+        match_level,
+        is_active,
+        redirect_enabled
+      `)
+      .in('old_path', candidatePaths)
+      .eq('is_active', true)
+      .eq('redirect_enabled', true)
+      .limit(1)
+      .maybeSingle();
+
+    if (pathResult.error) {
+      throw pathResult.error;
+    }
+
+    redirectRow =
+      pathResult.data as RedirectRow | null;
+
+    /*
+     * Fallback: search by complete old_url.
+     */
+    if (!redirectRow?.new_url) {
+      const urlResult = await supabaseAdmin
         .from('migration_redirects')
         .select(`
           id,
+          old_url,
           old_path,
           new_url,
           match_level,
           is_active,
           redirect_enabled
         `)
-        .in('old_path', candidatePaths)
+        .in('old_url', canonicalOldUrls)
         .eq('is_active', true)
         .eq('redirect_enabled', true)
         .limit(1)
         .maybeSingle();
 
-    if (error) {
-      throw error;
+      if (urlResult.error) {
+        throw urlResult.error;
+      }
+
+      redirectRow =
+        urlResult.data as RedirectRow | null;
     }
 
     if (!redirectRow?.new_url) {
@@ -70,21 +127,26 @@ export async function GET(
           routeVersion: ROUTE_VERSION,
           status:
             'LEGACY_REDIRECT_NOT_ENABLED_OR_NOT_FOUND',
+          slug: decodedSlug,
           oldPath,
+          candidatePaths,
+          canonicalOldUrls,
           redirectEnabled: false,
         },
         {
           status: 404,
           headers: {
-            'Cache-Control': 'no-store',
-            'X-Robots-Tag': 'noindex, nofollow',
+            'Cache-Control':
+              'no-store, no-cache, must-revalidate',
+            'X-Robots-Tag':
+              'noindex, nofollow',
           },
         }
       );
     }
 
     const destination = new URL(
-      String(redirectRow.new_url),
+      redirectRow.new_url,
       req.url
     );
 
@@ -101,6 +163,16 @@ export async function GET(
     response.headers.set(
       'X-Orbit-Migration',
       'legacy-product-redirect'
+    );
+
+    response.headers.set(
+      'X-Orbit-Redirect-Id',
+      String(redirectRow.id)
+    );
+
+    response.headers.set(
+      'X-Orbit-Route-Version',
+      ROUTE_VERSION
     );
 
     return response;
@@ -122,8 +194,10 @@ export async function GET(
       {
         status: 500,
         headers: {
-          'Cache-Control': 'no-store',
-          'X-Robots-Tag': 'noindex, nofollow',
+          'Cache-Control':
+            'no-store, no-cache, must-revalidate',
+          'X-Robots-Tag':
+            'noindex, nofollow',
         },
       }
     );
