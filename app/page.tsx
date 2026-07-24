@@ -92,7 +92,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-cyan-400/10 bg-[#04101b] min-h-[78vh] lg:min-h-[88vh]"
+      <section className="relative min-h-[78vh] overflow-hidden border-b border-cyan-400/10 bg-[#04101b] lg:min-h-[88vh]">
         <div
           className="absolute inset-0"
           style={{
