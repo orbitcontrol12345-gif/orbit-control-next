@@ -161,29 +161,7 @@ export default async function HomePage() {
       </span>
     </div>
 
-    <HeroSearchBar />
-  </div>
-
-  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-    <Link
-      href="/rfq"
-      className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30"
-    >
-      <FileText size={18} />
-      Request a Quote
-    </Link>
-
-    <Link
-      href="/products"
-      className="btn-outline-slate w-full justify-center"
-    >
-      Browse Inventory
-      <ArrowRight size={18} />
-    </Link>
-  </div>
-</div>
-
-            <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
+               <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
   {[
     ['64,000+', 'Industrial Items', 'Live inventory'],
     ['200+', 'Global Brands', 'Automation supply'],
