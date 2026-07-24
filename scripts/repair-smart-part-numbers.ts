@@ -78,16 +78,20 @@ function extractSmartPartNumber(title: string): string {
 }
 
 function needsRepair(product: any) {
-  const part = String(product.part_number || '').trim();
-  const name = String(product.name || '').trim();
+  const part = String(product.part_number || '').trim().toUpperCase();
+  const name = String(product.name || '').trim().toUpperCase();
 
   return (
     !part ||
     part.length > 40 ||
-    part.toUpperCase() === name.toUpperCase()
+    part === name ||
+    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]?\d{2,8}$/i.test(
+      part
+    ) ||
+    /^(19|20)\d{2}$/i.test(part) ||
+    /^27\d{10}$/.test(part)
   );
 }
-
 async function main() {
   let from = 0;
   let scanned = 0;
