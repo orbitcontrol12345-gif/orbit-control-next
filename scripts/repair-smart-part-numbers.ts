@@ -1,7 +1,8 @@
 import { supabaseAdmin } from '../lib/supabase-admin';
 
 const BATCH_SIZE = 100;
-
+const DRY_RUN = process.env.DRY_RUN !== 'false';
+const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 50);
 const BAD_UNITS =
   /\b\d+(?:\.\d+)?\s?(VAC|VDC|VAC\/DC|AC|DC|V|HZ|KHZ|MHZ|VA|KVA|W|KW|A|MA|AMP|AMPS|BAR|PSI|MM|CM|M|KG|G|RPM|HP|PH)\b/i;
 
@@ -108,15 +109,17 @@ async function main() {
     if (error) throw error;
     if (!products?.length) break;
 
-    for (const product of products) {
+        for (const product of products) {
       scanned++;
+
+      if (scanned > MAX_PRODUCTS) break;
 
       if (!needsRepair(product)) {
         skipped++;
         continue;
       }
 
-            const namePart = extractSmartPartNumber(
+      const namePart = extractSmartPartNumber(
         String(product.name || '').trim()
       );
 
@@ -129,6 +132,12 @@ async function main() {
 
       if (!newPart || newPart.toUpperCase() === oldPart.toUpperCase()) {
         skipped++;
+        continue;
+      }
+
+      if (DRY_RUN) {
+        repaired++;
+        console.log(`PREVIEW ${product.id}: ${oldPart} => ${newPart}`);
         continue;
       }
 
@@ -150,6 +159,8 @@ async function main() {
       repaired++;
       console.log(`✔ ${product.id}: ${oldPart} => ${newPart}`);
     }
+
+    if (scanned >= MAX_PRODUCTS) break;
 
     from += BATCH_SIZE;
   }
