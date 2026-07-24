@@ -340,9 +340,13 @@ function scorePart(value: string): number {
   const v = normalizePart(value);
 
   if (isBadPart(v)) return -9999;
-if (/^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]/i.test(v)) {
-  return -9999;
-}
+
+  if (
+    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]/i.test(v)
+  ) {
+    return -9999;
+  }
+
   let score = 0;
 
   /*
