@@ -286,7 +286,16 @@ function isRevisionToken(value: string): boolean {
     /^[A-Z]?-?REV-?[A-Z0-9.]+$/i.test(v)
   );
 }
+function isManufacturingOrDateCode(value: string): boolean {
+  const v = normalizePart(value);
 
+  return (
+    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]?\d{2,8}$/i.test(
+      v
+    ) ||
+    /^(19|20)\d{2}$/i.test(v)
+  );
+}
 function isBadPart(value: string): boolean {
   const v = normalizePart(value);
 
@@ -297,7 +306,7 @@ function isBadPart(value: string): boolean {
   if (startsWithDescriptor(v)) return true;
   if (isDescriptiveToken(v)) return true;
   if (isRevisionToken(v)) return true;
-
+  if (isManufacturingOrDateCode(v)) return true;
   // eBay item IDs
   if (/^27\d{10}$/.test(v)) return true;
 
@@ -331,7 +340,9 @@ function scorePart(value: string): number {
   const v = normalizePart(value);
 
   if (isBadPart(v)) return -9999;
-
+if (/^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]/i.test(v)) {
+  return -9999;
+}
   let score = 0;
 
   /*
