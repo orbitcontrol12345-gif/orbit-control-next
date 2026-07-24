@@ -145,22 +145,25 @@ export default async function HomePage() {
               <HeroSearchBar />
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-8 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
               <Link
   href="/rfq"
-  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30 sm:w-auto"
+  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30"
 >
-                <FileText size={18} />
-                Request a Quote
-              </Link>
+  <FileText size={18} />
+  Request a Quote
+</Link>
 
-              <Link href="/products" className="btn-outline-slate w-full justify-center sm:w-auto">
-                Browse Inventory
-                <ArrowRight size={18} />
-              </Link>
+              <Link
+  href="/products"
+  className="btn-outline-slate w-full justify-center"
+>
+  Browse Inventory
+  <ArrowRight size={18} />
+</Link>
             </div>
 
-            <div className="mt-10 grid grid-cols-2 gap-3 lg:mt-12 lg:max-w-3xl lg:grid-cols-3 lg:gap-4">
+            <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
               {[
                 ['64,000+', 'Industrial Items', 'Live inventory'],
                 ['200+', 'Global Brands', 'Automation supply'],
@@ -168,14 +171,15 @@ export default async function HomePage() {
               ].map(([value, label, note]) => (
                 <div
                   key={label}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] lg:p-5"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.06] p-3 sm:p-4 lg:p-5 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] lg:p-5"
                 >
-                  <div className="text-2xl lg:text-3xl font-black text-white">{value}</div>
-                  <div className="mt-1 text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-200">
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white">{value}</div>
+                  <div className="mt-1 text-[9px] leading-tight sm:text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-200">
                     {label}
                   </div>
-                  <div className="mt-2 text-[10px] lg:text-xs text-slate-400">{note}</div>
-                </div>
+                  <div className="mt-2 hidden text-[9px] leading-tight text-slate-400 sm:block sm:text-[10px] lg:text-xs">
+  {note}
+</div>
               ))}
             </div>
           </div>
