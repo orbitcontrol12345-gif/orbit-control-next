@@ -92,7 +92,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[88vh] overflow-hidden border-b border-cyan-400/10 bg-[#04101b]">
+      <section className="relative overflow-hidden border-b border-cyan-400/10 bg-[#04101b] min-h-[78vh] lg:min-h-[88vh]"
         <div
           className="absolute inset-0"
           style={{
@@ -113,7 +113,7 @@ export default async function HomePage() {
         <div className="absolute left-[-120px] top-28 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="absolute right-[-100px] top-20 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
 
-        <div className="page-container relative grid min-h-[88vh] items-center gap-14 py-24 lg:grid-cols-[1.12fr_0.88fr]">
+        <div className="page-container relative grid min-h-[78vh] items-center gap-10 py-14 lg:min-h-[88vh] lg:gap-14 lg:py-24 lg:grid-cols-[1.12fr_0.88fr]">
           <div>
             <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-100 shadow-lg shadow-cyan-950/30">
               <span className="relative flex h-2.5 w-2.5">
