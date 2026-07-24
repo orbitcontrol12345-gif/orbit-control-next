@@ -145,39 +145,63 @@ export default async function HomePage() {
               <HeroSearchBar />
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-  href="/rfq"
-  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30 sm:w-auto"
->
-                <FileText size={18} />
-                Request a Quote
-              </Link>
+            <div className="mx-auto w-full max-w-3xl px-6 sm:px-0">
+  <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl shadow-black/30 backdrop-blur">
+    <div className="mb-3 flex flex-wrap gap-2 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+      <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">
+        Part Number
+      </span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Manufacturer</span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Model</span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Obsolete Stock</span>
+    </div>
 
-              <Link href="/products" className="btn-outline-slate w-full justify-center sm:w-auto">
-                Browse Inventory
-                <ArrowRight size={18} />
-              </Link>
-            </div>
+    <HeroSearchBar />
+  </div>
 
-            <div className="mt-10 grid grid-cols-2 gap-3 lg:mt-12 lg:max-w-3xl lg:grid-cols-3 lg:gap-4">
-              {[
-                ['64,000+', 'Industrial Items', 'Live inventory'],
-                ['200+', 'Global Brands', 'Automation supply'],
-                ['24h', 'RFQ Target', 'Fast response'],
-              ].map(([value, label, note]) => (
-                <div
-                  key={label}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.06] p-4 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] lg:p-5"
-                >
-                  <div className="text-2xl lg:text-3xl font-black text-white">{value}</div>
-                  <div className="mt-1 text-[10px] lg:text-xs font-black uppercase tracking-wider text-cyan-200">
-                    {label}
-                  </div>
-                  <div className="mt-2 text-[10px] lg:text-xs text-slate-400">{note}</div>
-                </div>
-              ))}
-            </div>
+  <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <Link
+      href="/rfq"
+      className="btn-gold h-12 w-full justify-center px-5 text-sm shadow-xl shadow-amber-950/30"
+    >
+      <FileText size={18} />
+      Request a Quote
+    </Link>
+
+    <Link
+      href="/products"
+      className="btn-outline-slate h-12 w-full justify-center px-5 text-sm"
+    >
+      Browse Inventory
+      <ArrowRight size={18} />
+    </Link>
+  </div>
+</div>
+
+            <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
+  {[
+    ['64,000+', 'Industrial Items', 'Live inventory'],
+    ['200+', 'Global Brands', 'Automation supply'],
+    ['24h', 'RFQ Target', 'Fast response'],
+  ].map(([value, label, note]) => (
+    <div
+      key={label}
+      className="group rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] sm:p-4 lg:p-5"
+    >
+      <div className="text-xl font-black text-white sm:text-2xl lg:text-3xl">
+        {value}
+      </div>
+
+      <div className="mt-1 text-[9px] font-black uppercase leading-tight tracking-wider text-cyan-200 sm:text-[10px] lg:text-xs">
+        {label}
+      </div>
+
+      <div className="mt-2 hidden text-[9px] leading-tight text-slate-400 sm:block sm:text-[10px] lg:text-xs">
+        {note}
+      </div>
+    </div>
+  ))}
+</div>
           </div>
 
           <div className="hidden lg:block">
