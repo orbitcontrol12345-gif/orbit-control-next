@@ -283,7 +283,7 @@ export async function GET() {
       throw new Error('Missing eBay access token');
     }
 
-    const statusFilter = UPGRADE_STATUSES.join(',');
+    
 
     const { data: products, error } =
       await supabaseAdmin
@@ -302,9 +302,7 @@ export async function GET() {
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
         .gt('id', currentCursor)
-        .or(
-          `image_status.is.null,image_status.in.(${statusFilter})`
-        )
+       .is('r2_image_url', null)
         .order('id', { ascending: true })
         .limit(LIMIT);
 
