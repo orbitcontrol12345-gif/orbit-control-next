@@ -145,23 +145,38 @@ export default async function HomePage() {
               <HeroSearchBar />
             </div>
 
-            <div className="mt-8 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-              <Link
-  href="/rfq"
-  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30"
->
-  <FileText size={18} />
-  Request a Quote
-</Link>
+            <div className="mx-auto w-full max-w-3xl px-6 sm:px-0">
+  <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl shadow-black/30 backdrop-blur">
+    <div className="mb-3 flex flex-wrap gap-2 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
+      <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">
+        Part Number
+      </span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Manufacturer</span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Model</span>
+      <span className="rounded-full bg-white/5 px-3 py-1">Obsolete Stock</span>
+    </div>
 
-              <Link
-  href="/products"
-  className="btn-outline-slate w-full justify-center"
->
-  Browse Inventory
-  <ArrowRight size={18} />
-</Link>
-            </div>
+    <HeroSearchBar />
+  </div>
+
+  <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <Link
+      href="/rfq"
+      className="btn-gold h-12 w-full justify-center px-5 text-sm shadow-xl shadow-amber-950/30"
+    >
+      <FileText size={18} />
+      Request a Quote
+    </Link>
+
+    <Link
+      href="/products"
+      className="btn-outline-slate h-12 w-full justify-center px-5 text-sm"
+    >
+      Browse Inventory
+      <ArrowRight size={18} />
+    </Link>
+  </div>
+</div>
 
             <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
   {[
