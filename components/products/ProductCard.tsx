@@ -108,7 +108,7 @@ export default function ProductCard({
           unoptimized
           onError={handleImageError}
           sizes="(max-width:768px) 50vw, (max-width:1200px) 25vw, 300px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-contain transition-transform duration-500 group-hover:scale-105"
         />
 
         <div className="absolute left-2 top-2">
