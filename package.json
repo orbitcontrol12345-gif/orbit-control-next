@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "typecheck": "tsc --noEmit",
+  "repair:parts": "tsx scripts/repair-smart-part-numbers.ts"
+},
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1079.0",
     "@hookform/resolvers": "^3.9.0",
@@ -76,6 +77,7 @@
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.2.2",
+    "tsx": "^4.20.3",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
   }
