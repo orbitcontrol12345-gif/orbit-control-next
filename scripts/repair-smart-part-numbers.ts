@@ -1,194 +1,258 @@
 import { supabaseAdmin } from '../lib/supabase-admin';
+import { getEbayToken } from '../lib/ebay';
 
 const BATCH_SIZE = 100;
+const CONCURRENCY = 5;
 const DRY_RUN = process.env.DRY_RUN !== 'false';
 const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 50);
-const BAD_UNITS =
-  /\b\d+(?:\.\d+)?\s?(VAC|VDC|VAC\/DC|AC|DC|V|HZ|KHZ|MHZ|VA|KVA|W|KW|A|MA|AMP|AMPS|BAR|PSI|MM|CM|M|KG|G|RPM|HP|PH)\b/i;
 
-const REMOVE_WORDS =
-  /\b(NEW|USED|OPEN|BOX|WITHOUT|WITH|W\/|FILTHY|DAMAGED|BROKEN|TESTED|TRIED|ONLY|CASE|COVER|BATTERY|SCREEN|KEYPAD|SERIES|TYPE|MODEL|MODULE|CONTROLLER|BOARD|RELAY|METER|POWER|SUPPLY|DETECTOR|APPLIANCE|SYSTEM|PANEL|SWITCH|CARD|UNIT|INPUT|OUTPUT|CIRCUIT|PCB|PRINTED|ELECTRIC|ELECTRONICS|AUTOMATION|INDUSTRIAL)\b/gi;
+const INVALID_EBAY_VALUES =
+  /^(DOES NOT APPLY|NOT APPLICABLE|N\/A|NA|NONE|UNKNOWN|UNBRANDED)$/i;
 
-function cleanText(value: string) {
-  return String(value || '')
-    .toUpperCase()
-    .replace(/[()[\]{},;:"']/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+function normalize(value: unknown) {
+  return String(value || '').trim().toUpperCase();
 }
 
-function scoreCandidate(value: string) {
-  if (!value) return -999;
-  if (value.length < 3 || value.length > 35) return -999;
-  if (BAD_UNITS.test(value)) return -999;
-  if (/^\d{1,2}$/.test(value)) return -999;
+function isValidEbayValue(value: string, ebayItemId: string) {
+  const normalized = normalize(value);
+  const normalizedItemId = normalize(ebayItemId);
 
-  let score = 0;
+  if (!normalized) return false;
+  if (normalized.length > 80) return false;
+  if (INVALID_EBAY_VALUES.test(normalized)) return false;
+  if (normalized === normalizedItemId) return false;
+  if (/^27\d{10}$/.test(normalized)) return false;
 
-  if (/[A-Z]/.test(value)) score += 10;
-  if (/\d/.test(value)) score += 10;
-  if (/[-/.]/.test(value)) score += 8;
-  if (/^[A-Z]{1,8}\d/.test(value)) score += 12;
-  if (/^\d{3,14}[A-Z]?$/.test(value)) score += 7;
-  if (/^\d{2,4}[A-Z]{2,5}\d{2,4}/.test(value)) score += 16;
-  if (value.length >= 5 && value.length <= 22) score += 5;
-
-  if (/^(100|110|120|220|230|240|250|380|400|415|480|500|600)$/.test(value)) score -= 50;
-
-  return score;
+  return true;
 }
 
-function extractSmartPartNumber(title: string): string {
-  const original = cleanText(title);
-  const cleaned = cleanText(original.replace(REMOVE_WORDS, ' '));
+function getAspectValue(item: any, names: string[]) {
+  const aspects = Array.isArray(item?.localizedAspects)
+    ? item.localizedAspects
+    : [];
 
-  const joinedIndustrial = original
-    .replace(/\b(140)\s+(CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\s+(\d{2,4})\s+(\d{2,4})\b/g, '$1$2$3$4')
-    .replace(/\b(H46C)\s+(\d{3,5})\b/g, '$1$2')
-    .replace(/\b(DSE)\s+(\d{3,5})\b/g, '$1$2')
-    .replace(/\b(TAC)\s+(XENTA)\s+(\d{3,5}[A-Z]?)\b/g, '$1$2$3')
-    .replace(/\b(PNOZ)\s+(S\d{1,4})\s+(\d{4,8})?\b/g, (_m, a, b, c) => `${a}${b}${c || ''}`);
+  const wanted = new Set(names.map((name) => name.toLowerCase()));
 
-  const searchText = `${joinedIndustrial} ${cleaned}`;
+  const found = aspects.find((aspect: any) =>
+    wanted.has(String(aspect?.name || '').trim().toLowerCase())
+  );
 
-  const patterns = [
-    /\b140(?:CPU|DDI|DAI|DRA|CRA|CPS|ACI|ACO|CHS)\d{4,8}\b/g,
-    /\b[A-Z]{2,8}\d{2,10}[A-Z]?\b/g,
-    /\b\d{6,14}[A-Z]?\b/g,
-    /\b[A-Z0-9]+[-/][A-Z0-9][A-Z0-9-/]{2,35}\b/g,
-    /\b[A-Z]{2,8}\s+\d{3,8}[A-Z]?\b/g,
-  ];
+  return normalize(found?.value);
+}
 
-  const candidates: string[] = [];
+function getEbayIdentifiers(item: any, ebayItemId: string) {
+  const ebayMpn = getAspectValue(item, [
+    'mpn',
+    'manufacturer part number',
+  ]);
 
-  for (const pattern of patterns) {
-    const found = searchText.match(pattern) || [];
-    candidates.push(...found);
+  const ebayModel = getAspectValue(item, [
+    'model',
+    'model number',
+  ]);
+
+  const validMpn = isValidEbayValue(ebayMpn, ebayItemId)
+    ? ebayMpn
+    : '';
+
+  const validModel = isValidEbayValue(ebayModel, ebayItemId)
+    ? ebayModel
+    : '';
+
+  return {
+    ebayMpn: validMpn,
+    ebayModel: validModel,
+    partNumber: validMpn || validModel || 'UNKNOWN',
+    modelNumber: validModel || 'UNKNOWN',
+  };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchEbayItem(
+  accessToken: string,
+  ebayItemId: string,
+  attempt = 1
+): Promise<any | null> {
+  const url =
+    'https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id' +
+    `?legacy_item_id=${encodeURIComponent(ebayItemId)}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
+      'Accept-Language': 'en-US',
+    },
+  });
+
+  if (response.ok) {
+    return response.json();
   }
 
-  const normalized = candidates
-    .map((x) => x.replace(/\s+/g, '').replace(/[^A-Z0-9\-/.]/g, ''))
-    .filter(Boolean);
+  if ((response.status === 429 || response.status >= 500) && attempt < 4) {
+    const retryAfter = Number(response.headers.get('retry-after') || 0);
+    const waitMs = retryAfter > 0
+      ? retryAfter * 1000
+      : attempt * 2000;
 
-  const ranked = normalized
-    .map((value) => ({ value, score: scoreCandidate(value) }))
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score);
+    await sleep(waitMs);
+    return fetchEbayItem(accessToken, ebayItemId, attempt + 1);
+  }
 
-  return ranked[0]?.value || '';
-}
-
-function needsRepair(product: any) {
-  const part = String(product.part_number || '').trim().toUpperCase();
-  const name = String(product.name || '').trim().toUpperCase();
-
-  return (
-    !part ||
-    part.length > 40 ||
-    part === name ||
-    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]?\d{2,8}$/i.test(
-      part
-    ) ||
-    /^(19|20)\d{2}$/i.test(part) ||
-    /^27\d{10}$/.test(part)
+  const body = await response.text().catch(() => '');
+  console.error(
+    `EBAY FETCH FAILED ${ebayItemId}: ${response.status} ${body.slice(0, 200)}`
   );
+
+  return null;
 }
+
 async function main() {
+  const { access_token } = await getEbayToken();
+  const accessToken = String(access_token || '').trim();
+
+  if (!accessToken) {
+    throw new Error('Could not obtain an eBay access token.');
+  }
+
   let from = 0;
   let scanned = 0;
   let repaired = 0;
+  let unchanged = 0;
   let skipped = 0;
+  let failed = 0;
 
   while (true) {
+    const remaining =
+      MAX_PRODUCTS > 0
+        ? MAX_PRODUCTS - scanned
+        : BATCH_SIZE;
+
+    if (MAX_PRODUCTS > 0 && remaining <= 0) break;
+
+    const currentBatchSize = Math.min(BATCH_SIZE, remaining);
+
     const { data: products, error } = await supabaseAdmin
       .from('products')
-      .select('id,name,description,part_number,model_number')
+      .select(
+        'id,ebay_item_id,part_number,model_number,marketplace,source_type'
+      )
+      .not('ebay_item_id', 'is', null)
       .order('id')
-      .range(from, from + BATCH_SIZE - 1);
+      .range(from, from + currentBatchSize - 1);
 
     if (error) throw error;
     if (!products?.length) break;
 
-        for (const product of products) {
-      scanned++;
+    for (let i = 0; i < products.length; i += CONCURRENCY) {
+      const chunk = products.slice(i, i + CONCURRENCY);
 
-      if (scanned > MAX_PRODUCTS) break;
-function isBadStoredPart(value: string) {
-  const part = String(value || '').trim().toUpperCase();
-
-  return (
-    !part ||
-    part.length > 50 ||
-    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]?\d{2,8}$/i.test(
-      part
-    ) ||
-    /^(19|20)\d{2}$/i.test(part) ||
-    /^27\d{10}$/.test(part)
-  );
-}
-      if (!needsRepair(product)) {
-        skipped++;
-        continue;
-      }
-
-           const ebayModel = String(product.model_number || '')
-        .trim()
-        .toUpperCase();
-
-      const namePart = extractSmartPartNumber(
-        String(product.name || '').trim()
+      const details = await Promise.all(
+        chunk.map((product) =>
+          fetchEbayItem(accessToken, String(product.ebay_item_id || ''))
+        )
       );
 
-      const descriptionPart = extractSmartPartNumber(
-        String(product.description || '').trim()
-      );
+      for (let index = 0; index < chunk.length; index++) {
+        const product = chunk[index];
+        const item = details[index];
 
-      const newPart =
-        ebayModel && !isBadStoredPart(ebayModel)
-          ? ebayModel
-          : namePart || descriptionPart;
-      const oldPart = String(product.part_number || '').trim();
+        scanned++;
 
-      if (!newPart || newPart.toUpperCase() === oldPart.toUpperCase()) {
-        skipped++;
-        continue;
-      }
+        const ebayItemId = String(product.ebay_item_id || '').trim();
 
-      if (DRY_RUN) {
+        if (!ebayItemId || !item) {
+          failed++;
+          continue;
+        }
+
+        const {
+          ebayMpn,
+          ebayModel,
+          partNumber,
+          modelNumber,
+        } = getEbayIdentifiers(item, ebayItemId);
+
+        if (!ebayMpn && !ebayModel) {
+          skipped++;
+          console.log(
+            `SKIP ${product.id} (${ebayItemId}): eBay has no valid MPN or Model`
+          );
+          continue;
+        }
+
+        const oldPart = normalize(product.part_number);
+        const oldModel = normalize(product.model_number);
+
+        const partChanged = oldPart !== partNumber;
+        const modelChanged = oldModel !== modelNumber;
+
+        if (!partChanged && !modelChanged) {
+          unchanged++;
+          continue;
+        }
+
+        if (DRY_RUN) {
+          repaired++;
+          console.log(
+            [
+              `PREVIEW ${product.id} (${ebayItemId})`,
+              `part: ${oldPart || '(empty)'} => ${partNumber}`,
+              `model: ${oldModel || '(empty)'} => ${modelNumber}`,
+              `eBay MPN: ${ebayMpn || '(empty)'}`,
+              `eBay Model: ${ebayModel || '(empty)'}`,
+            ].join(' | ')
+          );
+          continue;
+        }
+
+        const { error: updateError } = await supabaseAdmin
+          .from('products')
+          .update({
+            part_number: partNumber,
+            model_number: modelNumber,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', product.id);
+
+        if (updateError) {
+          failed++;
+          console.error(
+            `UPDATE FAILED ${product.id} (${ebayItemId}): ${updateError.message}`
+          );
+          continue;
+        }
+
         repaired++;
-        console.log(`PREVIEW ${product.id}: ${oldPart} => ${newPart}`);
-        continue;
+        console.log(
+          `UPDATED ${product.id} (${ebayItemId}): ` +
+            `part ${oldPart || '(empty)'} => ${partNumber}, ` +
+            `model ${oldModel || '(empty)'} => ${modelNumber}`
+        );
       }
-
-      const { error: updateError } = await supabaseAdmin
-        .from('products')
-        .update({
-                
-          part_number: newPart,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', product.id);
-
-      if (updateError) {
-        console.error(`FAILED ${product.id}: ${updateError.message}`);
-        skipped++;
-        continue;
-      }
-
-      repaired++;
-      console.log(`✔ ${product.id}: ${oldPart} => ${newPart}`);
     }
 
-    if (scanned >= MAX_PRODUCTS) break;
+    if (MAX_PRODUCTS > 0 && scanned >= MAX_PRODUCTS) break;
 
-    from += BATCH_SIZE;
+    from += products.length;
   }
 
   console.log('Finished');
-  console.log({ scanned, repaired, skipped });
+  console.log({
+    dryRun: DRY_RUN,
+    maxProducts: MAX_PRODUCTS,
+    scanned,
+    repaired,
+    unchanged,
+    skipped,
+    failed,
+  });
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
 });
