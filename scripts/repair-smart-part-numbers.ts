@@ -113,11 +113,27 @@ async function main() {
       scanned++;
 
       if (scanned > MAX_PRODUCTS) break;
+function isBadStoredPart(value: string) {
+  const part = String(value || '').trim().toUpperCase();
 
+  return (
+    !part ||
+    part.length > 50 ||
+    /^(MFG|MFD|MFR|MANUFACTURED|MANUFACTURING|DATE|DOM|YEAR)[-/.]?\d{2,8}$/i.test(
+      part
+    ) ||
+    /^(19|20)\d{2}$/i.test(part) ||
+    /^27\d{10}$/.test(part)
+  );
+}
       if (!needsRepair(product)) {
         skipped++;
         continue;
       }
+
+           const ebayModel = String(product.model_number || '')
+        .trim()
+        .toUpperCase();
 
       const namePart = extractSmartPartNumber(
         String(product.name || '').trim()
@@ -127,7 +143,10 @@ async function main() {
         String(product.description || '').trim()
       );
 
-      const newPart = namePart || descriptionPart;
+      const newPart =
+        ebayModel && !isBadStoredPart(ebayModel)
+          ? ebayModel
+          : namePart || descriptionPart;
       const oldPart = String(product.part_number || '').trim();
 
       if (!newPart || newPart.toUpperCase() === oldPart.toUpperCase()) {
@@ -144,8 +163,8 @@ async function main() {
       const { error: updateError } = await supabaseAdmin
         .from('products')
         .update({
+                 .update({
           part_number: newPart,
-          model_number: newPart,
           updated_at: new Date().toISOString(),
         })
         .eq('id', product.id);
