@@ -17,12 +17,12 @@
       "schedule": "9,29,49 * * * *"
     },
     {
-      "path": "/api/ebay/auto-import?limit=200",
-      "schedule": "15 */2 * * *"
-    },
-    {
-      "path": "/api/cron/bridge-health",
-      "schedule": "* * * * *"
-    }
-  ]
+  "path": "/api/cron/bridge-health",
+  "schedule": "* * * * *"
+},
+{
+  "path": "/api/cron/repair-ebay-identifiers",
+  "schedule": "*/5 * * * *"
+}
+]
 }
