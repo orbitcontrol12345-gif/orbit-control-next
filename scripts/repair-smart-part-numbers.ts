@@ -163,7 +163,7 @@ function isBadStoredPart(value: string) {
       const { error: updateError } = await supabaseAdmin
         .from('products')
         .update({
-                 .update({
+                
           part_number: newPart,
           updated_at: new Date().toISOString(),
         })
