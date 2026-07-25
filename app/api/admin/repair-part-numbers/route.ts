@@ -136,6 +136,13 @@ export async function GET(request: Request) {
 
     const expectedKey = process.env.REPAIR_API_KEY || '';
 
+if (!expectedKey) {
+  return NextResponse.json({
+    success: false,
+    error: 'REPAIR_API_KEY is missing'
+  });
+}
+
     if (!expectedKey || providedKey !== expectedKey) {
       return NextResponse.json(
         {
