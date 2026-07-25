@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { getEbayToken } from '@/lib/ebay';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { extractPartNumber } from '@/lib/part-number';
 import { detectIndustrialBrand } from '@/lib/industrial-brand';
 
 export const dynamic = 'force-dynamic';
@@ -83,55 +82,61 @@ function getRealItemId(itemId: string) {
   return String(itemId || '').split('|')[1] || String(itemId || '');
 }
 
-function getBestPartNumber(item: any, title: string, realItemId: string) {
-  const aspects = item.localizedAspects || [];
+function getEbayIdentifiers(item: any, realItemId: string) {
+  const aspects = Array.isArray(item?.localizedAspects)
+    ? item.localizedAspects
+    : [];
 
   const getAspectValue = (names: string[]) => {
-    const found = aspects.find((a: any) =>
-      names.includes(String(a.name || '').trim().toLowerCase())
+    const normalizedNames = names.map((name) => name.toLowerCase());
+
+    const found = aspects.find((aspect: any) =>
+      normalizedNames.includes(
+        String(aspect?.name || '')
+          .trim()
+          .toLowerCase()
+      )
     );
 
     return String(found?.value || '').trim().toUpperCase();
   };
 
-  const ebayMpn = getAspectValue([
-    'mpn',
-    'manufacturer part number',
-  ]);
-
-  const ebayModel = getAspectValue([
-    'model',
-    'model number',
-  ]);
-
   const isValidEbayValue = (value: string) => {
-    if (!value) return false;
+    const normalized = String(value || '').trim().toUpperCase();
+
+    if (!normalized) return false;
 
     if (
-      /^(DOES NOT APPLY|NOT APPLICABLE|N\/A|NA|NONE|UNKNOWN)$/i.test(value)
+      /^(DOES NOT APPLY|NOT APPLICABLE|N\/?A|NA|NONE|UNKNOWN|UNBRANDED)$/i.test(
+        normalized
+      )
     ) {
       return false;
     }
 
-    if (value === String(realItemId || '').trim().toUpperCase()) {
+    if (normalized === String(realItemId || '').trim().toUpperCase()) {
       return false;
     }
 
-    if (/^27\d{10}$/.test(value)) return false;
+    if (/^27\d{10}$/.test(normalized)) return false;
 
     return true;
   };
 
-  if (isValidEbayValue(ebayMpn)) {
-    return ebayMpn;
-  }
+  const rawMpn = getAspectValue(['mpn', 'manufacturer part number']);
+  const rawModel = getAspectValue(['model', 'model number']);
 
-  if (isValidEbayValue(ebayModel)) {
-    return ebayModel;
-  }
+  const ebayMpn = isValidEbayValue(rawMpn) ? rawMpn : '';
+  const ebayModel = isValidEbayValue(rawModel) ? rawModel : '';
 
-  return 'UNKNOWN';
+  return {
+    ebayMpn,
+    ebayModel,
+    partNumber: ebayMpn || ebayModel || 'UNKNOWN',
+    modelNumber: ebayModel || 'UNKNOWN',
+  };
 }
+
 async function createFeedTask(accessToken: string) {
   const res = await fetch('https://api.ebay.com/sell/feed/v1/inventory_task', {
     method: 'POST',
@@ -388,7 +393,8 @@ export async function GET(req: NextRequest) {
           const realItemId = getRealItemId(item.itemId) || row.ebay_item_id;
           const title = String(item.title || '').trim();
           const cleanedName = cleanTitle(title);
-          const partNumber = getBestPartNumber(item, title, realItemId);
+          const { ebayMpn, ebayModel, partNumber, modelNumber } =
+            getEbayIdentifiers(item, realItemId);
 
           const aspectBrand =
             item.localizedAspects?.find(
@@ -396,7 +402,14 @@ export async function GET(req: NextRequest) {
             )?.value || '';
 
           const brand = detectIndustrialBrand(
-            [item.brand, aspectBrand, title, cleanedName, partNumber]
+            [
+              item.brand,
+              aspectBrand,
+              ebayMpn,
+              ebayModel,
+              title,
+              cleanedName,
+            ]
               .filter(Boolean)
               .join(' ')
           );
@@ -411,7 +424,7 @@ export async function GET(req: NextRequest) {
             ebay_item_id: realItemId,
             sku: realItemId,
             part_number: partNumber,
-            model_number: partNumber,
+            model_number: modelNumber,
             brand,
             category: item.categoryPath || 'Industrial Automation',
             name: cleanedName,
@@ -449,7 +462,10 @@ export async function GET(req: NextRequest) {
           sample.push({
             ebayItemId: realItemId,
             brand,
+            ebayMpn: ebayMpn || null,
+            ebayModel: ebayModel || null,
             partNumber,
+            modelNumber,
             title,
           });
         } catch (err) {
