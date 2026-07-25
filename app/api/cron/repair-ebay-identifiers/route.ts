@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const JOB_ID = 'repair-ebay-identifiers';
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 100;
 const CONCURRENCY = 5;
 
 const INVALID_VALUES =
