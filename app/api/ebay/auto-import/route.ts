@@ -86,34 +86,52 @@ function getRealItemId(itemId: string) {
 function getBestPartNumber(item: any, title: string, realItemId: string) {
   const aspects = item.localizedAspects || [];
 
-  const aspectPart =
-    aspects.find((a: any) =>
-      ['mpn', 'model', 'model number', 'manufacturer part number'].includes(
-        String(a.name || '').toLowerCase()
-      )
-    )?.value || '';
+  const getAspectValue = (names: string[]) => {
+    const found = aspects.find((a: any) =>
+      names.includes(String(a.name || '').trim().toLowerCase())
+    );
 
-  const candidates = [
-    aspectPart,
-    extractPartNumber(title),
-    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{2,4}\b/gi) || []),
-    ...(title.match(/\b\d{3}-\d{5}-\d{2}[A-Z]?\b/gi) || []),
-    ...(title.match(/\b[A-Z]{2,}\d{2,}[A-Z0-9\-/.]*\b/gi) || []),
-    ...(title.match(/\b\d{2}[A-Z]\d{5}[A-Z]\d{3}\b/gi) || []),
-  ]
-    .map((x) => String(x || '').trim().toUpperCase())
-    .filter(Boolean)
-    .filter((x) => x !== realItemId)
-    .filter((x) => {
-      if (/^27\d{10}$/.test(x)) return false;
-      if (/^\d{12,13}$/.test(x)) return false;
-      return true;
-    })
-    .filter((x) => !/\b(VAC|VDC|HZ|KW|AMP|AMPS|PCS|LOT)\b/i.test(x));
+    return String(found?.value || '').trim().toUpperCase();
+  };
 
-  return candidates[0] || 'UNKNOWN';
+  const ebayMpn = getAspectValue([
+    'mpn',
+    'manufacturer part number',
+  ]);
+
+  const ebayModel = getAspectValue([
+    'model',
+    'model number',
+  ]);
+
+  const isValidEbayValue = (value: string) => {
+    if (!value) return false;
+
+    if (
+      /^(DOES NOT APPLY|NOT APPLICABLE|N\/A|NA|NONE|UNKNOWN)$/i.test(value)
+    ) {
+      return false;
+    }
+
+    if (value === String(realItemId || '').trim().toUpperCase()) {
+      return false;
+    }
+
+    if (/^27\d{10}$/.test(value)) return false;
+
+    return true;
+  };
+
+  if (isValidEbayValue(ebayMpn)) {
+    return ebayMpn;
+  }
+
+  if (isValidEbayValue(ebayModel)) {
+    return ebayModel;
+  }
+
+  return 'UNKNOWN';
 }
-
 async function createFeedTask(accessToken: string) {
   const res = await fetch('https://api.ebay.com/sell/feed/v1/inventory_task', {
     method: 'POST',
