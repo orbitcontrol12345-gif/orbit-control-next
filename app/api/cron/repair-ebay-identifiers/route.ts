@@ -7,56 +7,90 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const JOB_ID = 'repair-ebay-identifiers';
-const BATCH_SIZE = 100;
-const CONCURRENCY = 5;
+const MARKETPLACE = 'EBAY_US';
+const SCAN_BATCH_SIZE = 300;
+const MAX_API_ITEMS_PER_RUN = 40;
+const CONCURRENCY = 2;
+const DELAY_BETWEEN_CHUNKS_MS = 500;
+const MAX_RETRIES = 3;
 
 const INVALID_VALUES =
-  /^(DOES NOT APPLY|NOT APPLICABLE|N\/A|NA|NONE|UNKNOWN)$/i;
+  /^(DOES NOT APPLY|NOT APPLICABLE|N\/A|NA|NONE|UNKNOWN|UNBRANDED|GENERIC)$/i;
 
-function normalize(value: unknown) {
-  return String(value || '').trim();
+type ProductRow = {
+  id: number;
+  ebay_item_id: string | null;
+  brand: string | null;
+  part_number: string | null;
+  name: string | null;
+  marketplace: string | null;
+};
+
+type FetchResult =
+  | { ok: true; item: any }
+  | { ok: false; rateLimited: true; status: 429; error: string }
+  | { ok: false; rateLimited: false; status: number; error: string };
+
+function normalize(value: unknown): string {
+  return String(value ?? '').trim();
 }
 
-function normalizeForCompare(value: unknown) {
+function normalizeForCompare(value: unknown): string {
   return normalize(value).toUpperCase();
 }
 
-function getAspectValue(item: any, names: string[]) {
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getAspectValue(item: any, names: string[]): string {
   const aspects = Array.isArray(item?.localizedAspects)
     ? item.localizedAspects
     : [];
 
-  const acceptedNames = new Set(
+  const accepted = new Set(
     names.map((name) => name.trim().toLowerCase())
   );
 
   const found = aspects.find((aspect: any) =>
-    acceptedNames.has(
-      String(aspect?.name || '').trim().toLowerCase()
-    )
+    accepted.has(String(aspect?.name ?? '').trim().toLowerCase())
   );
 
   return normalize(found?.value);
 }
 
-function isValidIdentifier(value: string, ebayItemId: string) {
-  const normalized = normalize(value);
-  const compared = normalizeForCompare(value);
-  const comparedItemId = normalizeForCompare(ebayItemId);
+function isValidBrand(value: unknown): boolean {
+  const brand = normalize(value);
+  if (!brand || brand.length > 100) return false;
+  return !INVALID_VALUES.test(brand);
+}
 
-  if (!normalized) return false;
-  if (normalized.length > 80) return false;
-  if (INVALID_VALUES.test(normalized)) return false;
-  if (compared === comparedItemId) return false;
-  if (/^27\d{10}$/.test(compared)) return false;
+function isValidPartNumber(
+  value: unknown,
+  ebayItemId: unknown
+): boolean {
+  const partNumber = normalize(value);
+  const compared = normalizeForCompare(value);
+  const itemId = normalizeForCompare(ebayItemId);
+
+  if (!partNumber || partNumber.length > 80) return false;
+  if (INVALID_VALUES.test(partNumber)) return false;
+  if (compared === itemId) return false;
+  if (/^\d{12}$/.test(compared)) return false;
 
   return true;
 }
 
+function needsRepair(product: ProductRow): boolean {
+  return (
+    !isValidBrand(product.brand) ||
+    !isValidPartNumber(product.part_number, product.ebay_item_id)
+  );
+}
+
 function getEbayIdentifiers(item: any, ebayItemId: string) {
   const rawBrand =
-    getAspectValue(item, ['brand']) ||
-    normalize(item?.brand);
+    getAspectValue(item, ['brand']) || normalize(item?.brand);
 
   const rawMpn = getAspectValue(item, [
     'mpn',
@@ -68,13 +102,9 @@ function getEbayIdentifiers(item: any, ebayItemId: string) {
     'model number',
   ]);
 
-  const ebayBrand = rawBrand || 'Unbranded';
-
-  const ebayMpn = isValidIdentifier(rawMpn, ebayItemId)
-    ? rawMpn
-    : '';
-
-  const ebayModel = isValidIdentifier(rawModel, ebayItemId)
+  const ebayBrand = isValidBrand(rawBrand) ? rawBrand : '';
+  const ebayMpn = isValidPartNumber(rawMpn, ebayItemId) ? rawMpn : '';
+  const ebayModel = isValidPartNumber(rawModel, ebayItemId)
     ? rawModel
     : '';
 
@@ -86,66 +116,84 @@ function getEbayIdentifiers(item: any, ebayItemId: string) {
   };
 }
 
-function sleep(milliseconds: number) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, milliseconds)
-  );
-}
-
 async function fetchEbayItem(
   accessToken: string,
   ebayItemId: string,
   attempt = 1
-): Promise<any | null> {
+): Promise<FetchResult> {
   const url =
     'https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id' +
     `?legacy_item_id=${encodeURIComponent(ebayItemId)}`;
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US',
-      'Accept-Language': 'en-US',
-    },
-    cache: 'no-store',
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+        'Accept-Language': 'en-US',
+      },
+      cache: 'no-store',
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      rateLimited: false,
+      status: 0,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 
   if (response.ok) {
-    return response.json();
+    const item = await response.json().catch(() => null);
+    return item
+      ? { ok: true, item }
+      : {
+          ok: false,
+          rateLimited: false,
+          status: response.status,
+          error: 'Empty eBay response.',
+        };
   }
 
-  if (
-    (response.status === 429 || response.status >= 500) &&
-    attempt < 4
-  ) {
-    const retryAfter = Number(
-      response.headers.get('retry-after') || 0
-    );
+  const text = await response.text().catch(() => '');
 
-    const waitTime =
-      retryAfter > 0
-        ? retryAfter * 1000
-        : attempt * 2000;
+  if (response.status === 429) {
+    if (attempt < MAX_RETRIES) {
+      const retryAfter = Number(
+        response.headers.get('retry-after') || 0
+      );
+      const waitMs =
+        retryAfter > 0
+          ? retryAfter * 1000
+          : attempt === 1
+            ? 5000
+            : 15000;
 
-    await sleep(waitTime);
+      await sleep(waitMs);
+      return fetchEbayItem(accessToken, ebayItemId, attempt + 1);
+    }
 
-    return fetchEbayItem(
-      accessToken,
-      ebayItemId,
-      attempt + 1
-    );
+    return {
+      ok: false,
+      rateLimited: true,
+      status: 429,
+      error: `eBay rate limit after ${MAX_RETRIES} attempts. ${text.slice(0, 200)}`,
+    };
   }
 
-  const responseText = await response
-    .text()
-    .catch(() => '');
+  if (response.status >= 500 && attempt < MAX_RETRIES) {
+    await sleep(attempt * 3000);
+    return fetchEbayItem(accessToken, ebayItemId, attempt + 1);
+  }
 
-  console.error(
-    `eBay fetch failed ${ebayItemId}: ` +
-      `${response.status} ${responseText.slice(0, 200)}`
-  );
-
-  return null;
+  return {
+    ok: false,
+    rateLimited: false,
+    status: response.status,
+    error: `eBay HTTP ${response.status}: ${text.slice(0, 200)}`,
+  };
 }
 
 async function getJob() {
@@ -156,63 +204,51 @@ async function getJob() {
     .maybeSingle();
 
   if (error) throw error;
-
   if (data) return data;
 
   const now = new Date().toISOString();
 
-  const { data: created, error: createError } =
-    await supabaseAdmin
-      .from('sync_jobs')
-      .insert({
-        id: JOB_ID,
-        status: 'idle',
-        stage: 'repairing_identifiers',
-        offset_value: 0,
-        batch_size: BATCH_SIZE,
-        processed: 0,
-        updated: 0,
-        failed: 0,
-        updated_at: now,
-      })
-      .select('*')
-      .single();
+  const { data: created, error: createError } = await supabaseAdmin
+    .from('sync_jobs')
+    .insert({
+      id: JOB_ID,
+      status: 'idle',
+      stage: 'ready_us_only',
+      offset_value: 0,
+      batch_size: SCAN_BATCH_SIZE,
+      processed: 0,
+      updated: 0,
+      failed: 0,
+      updated_at: now,
+    })
+    .select('*')
+    .single();
 
   if (createError) throw createError;
-
   return created;
-}
-
-async function resetJobCursor() {
-  await supabaseAdmin
-    .from('sync_jobs')
-    .update({
-      offset_value: 0,
-      stage: 'cycle_completed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', JOB_ID);
 }
 
 function isAuthorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET || '';
+  const authorization = request.headers.get('authorization') || '';
 
-  if (!cronSecret) return false;
-
-  const authorization =
-    request.headers.get('authorization') || '';
-
-  return authorization === `Bearer ${cronSecret}`;
+  return Boolean(cronSecret) &&
+    authorization === `Bearer ${cronSecret}`;
 }
 
 export async function GET(request: NextRequest) {
+  let processed = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let unresolved = 0;
+  let failed = 0;
+  let rateLimited = false;
+  const results: any[] = [];
+
   try {
     if (!isAuthorized(request)) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Unauthorized',
-        },
+        { success: false, error: 'Unauthorized' },
         { status: 401 }
       );
     }
@@ -220,269 +256,261 @@ export async function GET(request: NextRequest) {
     const now = new Date().toISOString();
     const job = await getJob();
 
-    const lastProcessedId = Number(
-      job.offset_value || 0
-    );
+    if (job.status === 'paused') {
+      return NextResponse.json({
+        success: true,
+        paused: true,
+        message: 'Job is paused. No eBay requests were sent.',
+      });
+    }
+
+    const lastScannedId = Number(job.offset_value || 0);
 
     await supabaseAdmin
       .from('sync_jobs')
       .update({
         status: 'running',
-        stage: 'repairing_identifiers',
+        stage: 'scanning_us_unresolved',
         last_error: null,
         updated_at: now,
+        finished_at: null,
       })
       .eq('id', JOB_ID);
 
-    let { data: products, error } =
-      await supabaseAdmin
-        .from('products')
-        .select(
-          'id,ebay_item_id,part_number,model_number,brand,name'
-        )
-        .not('ebay_item_id', 'is', null)
-        .gt('id', lastProcessedId)
-        .order('id', { ascending: true })
-        .limit(BATCH_SIZE);
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .select('id,ebay_item_id,brand,part_number,name,marketplace')
+      .eq('marketplace', MARKETPLACE)
+      .not('ebay_item_id', 'is', null)
+      .gt('id', lastScannedId)
+      .order('id', { ascending: true })
+      .limit(SCAN_BATCH_SIZE);
 
     if (error) throw error;
 
-    let restartedCycle = false;
+    const rows = (data || []) as ProductRow[];
 
-    if (!products?.length && lastProcessedId > 0) {
-      await resetJobCursor();
-      restartedCycle = true;
-
-      const restartResult = await supabaseAdmin
-        .from('products')
-        .select(
-          'id,ebay_item_id,part_number,model_number,brand,name'
-        )
-        .not('ebay_item_id', 'is', null)
-        .order('id', { ascending: true })
-        .limit(BATCH_SIZE);
-
-      if (restartResult.error) {
-        throw restartResult.error;
-      }
-
-      products = restartResult.data;
-    }
-
-    if (!products?.length) {
+    if (rows.length === 0) {
       await supabaseAdmin
         .from('sync_jobs')
         .update({
-          status: 'idle',
-          stage: 'no_products',
-          offset_value: 0,
+          status: 'completed',
+          stage: 'completed_us_only',
+          offset_value: lastScannedId,
           updated_at: now,
           finished_at: now,
+          last_error: null,
         })
         .eq('id', JOB_ID);
 
       return NextResponse.json({
         success: true,
-        message: 'No eBay products found.',
-        processed: 0,
-        updated: 0,
-        failed: 0,
+        completed: true,
+        marketplace: MARKETPLACE,
+        message: 'US-only repair completed.',
+      });
+    }
+
+    const candidates = rows
+      .filter(needsRepair)
+      .slice(0, MAX_API_ITEMS_PER_RUN);
+
+    if (candidates.length === 0) {
+      const lastRowId = rows[rows.length - 1].id;
+
+      await supabaseAdmin
+        .from('sync_jobs')
+        .update({
+          status: 'idle',
+          stage: 'scan_window_clean',
+          offset_value: lastRowId,
+          updated_at: now,
+          finished_at: now,
+          last_error: null,
+        })
+        .eq('id', JOB_ID);
+
+      return NextResponse.json({
+        success: true,
+        marketplace: MARKETPLACE,
+        scanned: rows.length,
+        candidates: 0,
+        nextId: lastRowId,
       });
     }
 
     const { access_token } = await getEbayToken();
-    const accessToken = String(
-      access_token || ''
-    ).trim();
+    const accessToken = normalize(access_token);
 
     if (!accessToken) {
       throw new Error('Could not obtain eBay token.');
     }
 
-    let processed = 0;
-    let updated = 0;
-    let unchanged = 0;
-    let skipped = 0;
-    let failed = 0;
-
-    const results: any[] = [];
+    let safeCursorId = lastScannedId;
 
     for (
       let index = 0;
-      index < products.length;
+      index < candidates.length;
       index += CONCURRENCY
     ) {
-      const chunk = products.slice(
-        index,
-        index + CONCURRENCY
-      );
+      const chunk = candidates.slice(index, index + CONCURRENCY);
 
-      const details = await Promise.all(
+      const fetchResults = await Promise.all(
         chunk.map((product) =>
           fetchEbayItem(
             accessToken,
-            String(product.ebay_item_id || '')
+            normalize(product.ebay_item_id)
           )
         )
       );
 
-      for (
-        let itemIndex = 0;
-        itemIndex < chunk.length;
-        itemIndex++
-      ) {
-        const product = chunk[itemIndex];
-        const item = details[itemIndex];
+      const chunkHitRateLimit = fetchResults.some(
+        (result) => !result.ok && result.rateLimited
+      );
 
-        processed++;
+      for (let i = 0; i < chunk.length; i++) {
+        const product = chunk[i];
+        const fetchResult = fetchResults[i];
+        const ebayItemId = normalize(product.ebay_item_id);
 
-        const ebayItemId = String(
-          product.ebay_item_id || ''
-        ).trim();
+        if (!fetchResult.ok) {
+          if (fetchResult.rateLimited) {
+            rateLimited = true;
+            results.push({
+              id: product.id,
+              ebayItemId,
+              status: 'rate_limited_not_failed',
+            });
+            continue;
+          }
 
-        if (!item) {
+          processed++;
           failed++;
-
           results.push({
             id: product.id,
             ebayItemId,
             status: 'ebay_fetch_failed',
+            httpStatus: fetchResult.status,
+            error: fetchResult.error,
           });
-
           continue;
         }
 
-        const {
-          ebayBrand,
-          ebayMpn,
-          ebayModel,
-          partNumber,
-        } = getEbayIdentifiers(item, ebayItemId);
+        processed++;
 
-        if (!partNumber) {
-          skipped++;
-
-          results.push({
-            id: product.id,
-            ebayItemId,
-            status: 'no_valid_mpn_or_model',
-            ebayBrand,
-            ebayMpn,
-            ebayModel,
-          });
-
-          continue;
-        }
+        const identifiers = getEbayIdentifiers(
+          fetchResult.item,
+          ebayItemId
+        );
 
         const oldBrand = normalize(product.brand);
-        const oldPartNumber = normalize(
-          product.part_number
+        const oldPartNumber = normalize(product.part_number);
+
+        const brandNeedsRepair = !isValidBrand(oldBrand);
+        const partNeedsRepair = !isValidPartNumber(
+          oldPartNumber,
+          ebayItemId
         );
-        const oldModelNumber = normalize(
-          product.model_number
-        );
 
-        const brandChanged =
-          normalizeForCompare(oldBrand) !==
-          normalizeForCompare(ebayBrand);
+        const updatePayload: {
+          brand?: string;
+          part_number?: string;
+          updated_at?: string;
+        } = {};
 
-        const partChanged =
-          normalizeForCompare(oldPartNumber) !==
-          normalizeForCompare(partNumber);
+        if (brandNeedsRepair && identifiers.ebayBrand) {
+          updatePayload.brand = identifiers.ebayBrand;
+        }
 
-        const modelChanged =
-          Boolean(ebayModel) &&
-          normalizeForCompare(oldModelNumber) !==
-            normalizeForCompare(ebayModel);
+        if (partNeedsRepair && identifiers.partNumber) {
+          updatePayload.part_number = identifiers.partNumber;
+        }
 
         if (
-          !brandChanged &&
-          !partChanged &&
-          !modelChanged
+          !updatePayload.brand &&
+          !updatePayload.part_number
         ) {
-          unchanged++;
+          if (
+            (!brandNeedsRepair || identifiers.ebayBrand) &&
+            (!partNeedsRepair || identifiers.partNumber)
+          ) {
+            unchanged++;
+          } else {
+            unresolved++;
+          }
 
           results.push({
             id: product.id,
             ebayItemId,
-            status: 'unchanged',
+            status: 'still_unresolved',
+            brandNeeded: brandNeedsRepair,
+            partNumberNeeded: partNeedsRepair,
           });
-
           continue;
         }
 
-        const updatePayload: {
-          brand: string;
-          part_number: string;
-          model_number?: string;
-          updated_at: string;
-        } = {
-          brand: ebayBrand,
-          part_number: partNumber,
-          updated_at: new Date().toISOString(),
-        };
+        updatePayload.updated_at = new Date().toISOString();
 
-        if (ebayModel) {
-          updatePayload.model_number = ebayModel;
-        }
-
-        const { error: updateError } =
-          await supabaseAdmin
-            .from('products')
-            .update(updatePayload)
-            .eq('id', product.id);
+        const { error: updateError } = await supabaseAdmin
+          .from('products')
+          .update(updatePayload)
+          .eq('id', product.id)
+          .eq('marketplace', MARKETPLACE);
 
         if (updateError) {
           failed++;
-
           results.push({
             id: product.id,
             ebayItemId,
-            status: 'update_failed',
+            status: 'database_update_failed',
             error: updateError.message,
           });
-
           continue;
         }
 
         updated++;
-
         results.push({
           id: product.id,
           ebayItemId,
           status: 'updated',
-          oldBrand,
-          newBrand: ebayBrand,
-          oldPartNumber,
-          newPartNumber: partNumber,
-          oldModelNumber,
-          newModelNumber:
-            ebayModel || oldModelNumber,
-          ebayMpn,
-          ebayModel,
+          fields: Object.keys(updatePayload).filter(
+            (key) => key !== 'updated_at'
+          ),
         });
+      }
+
+      if (chunkHitRateLimit) break;
+
+      safeCursorId = chunk[chunk.length - 1].id;
+
+      if (index + CONCURRENCY < candidates.length) {
+        await sleep(DELAY_BETWEEN_CHUNKS_MS);
       }
     }
 
-    const lastId =
-      products[products.length - 1]?.id ||
-      lastProcessedId;
+    const canAdvanceToEnd =
+      !rateLimited &&
+      candidates.length < MAX_API_ITEMS_PER_RUN;
+
+    const nextCursorId = canAdvanceToEnd
+      ? rows[rows.length - 1].id
+      : safeCursorId;
 
     await supabaseAdmin
       .from('sync_jobs')
       .update({
         status: 'idle',
-        stage: restartedCycle
-          ? 'restarted_cycle'
-          : 'batch_completed',
-        offset_value: lastId,
-        batch_size: BATCH_SIZE,
-        processed:
-          Number(job.processed || 0) + processed,
-        updated:
-          Number(job.updated || 0) + updated,
-        failed:
-          Number(job.failed || 0) + failed,
+        stage: rateLimited
+          ? 'rate_limited_waiting_next_cron'
+          : 'batch_completed_us_only',
+        offset_value: nextCursorId,
+        batch_size: SCAN_BATCH_SIZE,
+        processed: Number(job.processed || 0) + processed,
+        updated: Number(job.updated || 0) + updated,
+        failed: Number(job.failed || 0) + failed,
+        last_error: rateLimited
+          ? 'eBay HTTP 429. Stopped safely; not counted as failure.'
+          : null,
         updated_at: now,
         finished_at: now,
       })
@@ -490,21 +518,22 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      restartedCycle,
-      previousLastId: lastProcessedId,
-      newLastId: lastId,
+      marketplace: MARKETPLACE,
+      scanned: rows.length,
+      candidates: candidates.length,
+      previousCursorId: lastScannedId,
+      nextCursorId,
       processed,
       updated,
       unchanged,
-      skipped,
+      unresolved,
       failed,
+      rateLimited,
       results,
     });
   } catch (error) {
     const message =
-      error instanceof Error
-        ? error.message
-        : String(error);
+      error instanceof Error ? error.message : String(error);
 
     await supabaseAdmin
       .from('sync_jobs')
@@ -518,6 +547,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
+        processed,
+        updated,
+        unchanged,
+        unresolved,
+        failed,
+        rateLimited,
         error: message,
       },
       { status: 500 }
