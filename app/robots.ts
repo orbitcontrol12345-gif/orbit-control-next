@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const SITE_URL = 'https://www.orbit-surplus.com';
+const SITE_URL = 'https://orbit-surplus.com';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
           '/_next/',
         ],
       },
-
       {
         userAgent: 'Googlebot-Image',
         allow: '/',
@@ -22,6 +21,5 @@ export default function robots(): MetadataRoute.Robots {
     ],
 
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
   };
 }
