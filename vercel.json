@@ -20,9 +20,5 @@
   "path": "/api/cron/bridge-health",
   "schedule": "* * * * *"
 },
-{
-  "path": "/api/cron/repair-ebay-identifiers",
-  "schedule": "*/5 * * * *"
-}
 ]
 }
