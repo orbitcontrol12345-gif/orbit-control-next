@@ -1,74 +1,172 @@
 import ProductGallery from '@/components/product/ProductGallery';
+import JsonLd from '@/components/seo/JsonLd';
+import ProductCard from '@/components/products/ProductCard';
+
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+
 import {
   CheckCircle,
   XCircle,
   FileText,
-  Package,
   ChevronRight,
   MessageSquare,
   Tag,
   Boxes,
   Building2,
 } from 'lucide-react';
+
 import {
   getSupabaseProductBySlug,
   getSupabaseRelatedProducts,
 } from '@/lib/supabase-products';
-import ProductCard from '@/components/products/ProductCard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const SITE_URL = 'https://www.orbit-surplus.com';
+
 interface Props {
-  params: { slug: string };
+  params: {
+    slug: string;
+  };
 }
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+
+function cleanText(value?: string | null): string {
+  return (value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getSchemaCondition(condition?: string): string {
+  switch (condition?.trim().toLowerCase()) {
+    case 'new':
+      return 'https://schema.org/NewCondition';
+
+    case 'refurbished':
+      return 'https://schema.org/RefurbishedCondition';
+
+    case 'not working':
+    case 'for parts':
+    case 'damaged':
+      return 'https://schema.org/DamagedCondition';
+
+    case 'used':
+    default:
+      return 'https://schema.org/UsedCondition';
+  }
+}
+
+function uniqueImages(
+  values: Array<string | null | undefined>,
+): string[] {
+  return [
+    ...new Set(
+      values.filter(
+        (value): value is string =>
+          typeof value === 'string' && value.trim().length > 0,
+      ),
+    ),
+  ];
+}
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
   const product = await getSupabaseProductBySlug(params.slug);
 
   if (!product) {
-    return { title: 'Product Not Found' };
+    return {
+      title: 'Product Not Found',
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
-  const description =
-    product.description?.slice(0, 155) ||
-    `${product.brand} ${product.partNumber} industrial automation spare part available for RFQ.`;
+  const brand = cleanText(product.brand) || 'Industrial Automation';
+  const partNumber = cleanText(product.partNumber);
+  const productName = cleanText(product.name);
+
+  const title = `${partNumber} — ${productName}`;
+
+  const description = (
+    cleanText(product.description) ||
+    `${brand} ${partNumber} industrial automation spare part available for RFQ, worldwide shipping and fast quotation support.`
+  ).slice(0, 160);
+
+  const productPath = `/products/${encodeURIComponent(params.slug)}`;
+  const productUrl = `${SITE_URL}${productPath}`;
+
+  const image =
+    product.r2ImageUrl ||
+    product.imageUrl ||
+    `${SITE_URL}/logo.png`;
 
   return {
-    title: `${product.partNumber} — ${product.name}`,
+    title,
     description,
 
     alternates: {
-      canonical: `/products/${params.slug}`,
+      canonical: productPath,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
     },
 
     openGraph: {
-      title: `${product.partNumber} — ${product.name}`,
+      type: 'website',
+      siteName: 'Orbit Control Automation',
+      title,
       description,
-      url: `/products/${params.slug}`,
-      images: product.r2ImageUrl
-        ? [product.r2ImageUrl]
-        : product.imageUrl
-        ? [product.imageUrl]
-        : [],
+      url: productUrl,
+
+      images: [
+        {
+          url: image,
+          alt: `${brand} ${partNumber} - ${productName}`,
+        },
+      ],
     },
 
     twitter: {
       card: 'summary_large_image',
-      title: `${product.partNumber} — ${product.name}`,
+      title,
       description,
-      images: product.r2ImageUrl
-        ? [product.r2ImageUrl]
-        : product.imageUrl
-        ? [product.imageUrl]
-        : [],
+      images: [image],
+    },
+
+    other: {
+      'product:brand': brand,
+      'product:retailer_item_id':
+        product.sku || partNumber,
+      'product:condition':
+        product.condition || 'Used',
+      'product:availability': product.inStock
+        ? 'in stock'
+        : 'available for order',
     },
   };
 }
 
-function ConditionBadge({ condition }: { condition: string }) {
+function ConditionBadge({
+  condition,
+}: {
+  condition: string;
+}) {
   const map: Record<string, string> = {
     New: 'badge-condition-new',
     Used: 'badge-condition-used',
@@ -77,159 +175,365 @@ function ConditionBadge({ condition }: { condition: string }) {
   };
 
   return (
-    <span className={`${map[condition] || 'badge-condition-used'} text-sm px-3 py-1`}>
+    <span
+      className={`${
+        map[condition] || 'badge-condition-used'
+      } px-3 py-1 text-sm`}
+    >
       {condition}
     </span>
   );
 }
 
-export default async function ProductDetailPage({ params }: Props) {
-  const product = await getSupabaseProductBySlug(params.slug);
+export default async function ProductDetailPage({
+  params,
+}: Props) {
+  const product = await getSupabaseProductBySlug(
+    params.slug,
+  );
 
-  if (!product) notFound();
+  if (!product) {
+    notFound();
+  }
 
-  const related = await getSupabaseRelatedProducts(product);
+  const related =
+    await getSupabaseRelatedProducts(product);
+
+  const productUrl = `${SITE_URL}/products/${encodeURIComponent(
+    params.slug,
+  )}`;
+
+  const productImages = uniqueImages([
+    product.r2ImageUrl,
+    product.imageUrl,
+    ...(product.r2GalleryUrls || []),
+    ...(product.ebayGalleryUrls || []),
+  ]);
+
+  const schemaDescription =
+    cleanText(product.description) ||
+    `${product.brand} ${product.partNumber} industrial automation spare part available for RFQ and worldwide shipping.`;
+
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${productUrl}#product`,
+
+    url: productUrl,
+    name: product.name,
+    description: schemaDescription,
+
+    image:
+      productImages.length > 0
+        ? productImages
+        : [`${SITE_URL}/logo.png`],
+
+    sku: product.sku || product.partNumber,
+    mpn: product.partNumber,
+
+    brand: {
+      '@type': 'Brand',
+      name: product.brand,
+    },
+
+    manufacturer: {
+      '@type': 'Organization',
+      name: product.brand,
+    },
+
+    itemCondition: getSchemaCondition(
+      product.condition,
+    ),
+
+    category:
+      product.tags?.length > 0
+        ? product.tags[0]
+        : 'Industrial Automation Parts',
+
+    additionalProperty: [
+      {
+        '@type': 'PropertyValue',
+        name: 'Part Number',
+        value: product.partNumber,
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Condition',
+        value: product.condition,
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Availability',
+        value: product.inStock
+          ? 'In Stock'
+          : 'Request for Quote',
+      },
+    ],
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    '@id': `${productUrl}#breadcrumb`,
+
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Products',
+        item: `${SITE_URL}/products`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.partNumber,
+        item: productUrl,
+      },
+    ],
+  };
 
   return (
- 
     <div className="min-h-screen bg-navy-900 pt-20">
-      <div className="bg-navy-800 border-b border-navy-700">
+      <JsonLd
+        id={`product-schema-${product.id}`}
+        data={productSchema}
+      />
+
+      <JsonLd
+        id={`breadcrumb-schema-${product.id}`}
+        data={breadcrumbSchema}
+      />
+
+      <div className="border-b border-navy-700 bg-navy-800">
         <div className="page-container py-3">
-          <nav className="flex items-center gap-1.5 text-xs text-slate-500">
-            <Link href="/" className="hover:text-gold-500">Home</Link>
+          <nav
+            aria-label="Breadcrumb"
+            className="flex items-center gap-1.5 text-xs text-slate-500"
+          >
+            <Link
+              href="/"
+              className="hover:text-gold-500"
+            >
+              Home
+            </Link>
+
             <ChevronRight size={12} />
-            <Link href="/products" className="hover:text-gold-500">Products</Link>
+
+            <Link
+              href="/products"
+              className="hover:text-gold-500"
+            >
+              Products
+            </Link>
+
             <ChevronRight size={12} />
-            <span className="text-slate-300 truncate max-w-xs">{product.partNumber}</span>
+
+            <span className="max-w-xs truncate text-slate-300">
+              {product.partNumber}
+            </span>
           </nav>
         </div>
       </div>
 
-      <section className="bg-gradient-to-r from-navy-800 to-navy-700 border-b border-navy-600">
+      <section className="border-b border-navy-600 bg-gradient-to-r from-navy-800 to-navy-700">
         <div className="page-container py-12">
           <div className="mb-3 flex items-center gap-3">
             <span className="text-sm font-bold uppercase tracking-wider text-gold-500">
               {product.brand}
             </span>
-            <span className="text-slate-600">•</span> 
+
+            <span className="text-slate-600">
+              •
+            </span>
           </div>
-          <h1 className="mb-3 text-4xl md:text-5xl font-bold text-white leading-tight">
+
+          <h1 className="mb-3 text-4xl font-bold leading-tight text-white md:text-5xl">
             {product.name}
           </h1>
 
-          <p className="text-slate-300 max-w-3xl">
-            Industrial automation spare part available for RFQ, worldwide shipping and fast quotation support.
+          <p className="max-w-3xl text-slate-300">
+            Industrial automation spare part available
+            for RFQ, worldwide shipping and fast
+            quotation support.
           </p>
         </div>
       </section>
 
       <div className="page-container py-10">
-        <div className="grid lg:grid-cols-5 gap-8 mb-14">
+        <div className="mb-14 grid gap-8 lg:grid-cols-5">
           <div className="lg:col-span-2">
-           <div className="sticky top-24">
-  <ProductGallery
-    r2GalleryUrls={product.r2GalleryUrls}
-    ebayGalleryUrls={product.ebayGalleryUrls}
-    mainImageUrl={product.r2ImageUrl || product.imageUrl}
-    alt={product.name}
-  />
-</div>
+            <div className="sticky top-24">
+              <ProductGallery
+                r2GalleryUrls={
+                  product.r2GalleryUrls
+                }
+                ebayGalleryUrls={
+                  product.ebayGalleryUrls
+                }
+                mainImageUrl={
+                  product.r2ImageUrl ||
+                  product.imageUrl
+                }
+                alt={`${product.brand} ${product.partNumber} ${product.name}`}
+              />
+            </div>
           </div>
 
           <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 gap-3 mb-5 sm:grid-cols-5">
+            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-5">
               <div className="rounded-xl border border-gold-500/30 bg-gold-500/5 p-5 sm:col-span-2">
                 <p className="mb-1 flex items-center gap-1 text-xs uppercase tracking-wider text-gold-500">
-                  <Tag size={12} /> Part Number
+                  <Tag size={12} />
+                  Part Number
                 </p>
+
                 <p className="font-mono text-3xl font-bold tracking-wide text-white">
                   {product.partNumber}
                 </p>
               </div>
 
-              <div className="bg-navy-800 border border-navy-700 rounded-lg p-3">
-                <p className="text-xs text-slate-500 mb-1 flex items-center gap-1">
-                  <Boxes size={11} /> SKU
+              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
+                <p className="mb-1 flex items-center gap-1 text-xs text-slate-500">
+                  <Boxes size={11} />
+                  SKU
                 </p>
-                <p className="text-sm font-mono text-slate-300">{product.sku}</p>
+
+                <p className="font-mono text-sm text-slate-300">
+                  {product.sku ||
+                    product.partNumber}
+                </p>
               </div>
 
-              <div className="bg-navy-800 border border-navy-700 rounded-lg p-3">
-                <p className="text-xs text-slate-500 mb-1">Condition</p>
-                <ConditionBadge condition={product.condition} />
+              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
+                <p className="mb-1 text-xs text-slate-500">
+                  Condition
+                </p>
+
+                <ConditionBadge
+                  condition={product.condition}
+                />
               </div>
 
-              <div className="bg-navy-800 border border-navy-700 rounded-lg p-3">
-                <p className="text-xs text-slate-500 mb-1">Availability</p>
+              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
+                <p className="mb-1 text-xs text-slate-500">
+                  Availability
+                </p>
+
                 {product.inStock ? (
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle size={14} className="text-emerald-400" />
-                    <span className="text-sm text-emerald-400 font-semibold">In Stock</span>
+                    <CheckCircle
+                      size={14}
+                      className="text-emerald-400"
+                    />
+
+                    <span className="text-sm font-semibold text-emerald-400">
+                      In Stock
+                    </span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5">
-                    <XCircle size={14} className="text-slate-500" />
-                    <span className="text-sm text-slate-400">RFQ</span>
+                    <XCircle
+                      size={14}
+                      className="text-slate-500"
+                    />
+
+                    <span className="text-sm text-slate-400">
+                      RFQ
+                    </span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-300">
                 Description
               </h2>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                {product.description || 'Product available for RFQ. Contact us for availability, condition, and delivery time.'}
+
+              <p className="text-sm leading-relaxed text-slate-300">
+                {cleanText(product.description) ||
+                  'Product available for RFQ. Contact us for availability, condition, and delivery time.'}
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row">
               <Link
-                href={`/rfq?part=${encodeURIComponent(product.partNumber)}&name=${encodeURIComponent(product.name)}`}
-                className="btn-gold flex-1 justify-center text-base py-3"
+                href={`/rfq?part=${encodeURIComponent(
+                  product.partNumber,
+                )}&name=${encodeURIComponent(
+                  product.name,
+                )}`}
+                className="btn-gold flex-1 justify-center py-3 text-base"
               >
                 <FileText size={17} />
                 Request a Quote
               </Link>
 
               <Link
-                href={`/contact?part=${encodeURIComponent(product.partNumber)}`}
-                className="btn-outline-slate flex-1 justify-center text-base py-3"
+                href={`/contact?part=${encodeURIComponent(
+                  product.partNumber,
+                )}`}
+                className="btn-outline-slate flex-1 justify-center py-3 text-base"
               >
                 <MessageSquare size={17} />
                 Ask About This Item
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {['Worldwide Shipping', 'RFQ Response Within 24 Hours', 'New • Used • Surplus', 'Global Industrial Supply'].map((text) => (
-                <div key={text} className="bg-navy-800 border border-navy-700 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gold-500 font-semibold">{text}</p>
+            <div className="mb-6 grid grid-cols-2 gap-3">
+              {[
+                'Worldwide Shipping',
+                'RFQ Response Within 24 Hours',
+                'New • Used • Surplus',
+                'Global Industrial Supply',
+              ].map((text) => (
+                <div
+                  key={text}
+                  className="rounded-lg border border-navy-700 bg-navy-800 p-3 text-center"
+                >
+                  <p className="text-xs font-semibold text-gold-500">
+                    {text}
+                  </p>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-navy-800 border border-navy-700 rounded-lg">
-              <Building2 size={15} className="text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-800 p-3">
+              <Building2
+                size={15}
+                className="shrink-0 text-slate-400"
+              />
+
               <p className="text-xs text-slate-400">
-                Manufactured by <span className="text-gold-500 font-semibold">{product.brand}</span>
+                Manufactured by{' '}
+                <span className="font-semibold text-gold-500">
+                  {product.brand}
+                </span>
               </p>
             </div>
           </div>
         </div>
 
-        {product.tags.length > 0 && (
+        {product.tags?.length > 0 && (
           <div className="mb-10">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
               Related Tags
-            </h3>
+            </h2>
+
             <div className="flex flex-wrap gap-2">
               {product.tags.map((tag) => (
                 <Link
                   key={tag}
-                  href={`/products?q=${encodeURIComponent(tag)}`}
-                  className="px-3 py-1 bg-navy-800 border border-navy-700 hover:border-gold-500/40 text-slate-400 hover:text-gold-400 rounded text-xs"
+                  href={`/products?q=${encodeURIComponent(
+                    tag,
+                  )}`}
+                  className="rounded border border-navy-700 bg-navy-800 px-3 py-1 text-xs text-slate-400 hover:border-gold-500/40 hover:text-gold-400"
                 >
                   {tag}
                 </Link>
@@ -246,10 +550,16 @@ export default async function ProductDetailPage({ params }: Props) {
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {related
-                .filter((item) => item.id !== product.id)
+                .filter(
+                  (item) =>
+                    item.id !== product.id,
+                )
                 .slice(0, 4)
                 .map((item) => (
-                  <ProductCard key={item.id} product={item} />
+                  <ProductCard
+                    key={item.id}
+                    product={item}
+                  />
                 ))}
             </div>
           </section>
