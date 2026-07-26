@@ -1,41 +1,47 @@
 const SITE_URL = 'https://orbit-surplus.com';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const revalidate = 86400;
 
 export async function GET() {
+  const lastModified = new Date().toISOString();
+
   const pages = [
-    '',
-    '/products',
-    '/brands',
-    '/categories',
-    '/rfq',
-    '/sell-surplus',
-    '/contact',
-    '/about',
-    '/shipping-policy',
-    '/warranty-policy',
-    '/privacy-policy',
-    '/disclaimer',
+    { path: '', priority: '1.0', changefreq: 'daily' },
+    { path: '/products', priority: '0.9', changefreq: 'daily' },
+    { path: '/brands', priority: '0.9', changefreq: 'weekly' },
+    { path: '/categories', priority: '0.9', changefreq: 'weekly' },
+    { path: '/rfq', priority: '0.8', changefreq: 'monthly' },
+    { path: '/sell-surplus', priority: '0.8', changefreq: 'monthly' },
+    { path: '/contact', priority: '0.7', changefreq: 'yearly' },
+    { path: '/about', priority: '0.7', changefreq: 'yearly' },
+    { path: '/shipping-policy', priority: '0.5', changefreq: 'yearly' },
+    { path: '/warranty-policy', priority: '0.5', changefreq: 'yearly' },
+    { path: '/privacy-policy', priority: '0.4', changefreq: 'yearly' },
+    { path: '/disclaimer', priority: '0.3', changefreq: 'yearly' },
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${pages
   .map(
-    (page) => `<url>
-  <loc>${SITE_URL}${page}</loc>
-  <lastmod>${new Date().toISOString()}</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>${page === '' ? '1.0' : '0.8'}</priority>
-</url>`
+    ({ path, priority, changefreq }) => `
+  <url>
+    <loc>${SITE_URL}${path}</loc>
+    <lastmod>${lastModified}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`
   )
-  .join('\n')}
+  .join('')}
 </urlset>`;
 
   return new Response(xml, {
+    status: 200,
     headers: {
-      'Content-Type': 'application/xml',
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control':
+        'public, s-maxage=86400, stale-while-revalidate=3600',
     },
   });
 }
