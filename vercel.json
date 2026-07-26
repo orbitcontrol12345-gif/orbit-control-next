@@ -3,7 +3,7 @@
     {
       "path": "/api/migration/save-bridge",
       "schedule": "*/2 * * * *"
-    }, 
+    },
     {
       "path": "/api/catalog/fix-part-numbers-auto",
       "schedule": "3,13,23,33,43,53 * * * *"
@@ -17,12 +17,8 @@
       "schedule": "9,29,49 * * * *"
     },
     {
-  "path": "/api/cron/bridge-health",
-  "schedule": "* * * * *"
-},
-{
-  "path": "/api/cron/repair-ebay-identifiers",
-  "schedule": "*/59 * * * *"
-}
-]
+      "path": "/api/cron/bridge-health",
+      "schedule": "* * * * *"
+    }
+  ]
 }
