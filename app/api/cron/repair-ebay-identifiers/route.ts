@@ -9,9 +9,9 @@ export const maxDuration = 300;
 const JOB_ID = 'repair-ebay-identifiers';
 const MARKETPLACE = 'EBAY_US';
 const SCAN_BATCH_SIZE = 300;
-const MAX_API_ITEMS_PER_RUN = 5;
-const CONCURRENCY = 2;
-const DELAY_BETWEEN_CHUNKS_MS = 500;
+const MAX_API_ITEMS_PER_RUN = 11;
+const CONCURRENCY = 1;
+const DELAY_BETWEEN_CHUNKS_MS = 1500;
 const MAX_RETRIES = 3;
 
 const INVALID_VALUES =
@@ -231,9 +231,12 @@ async function getJob() {
 function isAuthorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET || '';
   const authorization = request.headers.get('authorization') || '';
+  const querySecret = request.nextUrl.searchParams.get('secret') || '';
 
-  return Boolean(cronSecret) &&
-    authorization === `Bearer ${cronSecret}`;
+  return (
+    Boolean(cronSecret) &&
+    (authorization === `Bearer ${cronSecret}` || querySecret === cronSecret)
+  );
 }
 
 export async function GET(request: NextRequest) {
