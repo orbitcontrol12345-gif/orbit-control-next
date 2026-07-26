@@ -2,10 +2,14 @@ import { getSupabaseProductsPage } from '@/lib/supabase-products';
 
 const SITE_URL = 'https://orbit-surplus.com';
 
-export const dynamic = 'force-dynamic';
+const PRODUCTS_PER_PAGE = 100;
+const PAGES_PER_BATCH = 35;
+const MAX_BATCHES = 4;
+
+export const dynamic = 'force-static';
 export const revalidate = 86400;
 
-function escapeXml(value: string) {
+function escapeXml(value: string): string {
   return value
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -14,50 +18,124 @@ function escapeXml(value: string) {
     .replaceAll("'", '&apos;');
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ batch: string }> }
-) {
-  const { batch } = await params;
+function parseBatchNumber(value: string): number | null {
+  const normalizedValue = value.replace(/\.xml$/i, '');
+  const batchNumber = Number(normalizedValue);
 
-  const batchNumber = Number(batch.replace('.xml', ''));
-  const perPage = 100;
-  const pagesPerBatch = 35;
-
-  if (!Number.isFinite(batchNumber) || batchNumber < 1 || batchNumber > 4) {
-    return new Response('Not Found', { status: 404 });
+  if (
+    !Number.isInteger(batchNumber) ||
+    batchNumber < 1 ||
+    batchNumber > MAX_BATCHES
+  ) {
+    return null;
   }
 
-  const startPage = (batchNumber - 1) * pagesPerBatch + 1;
+  return batchNumber;
+}
+
+export async function GET(
+  _request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{
+      batch: string;
+    }>;
+  },
+) {
+  const { batch } = await params;
+  const batchNumber = parseBatchNumber(batch);
+
+  if (!batchNumber) {
+    return new Response('Not Found', {
+      status: 404,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    });
+  }
+
+  const startPage =
+    (batchNumber - 1) * PAGES_PER_BATCH + 1;
+
   const pageNumbers = Array.from(
-    { length: pagesPerBatch },
-    (_, index) => startPage + index
+    {
+      length: PAGES_PER_BATCH,
+    },
+    (_, index) => startPage + index,
   );
 
   const results = await Promise.allSettled(
     pageNumbers.map((page) =>
       getSupabaseProductsPage({
         page,
-        perPage,
-      })
-    )
+        perPage: PRODUCTS_PER_PAGE,
+      }),
+    ),
   );
 
-  const products = results.flatMap((result) =>
-    result.status === 'fulfilled' ? result.value.products : []
+  const failedRequests = results.filter(
+    (result) => result.status === 'rejected',
   );
 
-  const urls = products
-    .filter((product) => product.slug)
+  if (failedRequests.length === results.length) {
+    return new Response(
+      'Unable to generate product sitemap',
+      {
+        status: 503,
+        headers: {
+          'Content-Type':
+            'text/plain; charset=utf-8',
+          'Retry-After': '3600',
+        },
+      },
+    );
+  }
+
+  if (failedRequests.length > 0) {
+    console.error(
+      `Product sitemap batch ${batchNumber}: ${failedRequests.length} Supabase page requests failed.`,
+    );
+  }
+
+  const products = results.flatMap((result) => {
+    if (result.status !== 'fulfilled') {
+      return [];
+    }
+
+    return result.value.products;
+  });
+
+  const uniqueProducts = Array.from(
+    new Map(
+      products
+        .filter(
+          (product) =>
+            typeof product.slug === 'string' &&
+            product.slug.trim().length > 0,
+        )
+        .map((product) => [
+          product.slug.trim(),
+          product,
+        ]),
+    ).values(),
+  );
+
+  const sitemapGeneratedAt =
+    new Date().toISOString();
+
+  const urls = uniqueProducts
     .map((product) => {
-      const url = `${SITE_URL}/products/${encodeURIComponent(product.slug)}`;
+      const productUrl =
+        `${SITE_URL}/products/` +
+        encodeURIComponent(product.slug.trim());
 
-      return `<url>
-  <loc>${escapeXml(url)}</loc>
-  <lastmod>${new Date().toISOString()}</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.8</priority>
-</url>`;
+      return `  <url>
+    <loc>${escapeXml(productUrl)}</loc>
+    <lastmod>${sitemapGeneratedAt}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
     })
     .join('\n');
 
@@ -67,9 +145,12 @@ ${urls}
 </urlset>`;
 
   return new Response(xml, {
+    status: 200,
     headers: {
-      'Content-Type': 'application/xml',
-      'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
+      'Content-Type':
+        'application/xml; charset=utf-8',
+      'Cache-Control':
+        'public, s-maxage=86400, stale-while-revalidate=3600',
     },
   });
 }
