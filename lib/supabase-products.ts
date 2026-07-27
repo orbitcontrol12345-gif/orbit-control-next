@@ -51,6 +51,7 @@ function mapSupabaseProduct(item: any): Product {
     slug: item.slug || item.sku || item.ebay_item_id || String(item.id),
   };
 }
+
 export async function getSupabaseProductsPage({
   search = '',
   page = 1,
@@ -90,10 +91,12 @@ export async function getSupabaseProductsPage({
 
 export async function getSupabaseProductsByCategoryTerms({
   terms,
+  excludeTerms = [],
   page = 1,
   perPage = 24,
 }: {
   terms: string[];
+  excludeTerms?: string[];
   page?: number;
   perPage?: number;
 }) {
@@ -101,19 +104,33 @@ export async function getSupabaseProductsByCategoryTerms({
   const to = from + perPage - 1;
 
   const filters = terms
-  .map((term) => `name.ilike.%${term}%`)
-  .join(',');
-  
-  const { data, count, error } = await supabaseAdmin
+    .map((term) => `name.ilike.%${term}%`)
+    .join(',');
+
+  let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
     .neq('catalog_visible', false)
-    .or(filters)
-   .order('id', { ascending: true })
+    .or(filters);
+
+  for (const term of excludeTerms) {
+    query = query.not('name', 'ilike', `%${term}%`);
+  }
+
+  const { data, count, error } = await query
+    .order('id', { ascending: true })
     .range(from, to);
 
-  if (error) return { products: [], totalProducts: 0, totalPages: 0 };
+  if (error) {
+    console.error('Category products query failed:', error);
+
+    return {
+      products: [],
+      totalProducts: 0,
+      totalPages: 0,
+    };
+  }
 
   return {
     products: (data || []).map(mapSupabaseProduct),
