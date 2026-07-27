@@ -347,7 +347,7 @@ export default function ProductGallery({
     <>
       <div className="w-full">
         <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-white shadow-xl shadow-black/25 sm:rounded-3xl">
-          <div className="relative h-[300px] w-full overflow-hidden bg-white sm:h-[380px] lg:h-[430px]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-white lg:h-[430px] lg:aspect-auto">
             {noImages || !activeImage ? (
               <div className="flex h-full w-full items-center justify-center bg-slate-100 px-6 text-center text-sm font-medium text-slate-500">
                 Product image unavailable
@@ -366,7 +366,7 @@ export default function ProductGallery({
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 520px"
-                    className="object-cover"
+                    className="object-contain p-2"
                     unoptimized
                     onError={() =>
                       handleImageError(activeIndex)
