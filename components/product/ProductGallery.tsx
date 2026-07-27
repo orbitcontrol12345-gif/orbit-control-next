@@ -345,9 +345,9 @@ export default function ProductGallery({
 
   return (
     <>
-      <div className="w-full">
-        <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 bg-white shadow-xl shadow-black/25 sm:rounded-3xl">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-white lg:h-[430px] lg:aspect-auto">
+      <div className="w-full max-w-full overflow-hidden">
+        <div className="relative left-1/2 w-[calc(100vw-20px)] max-w-[520px] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-white shadow-xl shadow-black/25 sm:left-auto sm:mx-auto sm:w-full sm:translate-x-0 sm:rounded-3xl">
+          <div className="relative h-[240px] w-full overflow-hidden bg-white sm:h-[380px] lg:h-[430px]">
             {noImages || !activeImage ? (
               <div className="flex h-full w-full items-center justify-center bg-slate-100 px-6 text-center text-sm font-medium text-slate-500">
                 Product image unavailable
@@ -366,7 +366,7 @@ export default function ProductGallery({
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 520px"
-                    className="object-contain p-2"
+                    className="object-cover object-center"
                     unoptimized
                     onError={() =>
                       handleImageError(activeIndex)
@@ -410,7 +410,7 @@ export default function ProductGallery({
         </div>
 
         {images.length > 1 && (
-          <div className="mx-auto mt-3 w-full max-w-[520px] rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:rounded-2xl">
+          <div className="relative left-1/2 mt-3 w-[calc(100vw-20px)] max-w-[520px] -translate-x-1/2 rounded-xl border border-navy-700 bg-navy-800/80 p-2 sm:left-auto sm:mx-auto sm:w-full sm:translate-x-0 sm:rounded-2xl">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {images.map((image, index) => {
                 const active =
