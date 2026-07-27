@@ -101,9 +101,9 @@ export async function getSupabaseProductsByCategoryTerms({
   const to = from + perPage - 1;
 
   const filters = terms
-    .map((term) => `category.ilike.%${term}%,name.ilike.%${term}%`)
-    .join(',');
-
+  .map((term) => `name.ilike.%${term}%`)
+  .join(',');
+  
   const { data, count, error } = await supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
