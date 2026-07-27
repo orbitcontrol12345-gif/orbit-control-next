@@ -22,7 +22,21 @@ interface Props {
 }
 
 const categorySearchMap: Record<string, string[]> = {
-  plcs: ['PLC'],
+  plcs: [
+    'PLC',
+    'Programmable Logic Controller',
+    'PLC Processor',
+    'PLC CPU',
+    'CPU Module',
+    'CompactLogix',
+    'ControlLogix',
+    'MicroLogix',
+    'S7-200',
+    'S7-300',
+    'S7-400',
+    'S7-1200',
+    'S7-1500',
+  ],
   hmis: ['HMI'],
   'drives-vfds': [
     'Variable Frequency Drives',
@@ -45,6 +59,26 @@ const categorySearchMap: Record<string, string[]> = {
   'safety-devices': ['Safety'],
   'obsolete-parts': ['Obsolete'],
   contactors: ['Contactor'],
+};
+
+const categoryExcludeMap: Record<string, string[]> = {
+  plcs: [
+    'HMI',
+    'Touch Panel',
+    'Operator Panel',
+    'Pressure Transmitter',
+    'Temperature Controller',
+    'Communication Module',
+    'Communication Board',
+    'Control Board',
+    'Circuit Board',
+    'PCB',
+    'Relay',
+    'Sensor',
+    'Power Supply',
+    'Servo Drive',
+    'Inverter',
+  ],
 };
 
 function cleanText(value?: string | null): string {
@@ -172,6 +206,7 @@ export default async function CategoryPage({
   const { products, totalPages } =
     await getSupabaseProductsByCategoryTerms({
       terms,
+      excludeTerms: categoryExcludeMap[category.slug] || [],
       page: currentPage,
       perPage: PRODUCTS_PER_PAGE,
     });
