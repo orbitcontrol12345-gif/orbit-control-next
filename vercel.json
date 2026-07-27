@@ -21,8 +21,8 @@
       "schedule": "* * * * *"
     },
     {
-      "path": "/api/ebay/auto-import",
-      "schedule": "0,20 */4 * * *"
+      "path": "/api/ebay/full-sync?limit=50",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
