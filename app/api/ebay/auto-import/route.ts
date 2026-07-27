@@ -10,6 +10,7 @@ export const runtime = 'nodejs';
 const JOB_ID = 'ebay-auto-import';
 const DEFAULT_LIMIT = 50;
 const CONCURRENCY = 8;
+const FEED_CHUNK_SIZE = 500;
 
 function slugify(text: string) {
   return String(text || '')
@@ -221,33 +222,45 @@ async function downloadFeedRows(accessToken: string, taskId: string) {
     .filter((row) => row.currency === 'USD' && row.quantity > 0);
 }
 
-async function findMissingRows(rows: any[], limit: number) {
-  const missing: any[] = [];
+async function findMissingRows(rows: any[], offset: number) {
+  const safeOffset = Math.max(0, Math.min(offset, rows.length));
+  const end = Math.min(safeOffset + FEED_CHUNK_SIZE, rows.length);
+  const chunk = rows.slice(safeOffset, end);
 
-  for (let i = 0; i < rows.length; i += 500) {
-    const chunk = rows.slice(i, i + 500);
-    const ids = chunk.map((row) => String(row.ebay_item_id));
-
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('ebay_item_id')
-      .in('ebay_item_id', ids);
-
-    if (error) throw error;
-
-    const existing = new Set(
-      (data || []).map((row) => String(row.ebay_item_id))
-    );
-
-    for (const row of chunk) {
-      if (!existing.has(String(row.ebay_item_id))) {
-        missing.push(row);
-        if (missing.length >= limit) return missing;
-      }
-    }
+  if (!chunk.length) {
+    return {
+      missing: [] as any[],
+      nextOffset: end,
+      finished: true,
+      scanned: 0,
+      total: rows.length,
+    };
   }
 
-  return missing;
+  const ids = chunk.map((row) => String(row.ebay_item_id));
+
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('ebay_item_id')
+    .in('ebay_item_id', ids);
+
+  if (error) throw error;
+
+  const existing = new Set(
+    (data || []).map((row) => String(row.ebay_item_id))
+  );
+
+  const missing = chunk.filter(
+    (row) => !existing.has(String(row.ebay_item_id))
+  );
+
+  return {
+    missing,
+    nextOffset: end,
+    finished: end >= rows.length,
+    scanned: chunk.length,
+    total: rows.length,
+  };
 }
 
 async function fetchEbayItem(accessToken: string, ebayItemId: string) {
@@ -296,17 +309,18 @@ async function ensureJob() {
 
 export async function GET(req: NextRequest) {
   try {
-    const limit = Math.min(
-      Number(req.nextUrl.searchParams.get('limit') || DEFAULT_LIMIT),
-      100
-    );
-
     const now = new Date().toISOString();
     const { access_token } = await getEbayToken();
-    const accessToken = String(access_token).trim();
+    const accessToken = String(access_token || '').trim();
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { success: false, error: 'No eBay access token' },
+        { status: 500 }
+      );
+    }
 
     const job = await ensureJob();
-
     let taskId = job.feed_task_id as string | null;
 
     if (!taskId || job.stage === 'idle' || job.stage === 'done') {
@@ -318,9 +332,14 @@ export async function GET(req: NextRequest) {
           status: 'running',
           stage: 'waiting_feed',
           feed_task_id: taskId,
+          offset_value: 0,
+          processed: 0,
+          updated: 0,
+          failed: 0,
           last_error: null,
+          started_at: now,
+          finished_at: null,
           updated_at: now,
-          started_at: job.started_at || now,
         })
         .eq('id', JOB_ID);
 
@@ -328,11 +347,17 @@ export async function GET(req: NextRequest) {
         success: true,
         stage: 'created_feed_task',
         taskId,
-        message: 'Feed task created. Next cron run will check completion.',
+        offset: 0,
+        chunkSize: FEED_CHUNK_SIZE,
+        message: 'Feed task created. Run the route again to check its status.',
       });
     }
 
     const status = await getTaskStatus(accessToken, taskId);
+
+    if (status === 'FAILED' || status === 'CANCELED') {
+      throw new Error(`eBay feed task ${status.toLowerCase()}: ${taskId}`);
+    }
 
     if (status !== 'COMPLETED') {
       return NextResponse.json({
@@ -340,34 +365,14 @@ export async function GET(req: NextRequest) {
         stage: 'waiting_feed',
         taskId,
         ebayStatus: status,
+        currentOffset: Number(job.offset_value || 0),
       });
     }
 
     const feedRows = await downloadFeedRows(accessToken, taskId);
-
-    const missingRows = await findMissingRows(feedRows, limit);
-
-    if (!missingRows.length) {
-      await supabaseAdmin
-        .from('sync_jobs')
-        .update({
-          status: 'idle',
-          stage: 'done',
-          feed_task_id: null,
-          finished_at: now,
-          updated_at: now,
-        })
-        .eq('id', JOB_ID);
-
-      return NextResponse.json({
-        success: true,
-        stage: 'done',
-        taskId,
-        totalActiveFeedItems: feedRows.length,
-        imported: 0,
-        message: 'No new eBay products found.',
-      });
-    }
+    const currentOffset = Math.max(0, Number(job.offset_value || 0));
+    const result = await findMissingRows(feedRows, currentOffset);
+    const missingRows = result.missing;
 
     let inserted = 0;
     let failed = 0;
@@ -375,7 +380,6 @@ export async function GET(req: NextRequest) {
 
     for (let i = 0; i < missingRows.length; i += CONCURRENCY) {
       const chunk = missingRows.slice(i, i + CONCURRENCY);
-
       const details = await Promise.all(
         chunk.map((row) => fetchEbayItem(accessToken, row.ebay_item_id))
       );
@@ -387,6 +391,10 @@ export async function GET(req: NextRequest) {
         try {
           if (!item?.title) {
             failed++;
+            sample.push({
+              ebayItemId: row.ebay_item_id,
+              error: 'Browse API returned no item title',
+            });
             continue;
           }
 
@@ -398,7 +406,8 @@ export async function GET(req: NextRequest) {
 
           const aspectBrand =
             item.localizedAspects?.find(
-              (a: any) => String(a.name || '').toLowerCase() === 'brand'
+              (aspect: any) =>
+                String(aspect?.name || '').trim().toLowerCase() === 'brand'
             )?.value || '';
 
           const brand = detectIndustrialBrand(
@@ -458,7 +467,6 @@ export async function GET(req: NextRequest) {
           if (error) throw error;
 
           inserted++;
-
           sample.push({
             ebayItemId: realItemId,
             brand,
@@ -468,11 +476,11 @@ export async function GET(req: NextRequest) {
             modelNumber,
             title,
           });
-        } catch (err) {
+        } catch (error) {
           failed++;
           sample.push({
             ebayItemId: row.ebay_item_id,
-            error: err instanceof Error ? err.message : String(err),
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
@@ -481,27 +489,37 @@ export async function GET(req: NextRequest) {
     await supabaseAdmin
       .from('sync_jobs')
       .update({
-        status: 'running',
-        stage: 'importing',
-        processed: (job.processed || 0) + missingRows.length,
-        updated: (job.updated || 0) + inserted,
-        failed: (job.failed || 0) + failed,
+        status: result.finished ? 'idle' : 'running',
+        stage: result.finished ? 'done' : 'scanning_feed',
+        offset_value: result.finished ? 0 : result.nextOffset,
+        processed: Number(job.processed || 0) + result.scanned,
+        updated: Number(job.updated || 0) + inserted,
+        failed: Number(job.failed || 0) + failed,
+        feed_task_id: result.finished ? null : taskId,
+        finished_at: result.finished ? now : null,
         updated_at: now,
       })
       .eq('id', JOB_ID);
 
     return NextResponse.json({
       success: true,
-      stage: 'imported_new_products',
+      stage: result.finished ? 'done' : 'scanning_feed',
       taskId,
-      totalActiveFeedItems: feedRows.length,
-      checkedNewProducts: missingRows.length,
+      totalActiveFeedItems: result.total,
+      scannedThisRun: result.scanned,
+      currentOffset,
+      nextOffset: result.finished ? 0 : result.nextOffset,
+      remaining: Math.max(result.total - result.nextOffset, 0),
+      missingInChunk: missingRows.length,
       inserted,
       failed,
       sample: sample.slice(0, 10),
+      message: result.finished
+        ? 'Feed scan completed.'
+        : 'Chunk completed. Run the route again to continue.',
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
 
     await supabaseAdmin
       .from('sync_jobs')
@@ -513,10 +531,7 @@ export async function GET(req: NextRequest) {
       .eq('id', JOB_ID);
 
     return NextResponse.json(
-      {
-        success: false,
-        error: message,
-      },
+      { success: false, error: message },
       { status: 500 }
     );
   }
