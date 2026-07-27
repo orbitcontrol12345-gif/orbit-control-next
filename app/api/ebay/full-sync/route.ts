@@ -83,6 +83,33 @@ function createEmptyReport(): SyncReport {
   };
 }
 
+
+function formatError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+
+  if (typeof error === 'string') return error;
+
+  if (error && typeof error === 'object') {
+    const value = error as Record<string, unknown>;
+    const parts = [
+      value.message ? `message=${String(value.message)}` : '',
+      value.code ? `code=${String(value.code)}` : '',
+      value.details ? `details=${String(value.details)}` : '',
+      value.hint ? `hint=${String(value.hint)}` : '',
+    ].filter(Boolean);
+
+    if (parts.length) return parts.join(' | ');
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'Unknown object error';
+    }
+  }
+
+  return String(error);
+}
+
 function slugify(text: string) {
   return String(text || '')
     .toLowerCase()
@@ -372,7 +399,11 @@ async function downloadFeedRows(accessToken: string, taskId: string) {
     });
   }
 
-  return rows;
+  // The LMS report can contain zero-quantity rows and non-USD rows.
+  // Only active US listings that can actually be purchased belong in this sync.
+  return rows.filter(
+    (row) => row.currency.toUpperCase() === 'USD' && row.quantity > 0
+  );
 }
 
 function deduplicateFeedRows(rows: FeedRow[]) {
@@ -513,7 +544,9 @@ async function insertProducts(products: NormalizedEbayItem[]) {
     }));
 
     const { error } = await supabaseAdmin.from('products').insert(chunk);
-    if (error) throw error;
+    if (error) {
+      throw new Error(`Insert products failed: ${formatError(error)}`);
+    }
   }
 }
 
@@ -554,7 +587,9 @@ async function updateProducts(products: NormalizedEbayItem[]) {
       .from('products')
       .upsert(chunk, { onConflict: 'ebay_item_id' });
 
-    if (error) throw error;
+    if (error) {
+      throw new Error(`Update products failed: ${formatError(error)}`);
+    }
   }
 }
 
@@ -818,7 +853,7 @@ export async function GET(req: NextRequest) {
         : 'All feed items were processed. The next run will deactivate missing products.',
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = formatError(error);
 
     try {
       await updateJob({
