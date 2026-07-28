@@ -201,6 +201,10 @@ async function downloadFeedRows(
   }
 
   const xml = await zip.files[fileName].async('string');
+  
+  console.log('================ XML PREVIEW ================');
+console.log(xml.substring(0, 10000));
+console.log('============== END XML PREVIEW ==============');
   const blocks = xml.match(/<SKUDetails>[\s\S]*?<\/SKUDetails>/g) || [];
 
   const parsedRows: FeedRow[] = [];
