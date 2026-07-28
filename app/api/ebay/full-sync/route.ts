@@ -285,7 +285,10 @@ function normalizeEbayItem(
     ebay_gallery_urls: galleryUrls,
     description: rawTitle,
     slug: slugify(`${realItemId}-${cleanedName}`),
-    marketplace: MARKETPLACE,
+    marketplace:
+  String(item?.listingMarketplaceId || MARKETPLACE)
+    .trim()
+    .toUpperCase() as typeof MARKETPLACE,
     seller: 'orbitcontrol',
     source: 'ebay-full-sync',
     source_type: 'ebay',
@@ -401,9 +404,7 @@ async function downloadFeedRows(accessToken: string, taskId: string) {
 
   // The LMS report can contain zero-quantity rows and non-USD rows.
   // Only active US listings that can actually be purchased belong in this sync.
-  return rows.filter(
-    (row) => row.currency.toUpperCase() === 'USD' && row.quantity > 0
-  );
+  return rows;
 }
 
 function deduplicateFeedRows(rows: FeedRow[]) {
@@ -447,36 +448,41 @@ async function fetchEbayItem(accessToken: string, ebayItemId: string) {
   return response.json();
 }
 
-async function ensureJob() {
-  const { data, error } = await supabaseAdmin
-    .from('sync_jobs')
-    .select('*')
-    .eq('id', JOB_ID)
-    .maybeSingle();
+async function fetchEbayItem(
+  accessToken: string,
+  ebayItemId: string
+) {
+  const response = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${encodeURIComponent(
+      ebayItemId
+    )}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+        'Accept-Language': 'en-US',
+      },
+      cache: 'no-store',
+    }
+  );
 
-  if (error) throw error;
-  if (data) return data;
+  if (!response.ok) {
+    return null;
+  }
 
-  const now = new Date().toISOString();
-  const { data: created, error: createError } = await supabaseAdmin
-    .from('sync_jobs')
-    .insert({
-      id: JOB_ID,
-      status: 'idle',
-      stage: 'idle',
-      offset_value: 0,
-      batch_size: DEFAULT_LIMIT,
-      processed: 0,
-      updated: 0,
-      failed: 0,
-      last_error: null,
-      updated_at: now,
-    })
-    .select('*')
-    .single();
+  const item = await response.json();
 
-  if (createError) throw createError;
-  return created;
+  const listingMarketplaceId = String(
+    item?.listingMarketplaceId || ''
+  )
+    .trim()
+    .toUpperCase();
+
+  if (listingMarketplaceId !== MARKETPLACE) {
+    return null;
+  }
+
+  return item;
 }
 
 async function updateJob(values: Record<string, unknown>) {
