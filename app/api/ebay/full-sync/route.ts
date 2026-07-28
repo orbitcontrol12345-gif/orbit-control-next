@@ -430,24 +430,6 @@ function deduplicateFeedRows(rows: FeedRow[]) {
   };
 }
 
-async function fetchEbayItem(accessToken: string, ebayItemId: string) {
-  const response = await fetch(
-    `https://api.ebay.com/buy/browse/v1/item/get_item_by_legacy_id?legacy_item_id=${encodeURIComponent(
-      ebayItemId
-    )}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-        'Accept-Language': 'en-US',
-      },
-    }
-  );
-
-  if (!response.ok) return null;
-  return response.json();
-}
-
 async function fetchEbayItem(
   accessToken: string,
   ebayItemId: string
