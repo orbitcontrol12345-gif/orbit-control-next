@@ -888,23 +888,25 @@ if (!normalized) {
   } catch (error) {
     const message = formatError(error);
 
-    try {
-      await updateJob({
-        status: 'error',
-        last_error: message,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      // Do not hide the original synchronization error.
-    }
+try {
+  await updateJob({
+    status: 'failed',
+    last_error: message,
+    updated_at: new Date().toISOString(),
+  });
+} catch (updateError) {
+  console.error(
+    'Failed to update the synchronization job:',
+    updateError
+  );
+}
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: message,
-        report,
-      },
-      { status: 500 }
-    );
+return NextResponse.json(
+  {
+    success: false,
+    error: message,
+  },
+  { status: 500 }
+);
   }
 }
