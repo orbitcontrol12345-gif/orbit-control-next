@@ -164,6 +164,8 @@ async function downloadFeedRows(
   taskId: string
 ): Promise<{
   rawSkuDetails: number;
+  rawXmlPreview: string;
+  firstSkuDetailsPreview: string | null;
   usActiveRows: FeedRow[];
   nonUsRows: number;
   zeroQuantityRows: number;
@@ -201,11 +203,9 @@ async function downloadFeedRows(
   }
 
   const xml = await zip.files[fileName].async('string');
-  
-  console.log('================ XML PREVIEW ================');
-console.log(xml.substring(0, 10000));
-console.log('============== END XML PREVIEW ==============');
   const blocks = xml.match(/<SKUDetails>[\s\S]*?<\/SKUDetails>/g) || [];
+  const rawXmlPreview = xml.substring(0, 5000);
+  const firstSkuDetailsPreview = blocks[0] || null;
 
   const parsedRows: FeedRow[] = [];
 
@@ -242,6 +242,8 @@ console.log('============== END XML PREVIEW ==============');
 
   return {
     rawSkuDetails: blocks.length,
+    rawXmlPreview,
+    firstSkuDetailsPreview,
     usActiveRows,
     nonUsRows,
     zeroQuantityRows,
@@ -538,6 +540,10 @@ export async function GET(req: NextRequest) {
       readOnly: true,
       stage: 'diagnostic_complete',
       taskId: taskIdParam,
+      xmlInspection: {
+        rawXmlPreview: feed.rawXmlPreview,
+        firstSkuDetailsPreview: feed.firstSkuDetailsPreview,
+      },
       summary,
       duplicateGroups: {
         sameMpnDifferentItemIds,
