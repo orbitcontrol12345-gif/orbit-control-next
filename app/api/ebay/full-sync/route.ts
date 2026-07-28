@@ -466,7 +466,47 @@ async function fetchEbayItem(
 
   return item;
 }
+async function ensureJob() {
+  const { data, error } = await supabaseAdmin
+    .from('sync_jobs')
+    .select('*')
+    .eq('id', JOB_ID)
+    .maybeSingle();
 
+  if (error) {
+    throw error;
+  }
+
+  if (data) {
+    return data;
+  }
+
+  const now = new Date().toISOString();
+
+  const { data: created, error: createError } =
+    await supabaseAdmin
+      .from('sync_jobs')
+      .insert({
+        id: JOB_ID,
+        status: 'idle',
+        stage: 'idle',
+        offset_value: 0,
+        batch_size: DEFAULT_LIMIT,
+        processed: 0,
+        updated: 0,
+        failed: 0,
+        last_error: null,
+        updated_at: now,
+      })
+      .select('*')
+      .single();
+
+  if (createError) {
+    throw createError;
+  }
+
+  return created;
+}
 async function updateJob(values: Record<string, unknown>) {
   const { error } = await supabaseAdmin
     .from('sync_jobs')
