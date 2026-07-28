@@ -449,6 +449,15 @@ async function fetchEbayItem(
   );
 
   if (!response.ok) {
+    const errorBody = await response.text().catch(() => '');
+
+    console.log(
+      `[FAILED API] ${ebayItemId} : status=${response.status} body=${errorBody.slice(
+        0,
+        300
+      )}`
+    );
+
     return null;
   }
 
@@ -461,6 +470,10 @@ async function fetchEbayItem(
     .toUpperCase();
 
   if (listingMarketplaceId !== MARKETPLACE) {
+    console.log(
+      `[FAILED MARKETPLACE] ${ebayItemId} : received=${listingMarketplaceId || 'EMPTY'} expected=${MARKETPLACE}`
+    );
+
     return null;
   }
 
