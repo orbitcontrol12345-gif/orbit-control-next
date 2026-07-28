@@ -798,31 +798,48 @@ const uniqueFeedRows = deduplicated.rows.filter(
     const normalizedItems: NormalizedEbayItem[] = [];
 
     for (let index = 0; index < batch.length; index += CONCURRENCY) {
-      const chunk = batch.slice(index, index + CONCURRENCY);
-      const details = await Promise.all(
-        chunk.map((row) => fetchEbayItem(accessToken, row.ebay_item_id))
+  const chunk = batch.slice(index, index + CONCURRENCY);
+
+  const details = await Promise.all(
+    chunk.map((row) =>
+      fetchEbayItem(accessToken, row.ebay_item_id)
+    )
+  );
+
+  for (
+    let itemIndex = 0;
+    itemIndex < chunk.length;
+    itemIndex++
+  ) {
+    const feedRow = chunk[itemIndex];
+    const ebayItem = details[itemIndex];
+
+    if (!ebayItem) {
+      console.log(
+        `[FAILED] ${feedRow.ebay_item_id} : Browse API returned null`
       );
 
-      for (let itemIndex = 0; itemIndex < chunk.length; itemIndex++) {
-        const feedRow = chunk[itemIndex];
-        const ebayItem = details[itemIndex];
+      report.failed++;
+      continue;
+    }
 
-        if (!ebayItem) {
-  console.log(
-    `[FAILED] ${feedRow.ebay_item_id} : Browse API returned null`
-  );
+    const normalized = normalizeEbayItem(
+      ebayItem,
+      feedRow,
+      now
+    );
 
-  report.failed++;
-  continue;
-}
+    if (!normalized) {
+      console.log(
+        `[FAILED] ${feedRow.ebay_item_id} : normalizeEbayItem returned null`
+      );
 
-if (!normalized) {
-  console.log(
-    `[FAILED] ${feedRow.ebay_item_id} : normalizeEbayItem returned null`
-  );
+      report.failed++;
+      continue;
+    }
 
-  report.failed++;
-  continue;
+    normalizedItems.push(normalized);
+  }
 }
     const itemsToInsert: NormalizedEbayItem[] = [];
     const itemsToUpdate: NormalizedEbayItem[] = [];
