@@ -496,7 +496,7 @@ export async function GET(req: NextRequest) {
       rawSkuDetails: feed.rawSkuDetails,
       usActiveFeedRows: feed.usActiveRows.length,
       uniqueUsActiveItems: uniqueRows.length,
-      duplicatesRemovedByEbayItemId,
+      duplicatesRemovedByEbayItemId: duplicatesRemovedByItemId,
       excludedNonUsRows: feed.nonUsRows,
       excludedZeroQuantityRows: feed.zeroQuantityRows,
       excludedNonUsdRows: feed.nonUsdRows,
