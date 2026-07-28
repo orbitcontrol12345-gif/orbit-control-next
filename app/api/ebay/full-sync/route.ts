@@ -808,20 +808,22 @@ const uniqueFeedRows = deduplicated.rows.filter(
         const ebayItem = details[itemIndex];
 
         if (!ebayItem) {
-          report.failed++;
-          continue;
-        }
+    console.log(
+      `[FAILED] ${feedRow.ebay_item_id} : Browse API returned null`
+    );
 
-        const normalized = normalizeEbayItem(ebayItem, feedRow, now);
-        if (!normalized) {
-          report.failed++;
-          continue;
-        }
+    report.failed++;
+    continue;
+}
 
-        normalizedItems.push(normalized);
-      }
-    }
+if (!normalized) {
+    console.log(
+      `[FAILED] ${feedRow.ebay_item_id} : normalizeEbayItem returned null`
+    );
 
+    report.failed++;
+    continue;
+}
     const itemsToInsert: NormalizedEbayItem[] = [];
     const itemsToUpdate: NormalizedEbayItem[] = [];
 
