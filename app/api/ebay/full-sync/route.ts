@@ -728,7 +728,10 @@ export async function GET(req: NextRequest) {
 
     const rawFeedRows = await downloadFeedRows(accessToken, taskId);
     const deduplicated = deduplicateFeedRows(rawFeedRows);
-    const uniqueFeedRows = deduplicated.rows;
+
+const uniqueFeedRows = deduplicated.rows.filter(
+  (row) => row.quantity > 0
+);
 
     report.rawFeedRows = rawFeedRows.length;
     report.uniqueFeedItems = uniqueFeedRows.length;
@@ -739,10 +742,10 @@ export async function GET(req: NextRequest) {
 
     if (currentStage === 'deactivating') {
       report.deactivated = await deactivateMissingProducts(
-        databaseProducts,
-        deduplicated.ids,
-        now
-      );
+  databaseProducts,
+  new Set(uniqueFeedRows.map((row) => row.ebay_item_id)),
+  now
+);
 
       await updateJob({
         status: 'idle',
