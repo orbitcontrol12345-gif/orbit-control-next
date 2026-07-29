@@ -135,68 +135,170 @@ function getTag(xml: string, tag: string) {
   return decodeXml(match?.[1]?.trim() || null);
 }
 
-function cleanTitle(title: string) {
-  return String(title || '')
+function cleanTitle(title: string): string {
+  if (!title) return '';
 
-    // ===== BOX =====
+  return String(title)
+
+    // =====================================================
+    // 1. BOX / PACKAGING
+    // =====================================================
+
     .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+(?:WITH\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bNEW\s+OPEN\s+BOX\b/gi, ' ')
+    .replace(/\bDAMAGED\s+BOX\b/gi, ' ')
+    .replace(/\bDAMAGE\s+BOX\b/gi, ' ')
+    .replace(/\bBOX\s+DAMAGED\b/gi, ' ')
+    .replace(/\bBOX\s+DAMAGE\b/gi, ' ')
     .replace(/\bWITHOUT\s+(?:THE\s+)?ORIGINAL\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?ORIGINAL\s+BOX\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bOPEN\s+BOX\b/gi, ' ')
+    .replace(/\bOLD\s+BOX\b/gi, ' ')
+    .replace(/\bORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bNO\s+BOX\b/gi, ' ')
     .replace(/\bW\/?\s*O\s+BOX\b/gi, ' ')
-    .replace(/\bORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bBOX\s+ONLY\b/gi, ' ')
+    .replace(/\bIN\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bBOXED\b/gi, ' ')
-    .replace(/\bIN\s+BOX\b/gi, ' ')
 
-    // ===== ACCESSORIES =====
-    .replace(/\bMISSING\s+(?:THE\s+)?CABLES?\b/gi, ' ')
+    // =====================================================
+    // 2. MISSING ITEMS / ACCESSORIES
+    // =====================================================
+
     .replace(/\bMISSING\s+(?:THE\s+)?POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?POWER\s+CORDS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?FRONT\s+COVERS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?BACK\s+COVERS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?COVERS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?FACEPLATES?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?DISPLAYS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?SCREENS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?CABLES?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?CONNECTORS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?TERMINALS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?KNOBS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?KEYS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?BATTER(?:Y|IES)\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?MEMORY\s+CARDS?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?MODULES?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?PARTS?\b/gi, ' ')
     .replace(/\bMISSING\s+(?:THE\s+)?ACCESSORIES\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?CABLES?\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:ANY\s+|THE\s+)?ACCESSORIES\b/gi, ' ')
-    .replace(/\bNO\s+CABLES?\b/gi, ' ')
-    .replace(/\bNO\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
-    .replace(/\bNO\s+ACCESSORIES\b/gi, ' ')
-    .replace(/\bW\/?\s*O\s+CABLES?\b/gi, ' ')
-    .replace(/\bW\/?\s*O\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
-    .replace(/\bW\/?\s*O\s+ACCESSORIES\b/gi, ' ')
 
-    // ===== CONDITION WORDS =====
-    .replace(/\bOLD\s+STOCK\b/gi, ' ')
-    .replace(/\bREFURBISHED\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:ANY\s+|THE\s+)?ACCESSORIES\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?POWER\s+CORDS?\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?CABLES?\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?COVERS?\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?PARTS?\b/gi, ' ')
+
+    .replace(/\bNO\s+ACCESSORIES\b/gi, ' ')
+    .replace(/\bNO\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bNO\s+POWER\s+CORDS?\b/gi, ' ')
+    .replace(/\bNO\s+CABLES?\b/gi, ' ')
+    .replace(/\bNO\s+COVERS?\b/gi, ' ')
+    .replace(/\bNO\s+KEYS?\b/gi, ' ')
+    .replace(/\bNO\s+BATTER(?:Y|IES)\b/gi, ' ')
+
+    .replace(/\bW\/?\s*O\s+ACCESSORIES\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+POWER\s+CORDS?\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+CABLES?\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+COVERS?\b/gi, ' ')
+
+    // =====================================================
+    // 3. PRODUCT CONDITION
+    // =====================================================
+
+    .replace(/\bFOR\s+PARTS?\s+(?:OR\s+NOT\s+WORKING)?\b/gi, ' ')
+    .replace(/\bPARTS?\s+ONLY\b/gi, ' ')
+    .replace(/\bFOR\s+REPAIR\b/gi, ' ')
+    .replace(/\bREPAIR\s+ONLY\b/gi, ' ')
+    .replace(/\bNOT\s+WORKING\b/gi, ' ')
+    .replace(/\bNON[\s-]*WORKING\b/gi, ' ')
+    .replace(/\bNOT\s+TESTED\b/gi, ' ')
+    .replace(/\bUNTESTED\b/gi, ' ')
     .replace(/\bTESTED\s*(?:&|AND)\s*WORKING\b/gi, ' ')
+    .replace(/\bTESTED\s+WORKING\b/gi, ' ')
     .replace(/\bTESTED\s+OK\b/gi, ' ')
+    .replace(/\bFULLY\s+TESTED\b/gi, ' ')
+    .replace(/\bWORKING\s+CONDITION\b/gi, ' ')
+    .replace(/\bAS[\s-]*IS\b/gi, ' ')
     .replace(/\bBROKEN\b/gi, ' ')
     .replace(/\bDAMAGED\b/gi, ' ')
     .replace(/\bDEFECTIVE\b/gi, ' ')
     .replace(/\bFAULTY\b/gi, ' ')
-    .replace(/\bNOT\s+WORKING\b/gi, ' ')
-    .replace(/\bUNTESTED\b/gi, ' ')
-    .replace(/\bAS[\s-]*IS\b/gi, ' ')
+    .replace(/\bSCRATCHED\b/gi, ' ')
+    .replace(/\bCRACKED\b/gi, ' ')
+    .replace(/\bRUSTY\b/gi, ' ')
+    .replace(/\bDIRTY\b/gi, ' ')
+    .replace(/\bYELLOWED\b/gi, ' ')
+    .replace(/\bREFURBISHED\b/gi, ' ')
+    .replace(/\bOLD\s+STOCK\b/gi, ' ')
+    .replace(/\bNEW\s+OLD\s+STOCK\b/gi, ' ')
+    .replace(/\bNOS\b/gi, ' ')
 
-    // ===== LOT / PCS =====
+    // =====================================================
+    // 4. LOT / QUANTITY
+    // =====================================================
+
+    // LOT OF 2, LOT OF 10
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
-    .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
-    .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?)\b/gi, ' ')
 
-    // ===== NEW / USED =====
+    // LOT 2, LOT-3, LOT: 4, LOT #5
+    .replace(/\bLOT\s*[-:#xX]?\s*\d+\b/gi, ' ')
+
+    // 2 LOT, 3 LOTS
+    .replace(/\b\d+\s+LOTS?\b/gi, ' ')
+
+    // Remaining standalone LOT
+    .replace(/\bLOTS?\b/gi, ' ')
+
+    // 2 PCS, 3 PC, 4 PIECES, 5 UNITS, 6 EA
+    .replace(
+      /\b\d+\s*[-xX]?\s*(?:PCS?|PIECES?|UNITS?|EA|EACH)\b/gi,
+      ' '
+    )
+
+    // PACK OF 2, SET OF 3
+    .replace(/\b(?:PACK|SET)\s+OF\s+\d+\b/gi, ' ')
+
+    // 2 PACK, 3 PACKS, 4 SET
+    .replace(/\b\d+\s*(?:PACKS?|SETS?)\b/gi, ' ')
+
+    // =====================================================
+    // 5. GENERAL CONDITION WORDS
+    // =====================================================
+
+    .replace(/\bBRAND\s+NEW\b/gi, ' ')
+    .replace(/\bLIKE\s+NEW\b/gi, ' ')
     .replace(/\bNEW\b/gi, ' ')
     .replace(/\bUSED\b/gi, ' ')
+    .replace(/\bPRE[\s-]*OWNED\b/gi, ' ')
 
-    // ===== CLEANUP =====
+    // =====================================================
+    // 6. CLEAN EMPTY BRACKETS AND EXTRA PUNCTUATION
+    // =====================================================
+
     .replace(/\(\s*\)/g, ' ')
     .replace(/\[\s*\]/g, ' ')
     .replace(/\{\s*\}/g, ' ')
-    .replace(/^[\s\-|,:;]+/g, '')
-    .replace(/[\s\-|,:;]+$/g, '')
+
+    // Repeated separators
+    .replace(/\s*[-–—|,:;]+\s*[-–—|,:;]+\s*/g, ' ')
+
+    // Separators at beginning/end
+    .replace(/^[\s\-–—|,:;/.]+/g, '')
+    .replace(/[\s\-–—|,:;/.]+$/g, '')
+
+    // Spaces before punctuation
+    .replace(/\s+([,;:])/g, '$1')
+
+    // Repeated spaces
     .replace(/\s+/g, ' ')
     .trim();
 }
