@@ -137,6 +137,14 @@ function getTag(xml: string, tag: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
+    .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNO\s+BOX\b/gi, ' ')
+    .replace(/\bW\/?O\s+BOX\b/gi, ' ')
+    .replace(/\bOPEN\s+BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+OPEN\s+BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
@@ -274,8 +282,15 @@ function normalizeEbayItem(
   return {
     ebay_item_id: realItemId,
     sku: feedRow.sku || realItemId,
-    part_number: getOfficialPartNumber(item),
-    model_number: getOfficialModelNumber(item),
+    part_number:
+  getOfficialPartNumber(item) ||
+  getOfficialModelNumber(item) ||
+  'UNKNOWN',
+
+model_number:
+  getOfficialModelNumber(item) ||
+  getOfficialPartNumber(item) ||
+  'UNKNOWN',
     brand: getOfficialBrand(item),
     category: normalizeOfficialValue(item?.categoryPath) || 'Industrial Automation',
     name: cleanedName,
