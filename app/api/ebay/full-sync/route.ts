@@ -739,6 +739,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const limit = getSafeLimit(req);
+    const requestedItemId = String(
+  req.nextUrl.searchParams.get('itemId') || ''
+).trim();
     const now = new Date().toISOString();
     const { access_token } = await getEbayToken();
     const accessToken = String(access_token || '').trim();
@@ -857,7 +860,11 @@ const uniqueFeedRows = deduplicated.rows.filter(
       });
     }
 
-    const batch = uniqueFeedRows.slice(offset, offset + limit);
+    const batch = requestedItemId
+  ? uniqueFeedRows.filter(
+      (row) => row.ebay_item_id === requestedItemId
+    ).slice(0, 1)
+  : uniqueFeedRows.slice(offset, offset + limit);
     const batchIds = batch.map((row) => row.ebay_item_id);
     const existingBatchProducts = await loadDatabaseProductsByIds(batchIds);
     const existingMap = new Map(
@@ -947,15 +954,24 @@ const uniqueFeedRows = deduplicated.rows.filter(
       throw error;
     }
 
-    const nextOffset = offset + batch.length;
-    const hasMoreItems = nextOffset < uniqueFeedRows.length;
+    const nextOffset = requestedItemId
+  ? offset
+  : offset + batch.length;
+
+const hasMoreItems = requestedItemId
+  ? true
+  : nextOffset < uniqueFeedRows.length;
 
     await updateJob({
       status: 'running',
       stage: hasMoreItems ? 'syncing' : 'deactivating',
-      offset_value: nextOffset,
-      batch_size: limit,
-      processed: Number(job.processed || 0) + batch.length,
+      offset_value: requestedItemId
+  ? offset
+  : nextOffset,
+
+processed: requestedItemId
+  ? Number(job.processed || 0)
+  : Number(job.processed || 0) + batch.length,
       updated:
         Number(job.updated || 0) + report.inserted + report.updated,
       failed: Number(job.failed || 0) + report.failed,
