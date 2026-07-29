@@ -137,29 +137,24 @@ function getTag(xml: string, tag: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
-    .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bNO\s+BOX\b/gi, ' ')
-    .replace(/\bW\/?O\s+BOX\b/gi, ' ')
-    .replace(/\bOPEN\s+BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
+    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITH\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bNEW\s+OPEN\s+BOX\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?ORIGINAL\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+BOX\b/gi, ' ')
+    .replace(/\bNO\s+BOX\b/gi, ' ')
+    .replace(/\bOPEN\s+BOX\b/gi, ' ')
     .replace(/\bORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bIN\s+BOX\b/gi, ' ')
     .replace(/\bBOXED\b/gi, ' ')
     .replace(/\bBOX\s+ONLY\b/gi, ' ')
-    .replace(/\bWITHOUT\s+ORIGINAL\s+BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
-    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bNO\s+BOX\b/gi, ' ')
-    .replace(/\bW\/?O\s+BOX\b/gi, ' ')
-    .replace(/\bOPEN\s+BOX\b/gi, ' ')
     .replace(/\bOLD\s+STOCK\b/gi, ' ')
     .replace(/\bWITHOUT\s+(?:ANY\s+)?ACCESSORIES\b/gi, ' ')
-    .replace(/\bW\/?O\s+ACCESSORIES\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+ACCESSORIES\b/gi, ' ')
     .replace(/\bFOR\s+PARTS(?:\s+OR\s+NOT\s+WORKING)?\b/gi, ' ')
     .replace(/\bNOT\s+WORKING\b/gi, ' ')
     .replace(/\bTESTED\s*(?:&|AND)\s*WORKING\b/gi, ' ')
@@ -178,7 +173,6 @@ function cleanTitle(title: string) {
     .replace(/\s+/g, ' ')
     .trim();
 }
-
 function cleanCondition(condition: string) {
   const normalized = String(condition || '').toLowerCase();
 
@@ -275,7 +269,9 @@ function normalizeEbayItem(
   now: string
 ): NormalizedEbayItem | null {
   const realItemId =
-    getRealItemId(item?.itemId) || String(feedRow.ebay_item_id || '').trim();
+    getRealItemId(item?.itemId) ||
+    String(feedRow.ebay_item_id || '').trim();
+
   const rawTitle = normalizeOfficialValue(item?.title);
 
   if (!realItemId || !rawTitle) return null;
@@ -284,36 +280,70 @@ function normalizeEbayItem(
   const galleryUrls = getOfficialGalleryUrls(item);
   const imageUrl = galleryUrls[0] || null;
 
+  const officialPartNumber = getOfficialPartNumber(item);
+  const officialModelNumber = getOfficialModelNumber(item);
+
+  const validPartNumber =
+    isUsableOfficialValue(officialPartNumber)
+      ? officialPartNumber.trim()
+      : '';
+
+  const validModelNumber =
+    isUsableOfficialValue(officialModelNumber)
+      ? officialModelNumber.trim()
+      : '';
+
+  const partNumber =
+    validPartNumber ||
+    validModelNumber ||
+    'UNKNOWN';
+
+  const modelNumber =
+    validModelNumber ||
+    validPartNumber ||
+    'UNKNOWN';
+
   return {
     ebay_item_id: realItemId,
     sku: feedRow.sku || realItemId,
-    part_number:
-  getOfficialPartNumber(item) ||
-  getOfficialModelNumber(item) ||
-  'UNKNOWN',
-
-model_number:
-  getOfficialModelNumber(item) ||
-  getOfficialPartNumber(item) ||
-  'UNKNOWN',
+    part_number: partNumber,
+    model_number: modelNumber,
     brand: getOfficialBrand(item),
-    category: normalizeOfficialValue(item?.categoryPath) || 'Industrial Automation',
+
+    category:
+      normalizeOfficialValue(item?.categoryPath) ||
+      'Industrial Automation',
+
     name: cleanedName,
-    condition: cleanCondition(normalizeOfficialValue(item?.condition) || 'Used'),
+
+    condition: cleanCondition(
+      normalizeOfficialValue(item?.condition) || 'Used'
+    ),
+
     image_url: imageUrl,
     ebay_image_url: imageUrl,
     ebay_gallery_urls: galleryUrls,
     description: rawTitle,
     slug: slugify(`${realItemId}-${cleanedName}`),
-    marketplace:
-  String(item?.listingMarketplaceId || MARKETPLACE)
-    .trim()
-    .toUpperCase() as typeof MARKETPLACE,
+
+    marketplace: String(
+      item?.listingMarketplaceId || MARKETPLACE
+    )
+      .trim()
+      .toUpperCase() as typeof MARKETPLACE,
+
     seller: 'orbitcontrol',
     source: 'ebay-full-sync',
     source_type: 'ebay',
-    quantity: Number.isFinite(feedRow.quantity) ? feedRow.quantity : 0,
-    price: Number.isFinite(feedRow.price as number) ? feedRow.price : null,
+
+    quantity: Number.isFinite(feedRow.quantity)
+      ? feedRow.quantity
+      : 0,
+
+    price: Number.isFinite(feedRow.price as number)
+      ? feedRow.price
+      : null,
+
     currency: feedRow.currency || 'USD',
     is_active: true,
     catalog_visible: true,
@@ -321,7 +351,6 @@ model_number:
     updated_at: now,
   };
 }
-
 async function createFeedTask(accessToken: string) {
   const response = await fetch(
     'https://api.ebay.com/sell/feed/v1/inventory_task',
