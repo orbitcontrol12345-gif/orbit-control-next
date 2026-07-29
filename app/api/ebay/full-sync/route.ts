@@ -464,19 +464,21 @@ async function fetchEbayItem(
   const item = await response.json();
 
   const listingMarketplaceId = String(
-    item?.listingMarketplaceId || ''
-  )
-    .trim()
-    .toUpperCase();
+  item?.listingMarketplaceId || ''
+)
+  .trim()
+  .toUpperCase();
 
-  if (listingMarketplaceId !== MARKETPLACE) {
-    console.log(
-      `[FAILED MARKETPLACE] ${ebayItemId} : received=${listingMarketplaceId || 'EMPTY'} expected=${MARKETPLACE}`
-    );
+if (
+  listingMarketplaceId !== 'EBAY_US' &&
+  listingMarketplaceId !== 'EBAY_MOTORS_US'
+) {
+  console.log(
+    `[FAILED MARKETPLACE] ${ebayItemId} : received=${listingMarketplaceId}`
+  );
 
-    return null;
-  }
-
+  return null;
+}
   return item;
 }
 async function ensureJob() {
