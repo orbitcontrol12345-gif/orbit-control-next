@@ -302,7 +302,15 @@ function normalizeEbayItem(
     validModelNumber ||
     validPartNumber ||
     'UNKNOWN';
-
+console.log({
+  item: realItemId,
+  officialPartNumber,
+  officialModelNumber,
+  validPartNumber,
+  validModelNumber,
+  partNumber,
+  modelNumber,
+});
   return {
     ebay_item_id: realItemId,
     sku: feedRow.sku || realItemId,
