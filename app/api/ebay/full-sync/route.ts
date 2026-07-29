@@ -137,6 +137,8 @@ function getTag(xml: string, tag: string) {
 
 function cleanTitle(title: string) {
   return String(title || '')
+
+    // ===== BOX =====
     .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITH\s+(?:THE\s+)?BOX\b/gi, ' ')
@@ -145,26 +147,51 @@ function cleanTitle(title: string) {
     .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bW\/?\s*O\s+BOX\b/gi, ' ')
-    .replace(/\bNO\s+BOX\b/gi, ' ')
     .replace(/\bOPEN\s+BOX\b/gi, ' ')
+    .replace(/\bNO\s+BOX\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+BOX\b/gi, ' ')
     .replace(/\bORIGINAL\s+BOX\b/gi, ' ')
-    .replace(/\bIN\s+BOX\b/gi, ' ')
-    .replace(/\bBOXED\b/gi, ' ')
     .replace(/\bBOX\s+ONLY\b/gi, ' ')
-    .replace(/\bOLD\s+STOCK\b/gi, ' ')
-    .replace(/\bWITHOUT\s+(?:ANY\s+)?ACCESSORIES\b/gi, ' ')
+    .replace(/\bBOXED\b/gi, ' ')
+    .replace(/\bIN\s+BOX\b/gi, ' ')
+
+    // ===== ACCESSORIES =====
+    .replace(/\bMISSING\s+(?:THE\s+)?CABLES?\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bMISSING\s+(?:THE\s+)?ACCESSORIES\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?CABLES?\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:THE\s+)?POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bWITHOUT\s+(?:ANY\s+|THE\s+)?ACCESSORIES\b/gi, ' ')
+    .replace(/\bNO\s+CABLES?\b/gi, ' ')
+    .replace(/\bNO\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
+    .replace(/\bNO\s+ACCESSORIES\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+CABLES?\b/gi, ' ')
+    .replace(/\bW\/?\s*O\s+POWER\s+SUPPL(?:Y|IES)\b/gi, ' ')
     .replace(/\bW\/?\s*O\s+ACCESSORIES\b/gi, ' ')
-    .replace(/\bFOR\s+PARTS(?:\s+OR\s+NOT\s+WORKING)?\b/gi, ' ')
-    .replace(/\bNOT\s+WORKING\b/gi, ' ')
+
+    // ===== CONDITION WORDS =====
+    .replace(/\bOLD\s+STOCK\b/gi, ' ')
+    .replace(/\bREFURBISHED\b/gi, ' ')
     .replace(/\bTESTED\s*(?:&|AND)\s*WORKING\b/gi, ' ')
     .replace(/\bTESTED\s+OK\b/gi, ' ')
-    .replace(/\bREFURBISHED\b/gi, ' ')
+    .replace(/\bBROKEN\b/gi, ' ')
+    .replace(/\bDAMAGED\b/gi, ' ')
+    .replace(/\bDEFECTIVE\b/gi, ' ')
+    .replace(/\bFAULTY\b/gi, ' ')
+    .replace(/\bNOT\s+WORKING\b/gi, ' ')
+    .replace(/\bUNTESTED\b/gi, ' ')
+    .replace(/\bAS[\s-]*IS\b/gi, ' ')
+
+    // ===== LOT / PCS =====
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
     .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
     .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?)\b/gi, ' ')
+
+    // ===== NEW / USED =====
     .replace(/\bNEW\b/gi, ' ')
     .replace(/\bUSED\b/gi, ' ')
+
+    // ===== CLEANUP =====
     .replace(/\(\s*\)/g, ' ')
     .replace(/\[\s*\]/g, ' ')
     .replace(/\{\s*\}/g, ' ')
