@@ -141,24 +141,34 @@ function cleanTitle(title: string): string {
   return String(title)
 
     // =====================================================
-    // 1. BOX / PACKAGING
+    // 1. PACKAGING / BOX CONDITION
+    // لا نحذف كلمة BOX وحدها لأنها قد تكون جزءًا من اسم المنتج
+    // مثل: FUNCTION BOX أو JUNCTION BOX
     // =====================================================
 
     .replace(/\bNEW\s+WITHOUT\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
     .replace(/\bNEW\s+WITH\s+(?:THE\s+)?(?:ORIGINAL\s+)?BOX\b/gi, ' ')
-    .replace(/\bNEW\s+(?:WITH\s+)?OLD\s+BOX\b/gi, ' ')
+    .replace(/\bNEW\s+(?:WITH\s+)?OLD\s+(?:STOCK\s+)?BOX\b/gi, ' ')
     .replace(/\bNEW\s+OPEN\s+BOX\b/gi, ' ')
+
+    .replace(/\bWITH\s+(?:THE\s+)?FILTHY\s+BOX\b/gi, ' ')
+    .replace(/\bW\/\s*FILTHY\s+BOX\b/gi, ' ')
+    .replace(/\bFILTHY\s+BOX\b/gi, ' ')
+
+    .replace(/\bWITH\s+(?:THE\s+)?DAMAGED\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?DAMAGE(?:D)?\s+BOX\b/gi, ' ')
     .replace(/\bDAMAGED\s+BOX\b/gi, ' ')
     .replace(/\bDAMAGE\s+BOX\b/gi, ' ')
     .replace(/\bBOX\s+DAMAGED\b/gi, ' ')
     .replace(/\bBOX\s+DAMAGE\b/gi, ' ')
+
     .replace(/\bWITHOUT\s+(?:THE\s+)?ORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?ORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bWITHOUT\s+(?:THE\s+)?BOX\b/gi, ' ')
-    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+BOX\b/gi, ' ')
+    .replace(/\bWITH\s+(?:THE\s+)?OLD\s+(?:STOCK\s+)?BOX\b/gi, ' ')
     .replace(/\bWITH\s+(?:THE\s+)?BOX\b/gi, ' ')
     .replace(/\bOPEN\s+BOX\b/gi, ' ')
-    .replace(/\bOLD\s+BOX\b/gi, ' ')
+    .replace(/\bOLD\s+(?:STOCK\s+)?BOX\b/gi, ' ')
     .replace(/\bORIGINAL\s+BOX\b/gi, ' ')
     .replace(/\bNO\s+BOX\b/gi, ' ')
     .replace(/\bW\/?\s*O\s+BOX\b/gi, ' ')
@@ -214,7 +224,9 @@ function cleanTitle(title: string): string {
     // 3. PRODUCT CONDITION
     // =====================================================
 
-    .replace(/\bFOR\s+PARTS?\s+(?:OR\s+NOT\s+WORKING)?\b/gi, ' ')
+    .replace(/\bFOR\s+PARTS?\s+OR\s+NOT\s+WORKING\b/gi, ' ')
+    .replace(/\bFOR\s+PARTS?\s+ONLY\b/gi, ' ')
+    .replace(/\bFOR\s+PARTS?\b/gi, ' ')
     .replace(/\bPARTS?\s+ONLY\b/gi, ' ')
     .replace(/\bFOR\s+REPAIR\b/gi, ' ')
     .replace(/\bREPAIR\s+ONLY\b/gi, ' ')
@@ -238,36 +250,40 @@ function cleanTitle(title: string): string {
     .replace(/\bDIRTY\b/gi, ' ')
     .replace(/\bYELLOWED\b/gi, ' ')
     .replace(/\bREFURBISHED\b/gi, ' ')
-    .replace(/\bOLD\s+STOCK\b/gi, ' ')
     .replace(/\bNEW\s+OLD\s+STOCK\b/gi, ' ')
+    .replace(/\bOLD\s+STOCK\b/gi, ' ')
     .replace(/\bNOS\b/gi, ' ')
 
     // =====================================================
     // 4. LOT / QUANTITY
+    // لا نحذف PCS وحدها، نحذفها فقط عندما تكون مرتبطة برقم
     // =====================================================
 
-    // LOT OF 2, LOT OF 10
+    // LOT OF 2 / LOT OF 25
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
 
-    // LOT 2, LOT-3, LOT: 4, LOT #5
+    // LOT 2 / LOT-3 / LOT #4 / LOT:5
     .replace(/\bLOT\s*[-:#xX]?\s*\d+\b/gi, ' ')
 
-    // 2 LOT, 3 LOTS
+    // 2 LOT / 3 LOTS
     .replace(/\b\d+\s+LOTS?\b/gi, ' ')
 
-    // Remaining standalone LOT
+    // LOT standalone
     .replace(/\bLOTS?\b/gi, ' ')
 
-    // 2 PCS, 3 PC, 4 PIECES, 5 UNITS, 6 EA
+    // 2 PCS / 3 PC / 5 PIECES / 4 UNITS / 10 EA
     .replace(
-      /\b\d+\s*[-xX]?\s*(?:PCS?|PIECES?|UNITS?|EA|EACH)\b/gi,
+      /\b\d+\s*(?:[-xX]\s*)?(?:PCS?|PIECES?|UNITS?|EA|EACH)\b/gi,
       ' '
     )
 
-    // PACK OF 2, SET OF 3
+    // QTY 2 / QTY: 5 / QUANTITY 10
+    .replace(/\b(?:QTY|QUANTITY)\s*[:#-]?\s*\d+\b/gi, ' ')
+
+    // PACK OF 2 / SET OF 3
     .replace(/\b(?:PACK|SET)\s+OF\s+\d+\b/gi, ' ')
 
-    // 2 PACK, 3 PACKS, 4 SET
+    // 2 PACK / 3 PACKS / 4 SETS
     .replace(/\b\d+\s*(?:PACKS?|SETS?)\b/gi, ' ')
 
     // =====================================================
@@ -281,24 +297,24 @@ function cleanTitle(title: string): string {
     .replace(/\bPRE[\s-]*OWNED\b/gi, ' ')
 
     // =====================================================
-    // 6. CLEAN EMPTY BRACKETS AND EXTRA PUNCTUATION
+    // 6. CLEANUP
     // =====================================================
 
     .replace(/\(\s*\)/g, ' ')
     .replace(/\[\s*\]/g, ' ')
     .replace(/\{\s*\}/g, ' ')
 
-    // Repeated separators
+    // إزالة الفواصل والشرطات المكررة
     .replace(/\s*[-–—|,:;]+\s*[-–—|,:;]+\s*/g, ' ')
 
-    // Separators at beginning/end
+    // إزالة الفاصل من بداية أو نهاية العنوان
     .replace(/^[\s\-–—|,:;/.]+/g, '')
     .replace(/[\s\-–—|,:;/.]+$/g, '')
 
-    // Spaces before punctuation
+    // تنظيم المسافات حول الفواصل
     .replace(/\s+([,;:])/g, '$1')
 
-    // Repeated spaces
+    // إزالة المسافات المكررة
     .replace(/\s+/g, ' ')
     .trim();
 }
