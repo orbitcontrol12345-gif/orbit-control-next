@@ -17,6 +17,10 @@
       "schedule": "9,29,49 * * * *"
     },
     {
+      "path": "/api/ebay/auto-import?limit=50",
+      "schedule": "0 */6 * * *"
+    },
+    {
       "path": "/api/cron/bridge-health",
       "schedule": "* * * * *"
     }
