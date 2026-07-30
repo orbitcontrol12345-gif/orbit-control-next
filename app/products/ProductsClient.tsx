@@ -41,13 +41,20 @@ export default function ProductsClient({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [suggestions, setSuggestions] = useState<Product[]>([]);
+  const [allowSuggestions, setAllowSuggestions] = useState(false);
+ useEffect(() => {
+  setQuery(searchParams.get('q') || '');
+  setSuggestions([]);
+  setAllowSuggestions(false);
+}, [searchParams]);
 
   useEffect(() => {
-    setQuery(searchParams.get('q') || '');
-  }, [searchParams]);
+   const cleanQuery = query.trim();
 
-  useEffect(() => {
-    const cleanQuery = query.trim();
+if (!allowSuggestions) {
+  setSuggestions([]);
+  return;
+}
 
     if (cleanQuery.length < 2) {
       setSuggestions([]);
@@ -159,7 +166,10 @@ export default function ProductsClient({
                 type="text"
                 placeholder="Search by part number, SKU, brand, model, or category..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+               setAllowSuggestions(true);
+              setQuery(e.target.value);
+               }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     window.location.href = `/products?q=${encodeURIComponent(query)}&page=1`;
