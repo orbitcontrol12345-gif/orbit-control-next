@@ -1,20 +1,25 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  ArrowUpDown,
+  ChevronDown,
+  Package,
   Search,
   SlidersHorizontal,
   X,
-  ChevronDown,
-  Package,
-  ArrowUpDown,
 } from 'lucide-react';
+
 import ProductCard from '@/components/products/ProductCard';
-import { CATEGORIES, BRANDS } from '@/lib/data';
-import type { Product, ProductCategory, ProductCondition } from '@/lib/types';
+import { BRANDS, CATEGORIES } from '@/lib/data';
+import type {
+  Product,
+  ProductCategory,
+  ProductCondition,
+} from '@/lib/types';
 
 const CONDITIONS: ProductCondition[] = [
   'New',
@@ -25,88 +30,175 @@ const CONDITIONS: ProductCondition[] = [
 
 type SortOption = 'relevance' | 'name' | 'brand' | 'condition';
 
+function safeText(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function normalizeBrand(value: unknown) {
+  return safeText(value)
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\bco(?:mpany)?\b/g, '')
+    .replace(/\bcorp(?:oration)?\b/g, '')
+    .replace(/\binc(?:orporated)?\b/g, '')
+    .replace(/\bltd\b/g, '')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function matchesBrandName(productBrand: unknown, selectedBrand: unknown) {
+  const productValue = normalizeBrand(productBrand);
+  const selectedValue = normalizeBrand(selectedBrand);
+
+  if (!selectedValue) return true;
+  if (!productValue) return false;
+
+  return (
+    productValue === selectedValue ||
+    productValue.includes(selectedValue) ||
+    selectedValue.includes(productValue)
+  );
+}
+
 export default function ProductsClient({
   initialProducts = [],
 }: {
   initialProducts?: Product[];
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
   const initialQuery = searchParams.get('q') || '';
-  const initialBrand = searchParams.get('brand') || '';
+
   const [query, setQuery] = useState(initialQuery);
-  const [selectedBrand, setSelectedBrand] = useState(initialBrand);
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | ''>('');
-  const [selectedCondition, setSelectedCondition] = useState<ProductCondition | ''>('');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedCategory, setSelectedCategory] =
+    useState<ProductCategory | ''>('');
+  const [selectedCondition, setSelectedCondition] =
+    useState<ProductCondition | ''>('');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [allowSuggestions, setAllowSuggestions] = useState(false);
- useEffect(() => {
-  const urlQuery = searchParams.get('q') || '';
-  const urlBrand = searchParams.get('brand') || '';
-
-  setQuery(urlQuery);
-  setSelectedBrand(urlBrand);
-  setSuggestions([]);
-  setAllowSuggestions(false);
-}, [searchParams]);
 
   useEffect(() => {
-   const cleanQuery = query.trim();
+    const urlQuery = searchParams.get('q') || '';
 
-if (!allowSuggestions) {
-  setSuggestions([]);
-  return;
-}
+    setQuery(urlQuery);
+    setSuggestions([]);
+    setAllowSuggestions(false);
+  }, [searchParams]);
 
-    if (cleanQuery.length < 2) {
+  useEffect(() => {
+    const cleanQuery = query.trim();
+
+    if (!allowSuggestions || cleanQuery.length < 2) {
       setSuggestions([]);
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const controller = new AbortController();
+
+    const timer = window.setTimeout(async () => {
       try {
-        const res = await fetch(
+        const response = await fetch(
           `/api/search-products?q=${encodeURIComponent(cleanQuery)}`,
-          { cache: 'no-store' }
+          {
+            cache: 'no-store',
+            signal: controller.signal,
+          }
         );
 
-        const data = await res.json();
-        setSuggestions(Array.isArray(data) ? data.slice(0, 8) : []);
-      } catch {
-        setSuggestions([]);
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!controller.signal.aborted) {
+          const products = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.products)
+              ? data.products
+              : [];
+
+          setSuggestions(products.slice(0, 8));
+        }
+      } catch (error) {
+        if (
+          !controller.signal.aborted &&
+          !(error instanceof Error && error.name === 'AbortError')
+        ) {
+          setSuggestions([]);
+        }
       }
     }, 250);
 
-    return () => clearTimeout(timer);
-  }, [query]);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, allowSuggestions]);
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
+    const normalizedQuery = query.toLowerCase().trim();
 
-    const results = initialProducts.filter((p) => {
+    const results = initialProducts.filter((product) => {
+      const partNumber = safeText(product.partNumber).toLowerCase();
+      const name = safeText(product.name).toLowerCase();
+      const brand = safeText(product.brand).toLowerCase();
+      const sku = safeText(product.sku).toLowerCase();
+      const category = safeText(product.category).toLowerCase();
+      const tags = Array.isArray(product.tags) ? product.tags : [];
+
       const matchesQuery =
-        !q ||
-        p.partNumber.toLowerCase().includes(q) ||
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.tags.some((t: string) => t.toLowerCase().includes(q));
+        !normalizedQuery ||
+        partNumber.includes(normalizedQuery) ||
+        name.includes(normalizedQuery) ||
+        brand.includes(normalizedQuery) ||
+        sku.includes(normalizedQuery) ||
+        category.includes(normalizedQuery) ||
+        tags.some((tag) =>
+          safeText(tag).toLowerCase().includes(normalizedQuery)
+        );
 
-      const matchesBrand = !selectedBrand || p.brand === selectedBrand;
-      const matchesCategory = !selectedCategory || p.category === selectedCategory;
-      const matchesCondition = !selectedCondition || p.condition === selectedCondition;
-      const matchesStock = !inStockOnly || p.inStock;
+      const matchesBrand = matchesBrandName(
+        product.brand,
+        selectedBrand
+      );
 
-      return matchesQuery && matchesBrand && matchesCategory && matchesCondition && matchesStock;
+      const matchesCategory =
+        !selectedCategory || product.category === selectedCategory;
+
+      const matchesCondition =
+        !selectedCondition || product.condition === selectedCondition;
+
+      const matchesStock = !inStockOnly || product.inStock;
+
+      return (
+        matchesQuery &&
+        matchesBrand &&
+        matchesCategory &&
+        matchesCondition &&
+        matchesStock
+      );
     });
 
     return [...results].sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'brand') return a.brand.localeCompare(b.brand);
-      if (sortBy === 'condition') return a.condition.localeCompare(b.condition);
+      if (sortBy === 'name') {
+        return safeText(a.name).localeCompare(safeText(b.name));
+      }
+
+      if (sortBy === 'brand') {
+        return safeText(a.brand).localeCompare(safeText(b.brand));
+      }
+
+      if (sortBy === 'condition') {
+        return safeText(a.condition).localeCompare(
+          safeText(b.condition)
+        );
+      }
+
       return 0;
     });
   }, [
@@ -119,6 +211,22 @@ if (!allowSuggestions) {
     sortBy,
   ]);
 
+  const submitSearch = () => {
+    const cleanQuery = query.trim();
+
+    setSuggestions([]);
+    setAllowSuggestions(false);
+
+    if (!cleanQuery) {
+      router.push('/products?page=1');
+      return;
+    }
+
+    router.push(
+      `/products?q=${encodeURIComponent(cleanQuery)}&page=1`
+    );
+  };
+
   const clearFilters = () => {
     setQuery('');
     setSelectedBrand('');
@@ -127,15 +235,19 @@ if (!allowSuggestions) {
     setInStockOnly(false);
     setSortBy('relevance');
     setSuggestions([]);
+    setAllowSuggestions(false);
+
+    router.push('/products?page=1');
   };
 
-  const hasFilters =
+  const hasFilters = Boolean(
     query ||
-    selectedBrand ||
-    selectedCategory ||
-    selectedCondition ||
-    inStockOnly ||
-    sortBy !== 'relevance';
+      selectedBrand ||
+      selectedCategory ||
+      selectedCondition ||
+      inStockOnly ||
+      sortBy !== 'relevance'
+  );
 
   return (
     <div className="min-h-screen bg-navy-900 pt-24">
@@ -150,9 +262,9 @@ if (!allowSuggestions) {
           </h1>
 
           <p className="mt-2 max-w-2xl text-slate-400">
-            Search by part number, SKU, brand, category, model, or keyword.
-            Browse PLCs, HMIs, drives, sensors, circuit breakers and obsolete
-            spare parts.
+            Search by part number, SKU, brand, category, model, or
+            keyword. Browse PLCs, HMIs, drives, sensors, circuit
+            breakers and obsolete spare parts.
           </p>
         </div>
       </div>
@@ -170,13 +282,23 @@ if (!allowSuggestions) {
                 type="text"
                 placeholder="Search by part number, SKU, brand, model, or category..."
                 value={query}
-                onChange={(e) => {
-               setAllowSuggestions(true);
-              setQuery(e.target.value);
-               }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    window.location.href = `/products?q=${encodeURIComponent(query)}&page=1`;
+                autoComplete="off"
+                onChange={(event) => {
+                  setAllowSuggestions(true);
+                  setQuery(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    setSuggestions([]);
+                    setAllowSuggestions(false);
+                    event.currentTarget.blur();
+                    return;
+                  }
+
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.currentTarget.blur();
+                    submitSearch();
                   }
                 }}
                 className="w-full rounded-xl border border-navy-600 bg-navy-900 py-4 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-gold-500"
@@ -188,12 +310,23 @@ if (!allowSuggestions) {
                     <Link
                       key={item.id}
                       href={`/products/${item.slug}`}
+                      onClick={() => {
+                        setSuggestions([]);
+                        setAllowSuggestions(false);
+                      }}
                       className="flex items-center gap-3 border-b border-navy-700 px-4 py-3 hover:bg-navy-700"
                     >
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-white">
                         <Image
-                          src={item.imageUrl || '/placeholder-product.jpg'}
-                          alt={item.name || item.partNumber}
+                          src={
+                            item.imageUrl ||
+                            '/placeholder-product.jpg'
+                          }
+                          alt={
+                            item.name ||
+                            item.partNumber ||
+                            'Product'
+                          }
                           fill
                           sizes="48px"
                           className="object-contain p-1"
@@ -204,9 +337,11 @@ if (!allowSuggestions) {
                         <div className="line-clamp-1 text-sm font-medium text-white">
                           {item.partNumber}
                         </div>
+
                         <div className="line-clamp-1 text-xs text-slate-400">
                           {item.name}
                         </div>
+
                         <div className="text-xs text-slate-500">
                           {item.brand}
                         </div>
@@ -218,15 +353,20 @@ if (!allowSuggestions) {
             </div>
 
             <button
-              onClick={() => setFiltersOpen(!filtersOpen)}
+              type="button"
+              onClick={() => setFiltersOpen((current) => !current)}
               className="flex items-center justify-center gap-2 rounded-xl border border-navy-600 bg-navy-700 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:border-gold-500/50 hover:text-white"
             >
               <SlidersHorizontal size={16} />
               Filters
-              {hasFilters && <span className="h-2 w-2 rounded-full bg-gold-500" />}
+              {hasFilters && (
+                <span className="h-2 w-2 rounded-full bg-gold-500" />
+              )}
               <ChevronDown
                 size={14}
-                className={`transition-transform ${filtersOpen ? 'rotate-180' : ''}`}
+                className={`transition-transform ${
+                  filtersOpen ? 'rotate-180' : ''
+                }`}
               />
             </button>
 
@@ -238,7 +378,9 @@ if (!allowSuggestions) {
 
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                onChange={(event) =>
+                  setSortBy(event.target.value as SortOption)
+                }
                 className="h-full min-w-[180px] rounded-xl border border-navy-600 bg-navy-700 py-3 pl-11 pr-4 text-sm font-semibold text-slate-300 outline-none transition focus:border-gold-500"
               >
                 <option value="relevance">Sort: Relevance</option>
@@ -250,6 +392,7 @@ if (!allowSuggestions) {
 
             {hasFilters && (
               <button
+                type="button"
                 onClick={clearFilters}
                 className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-sm font-semibold text-slate-400 transition hover:bg-navy-700 hover:text-white"
               >
@@ -268,7 +411,9 @@ if (!allowSuggestions) {
 
                 <select
                   value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  onChange={(event) =>
+                    setSelectedBrand(event.target.value)
+                  }
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
                   <option value="">All Brands</option>
@@ -287,15 +432,20 @@ if (!allowSuggestions) {
 
                 <select
                   value={selectedCategory}
-                  onChange={(e) =>
-                    setSelectedCategory(e.target.value as ProductCategory | '')
+                  onChange={(event) =>
+                    setSelectedCategory(
+                      event.target.value as ProductCategory | ''
+                    )
                   }
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
                   <option value="">All Categories</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c.slug} value={c.name}>
-                      {c.name}
+                  {CATEGORIES.map((category) => (
+                    <option
+                      key={category.slug}
+                      value={category.name}
+                    >
+                      {category.name}
                     </option>
                   ))}
                 </select>
@@ -308,8 +458,11 @@ if (!allowSuggestions) {
 
                 <select
                   value={selectedCondition}
-                  onChange={(e) =>
-                    setSelectedCondition(e.target.value as ProductCondition | '')
+                  onChange={(event) =>
+                    setSelectedCondition(
+                      event.target
+                        .value as ProductCondition | ''
+                    )
                   }
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
@@ -328,7 +481,10 @@ if (!allowSuggestions) {
                 </label>
 
                 <button
-                  onClick={() => setInStockOnly(!inStockOnly)}
+                  type="button"
+                  onClick={() =>
+                    setInStockOnly((current) => !current)
+                  }
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
                     inStockOnly
                       ? 'border-gold-500 bg-gold-500/10 text-gold-400'
@@ -344,7 +500,10 @@ if (!allowSuggestions) {
 
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-400">
-            Showing <span className="font-semibold text-white">{filtered.length}</span>{' '}
+            Showing{' '}
+            <span className="font-semibold text-white">
+              {filtered.length}
+            </span>{' '}
             {filtered.length === 1 ? 'result' : 'results'}
           </p>
 
@@ -361,16 +520,20 @@ if (!allowSuggestions) {
           </div>
         ) : (
           <div className="rounded-2xl border border-gold-500/20 bg-navy-800 px-6 py-20 text-center">
-            <Package size={44} className="mx-auto mb-5 text-gold-500" />
+            <Package
+              size={44}
+              className="mx-auto mb-5 text-gold-500"
+            />
 
             <h3 className="text-2xl font-bold text-white">
               No Exact Match Found
             </h3>
 
             <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
-              We couldn&apos;t find an exact match in the current catalog. Send
-              us the part number, brand, quantity and photos if available, and
-              we&apos;ll help source it worldwide.
+              We couldn&apos;t find an exact match in the current
+              catalog. Send us the part number, brand, quantity and
+              photos if available, and we&apos;ll help source it
+              worldwide.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -382,6 +545,7 @@ if (!allowSuggestions) {
               </Link>
 
               <button
+                type="button"
                 onClick={clearFilters}
                 className="rounded-xl border border-navy-500 px-7 py-3 text-sm font-semibold text-white transition hover:border-gold-500 hover:text-gold-400"
               >
