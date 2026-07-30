@@ -1,10 +1,16 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Search } from 'lucide-react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Menu, Search, X } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
 
@@ -18,64 +24,126 @@ const navLinks = [
 ];
 
 export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const searchRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
-  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const submittedRef = useRef(false);
+
+  const closeSearch = (clearQuery = false) => {
+    abortControllerRef.current?.abort();
+    setSearchOpen(false);
+    setSuggestions([]);
+    setSelectedIndex(-1);
+    setLoading(false);
+
+    if (clearQuery) {
+      setSearchQuery('');
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
+    submittedRef.current = true;
+    closeSearch(true);
     setMobileOpen(false);
-    setSearchOpen(false);
-    setSearchQuery('');
-  }, [pathname]);
+    inputRef.current?.blur();
+  }, [pathname, searchParams]);
 
   useEffect(() => {
-    const controller = new AbortController();
+    const query = searchQuery.trim();
 
-    async function loadSuggestions() {
-      const q = searchQuery.trim();
-
-      if (q.length < 1) {
+    if (submittedRef.current || query.length < 1) {
+      if (query.length < 1) {
         setSuggestions([]);
         setSearchOpen(false);
-        return;
+        setSelectedIndex(-1);
       }
-
-      try {
-        const res = await fetch(`/api/search-products?q=${encodeURIComponent(q)}`, {
-          signal: controller.signal,
-          cache: 'no-store',
-        });
-
-        const data = await res.json();
-        setSuggestions(Array.isArray(data) ? data : []);
-        setSearchOpen(true);
-      } catch {
-        if (!controller.signal.aborted) {
-          setSuggestions([]);
-          setSearchOpen(true);
-        }
-      }
+      setLoading(false);
+      return;
     }
 
-    loadSuggestions();
-    return () => controller.abort();
+    const timer = window.setTimeout(async () => {
+      abortControllerRef.current?.abort();
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      setLoading(true);
+
+      try {
+        const response = await fetch(
+          `/api/search-products?q=${encodeURIComponent(query)}`,
+          {
+            signal: controller.signal,
+            cache: 'no-store',
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (controller.signal.aborted || submittedRef.current) {
+          return;
+        }
+
+        const products: Product[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.products)
+            ? data.products
+            : [];
+
+        setSuggestions(products);
+        setSelectedIndex(-1);
+        setSearchOpen(true);
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+
+        if (!submittedRef.current) {
+          setSuggestions([]);
+          setSelectedIndex(-1);
+          setSearchOpen(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
   }, [searchQuery]);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setSearchOpen(false);
+        setSelectedIndex(-1);
       }
     };
 
@@ -83,21 +151,74 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const submitSearch = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  useEffect(() => {
+    return () => abortControllerRef.current?.abort();
+  }, []);
 
-  const q = searchQuery.trim();
+  const submitSearch = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
 
-  if (!q) return;
+    const query = searchQuery.trim();
+    if (!query) return;
 
-  setSearchOpen(false);
-  setSuggestions([]);
-  searchRef.current
-    ?.querySelector('input')
-    ?.blur();
+    submittedRef.current = true;
+    closeSearch(true);
+    inputRef.current?.blur();
 
-  router.push(`/products?q=${encodeURIComponent(q)}`);
-};
+    router.push(`/products?q=${encodeURIComponent(query)}`);
+  };
+
+  const openProduct = (product: Product) => {
+    submittedRef.current = true;
+    closeSearch(true);
+    inputRef.current?.blur();
+    router.push(`/products/${product.slug}`);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setSearchOpen(false);
+      setSelectedIndex(-1);
+      inputRef.current?.blur();
+      return;
+    }
+
+    if (!searchOpen || suggestions.length === 0) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        submitSearch();
+      }
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setSelectedIndex((index) =>
+        index < suggestions.length - 1 ? index + 1 : 0
+      );
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setSelectedIndex((index) =>
+        index > 0 ? index - 1 : suggestions.length - 1
+      );
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+
+      const selectedProduct = suggestions[selectedIndex];
+      if (selectedProduct) {
+        openProduct(selectedProduct);
+      } else {
+        submitSearch();
+      }
+    }
+  };
 
   return (
     <header
@@ -167,43 +288,58 @@ export default function Header() {
           <div className="hidden items-center gap-3 lg:flex">
             <div ref={searchRef} className="relative">
               <form
-              onSubmit={submitSearch}
+                onSubmit={submitSearch}
                 className="flex items-center overflow-hidden rounded-md border border-navy-500 bg-navy-700 transition-all focus-within:border-gold-500 focus-within:ring-1 focus-within:ring-gold-500"
               >
                 <Search size={15} className="ml-3 shrink-0 text-slate-400" />
 
                 <input
+                  ref={inputRef}
                   name="q"
                   type="text"
                   autoComplete="off"
                   placeholder="Search part number..."
                   value={searchQuery}
                   onFocus={() => {
-                    if (searchQuery.trim()) setSearchOpen(true);
+                    submittedRef.current = false;
+                    if (searchQuery.trim() && suggestions.length > 0) {
+                      setSearchOpen(true);
+                    }
                   }}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(event) => {
+                    submittedRef.current = false;
+                    setSearchQuery(event.target.value);
+                    setSelectedIndex(-1);
+                  }}
+                  onKeyDown={handleKeyDown}
                   className="w-52 bg-transparent px-2.5 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 xl:w-60"
                 />
               </form>
 
               {searchOpen && searchQuery.trim() && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-[430px] overflow-hidden rounded-xl border border-navy-600 bg-navy-800 shadow-2xl shadow-black/50">
-                  {suggestions.length > 0 ? (
+                  {loading ? (
+                    <div className="px-4 py-5 text-center text-sm text-slate-400">
+                      Searching...
+                    </div>
+                  ) : suggestions.length > 0 ? (
                     <>
-                      {suggestions.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/products/${p.slug}`}
-                          onClick={() => {
-                            setSearchOpen(false);
-                            setSearchQuery('');
-                          }}
-                          className="flex items-start gap-3 border-b border-navy-700 px-4 py-3 transition-colors last:border-0 hover:bg-navy-700"
+                      {suggestions.map((product, index) => (
+                        <button
+                          key={product.id}
+                          type="button"
+                          onMouseEnter={() => setSelectedIndex(index)}
+                          onClick={() => openProduct(product)}
+                          className={`flex w-full items-start gap-3 border-b border-navy-700 px-4 py-3 text-left transition-colors last:border-0 ${
+                            selectedIndex === index
+                              ? 'bg-navy-700'
+                              : 'hover:bg-navy-700'
+                          }`}
                         >
                           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-navy-600 bg-white">
                             <Image
-                              src={p.imageUrl}
-                              alt={p.name}
+                              src={product.imageUrl || '/placeholder-product.jpg'}
+                              alt={product.name}
                               fill
                               sizes="48px"
                               className="object-cover"
@@ -213,29 +349,31 @@ export default function Header() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-xs font-semibold text-gold-500">
-                                {p.partNumber}
+                                {product.partNumber}
                               </span>
-
                               <span className="text-xs text-slate-500">
-                                {p.brand}
+                                {product.brand}
                               </span>
                             </div>
 
                             <p className="truncate text-sm text-slate-200">
-                              {p.name}
+                              {product.name}
                             </p>
 
                             <div className="mt-0.5 flex items-center gap-2">
                               <span className="text-xs text-slate-500">
-                                {p.category}
+                                {product.category}
                               </span>
-
                               <span
                                 className={`text-xs ${
-                                  p.inStock ? 'text-emerald-400' : 'text-slate-500'
+                                  product.inStock
+                                    ? 'text-emerald-400'
+                                    : 'text-slate-500'
                                 }`}
                               >
-                                {p.inStock ? '● In Stock' : '○ Check availability'}
+                                {product.inStock
+                                  ? '● In Stock'
+                                  : '○ Check availability'}
                               </span>
                             </div>
                           </div>
@@ -243,36 +381,28 @@ export default function Header() {
                           <span className="shrink-0 text-xs font-semibold text-gold-500">
                             View →
                           </span>
-                        </Link>
+                        </button>
                       ))}
 
-                      <Link
-                        href={`/products?q=${encodeURIComponent(searchQuery)}`}
-                        onClick={() => {
-                          setSearchOpen(false);
-                          setSearchQuery('');
-                        }}
-                        className="block px-4 py-3 text-center text-xs font-semibold text-gold-500 transition-colors hover:bg-navy-700"
+                      <button
+                        type="button"
+                        onClick={() => submitSearch()}
+                        className="block w-full px-4 py-3 text-center text-xs font-semibold text-gold-500 transition-colors hover:bg-navy-700"
                       >
                         Search all results for &quot;{searchQuery}&quot; →
-                      </Link>
+                      </button>
                     </>
                   ) : (
                     <div className="px-4 py-4 text-center">
                       <p className="text-sm font-semibold text-white">
                         No matching products found
                       </p>
-
                       <p className="mt-1 text-xs text-slate-400">
                         Submit an RFQ and we will help source this part.
                       </p>
-
                       <Link
-                        href={`/rfq?part=${encodeURIComponent(searchQuery)}`}
-                        onClick={() => {
-                          setSearchOpen(false);
-                          setSearchQuery('');
-                        }}
+                        href={`/rfq?part=${encodeURIComponent(searchQuery.trim())}`}
+                        onClick={() => closeSearch(true)}
                         className="mt-3 inline-flex rounded-lg bg-gold-500 px-4 py-2 text-xs font-semibold text-navy-900 transition hover:bg-gold-400"
                       >
                         Submit RFQ
@@ -289,7 +419,7 @@ export default function Header() {
           </div>
 
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => setMobileOpen((value) => !value)}
             className="p-2 text-slate-300 transition-colors hover:text-white lg:hidden"
             aria-label="Toggle menu"
           >
