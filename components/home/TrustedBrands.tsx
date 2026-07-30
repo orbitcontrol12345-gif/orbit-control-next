@@ -19,7 +19,7 @@ function BrandRow({ rowKey }: { rowKey: string }) {
       {BRANDS.map((brand) => (
         <Link
           key={`${rowKey}-${brand}`}
-          href={`/products?brand=${encodeURIComponent(brand)}`}
+          href={`/products?q=${encodeURIComponent(brand)}&page=1`}
           aria-label={`View all ${brand} products`}
           className="group flex h-24 min-w-[260px] items-center justify-center border-r border-white/[0.06] px-8 transition duration-300 hover:bg-white/[0.035] focus-visible:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/60"
         >
@@ -67,7 +67,6 @@ export default function TrustedBrands() {
 
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-28 bg-gradient-to-r from-[#030b14] to-transparent" />
-
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-28 bg-gradient-to-l from-[#030b14] to-transparent" />
 
         <div className="overflow-hidden rounded-2xl border border-cyan-300/10 bg-[#06101a]/80 shadow-[0_0_50px_rgba(0,180,255,0.05)]">
