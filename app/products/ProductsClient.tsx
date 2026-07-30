@@ -32,9 +32,9 @@ export default function ProductsClient({
 }) {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
-
+  const initialBrand = searchParams.get('brand') || '';
   const [query, setQuery] = useState(initialQuery);
-  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | ''>('');
   const [selectedCondition, setSelectedCondition] = useState<ProductCondition | ''>('');
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -43,7 +43,11 @@ export default function ProductsClient({
   const [suggestions, setSuggestions] = useState<Product[]>([]);
   const [allowSuggestions, setAllowSuggestions] = useState(false);
  useEffect(() => {
-  setQuery(searchParams.get('q') || '');
+  const urlQuery = searchParams.get('q') || '';
+  const urlBrand = searchParams.get('brand') || '';
+
+  setQuery(urlQuery);
+  setSelectedBrand(urlBrand);
   setSuggestions([]);
   setAllowSuggestions(false);
 }, [searchParams]);
