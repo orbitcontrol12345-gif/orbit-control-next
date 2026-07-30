@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, X, Search } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
@@ -26,7 +26,7 @@ export default function Header() {
 
   const searchRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
+  const router = useRouter();
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -84,8 +84,20 @@ export default function Header() {
   }, []);
 
   const submitSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!searchQuery.trim()) e.preventDefault();
-  };
+  e.preventDefault();
+
+  const q = searchQuery.trim();
+
+  if (!q) return;
+
+  setSearchOpen(false);
+  setSuggestions([]);
+  searchRef.current
+    ?.querySelector('input')
+    ?.blur();
+
+  router.push(`/products?q=${encodeURIComponent(q)}`);
+};
 
   return (
     <header
@@ -155,8 +167,7 @@ export default function Header() {
           <div className="hidden items-center gap-3 lg:flex">
             <div ref={searchRef} className="relative">
               <form
-                action="/products"
-                onSubmit={submitSearch}
+              onSubmit={submitSearch}
                 className="flex items-center overflow-hidden rounded-md border border-navy-500 bg-navy-700 transition-all focus-within:border-gold-500 focus-within:ring-1 focus-within:ring-gold-500"
               >
                 <Search size={15} className="ml-3 shrink-0 text-slate-400" />
