@@ -37,14 +37,13 @@ export default function HeroSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const searchSubmittedRef = useRef(false);
- 
+  const userInteractedRef = useRef(false);
   const closeSuggestions = () => {
     setOpen(false);
     setSelectedIndex(-1);
   };
 
-  useEffect(() => {
-    useEffect(() => {
+  useEffect(() => { 
   const cleanQuery = query.trim();
 
   // لا تفتح الاقتراحات تلقائياً عند وصول البحث من الرابط
