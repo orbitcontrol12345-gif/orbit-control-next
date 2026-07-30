@@ -3,17 +3,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  useState,
   useEffect,
   useRef,
+  useState,
+  type ChangeEvent,
   type KeyboardEvent,
 } from 'react';
-import {
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from 'next/navigation';
-import { Search, ArrowRight, Loader2 } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ArrowRight, Loader2, Search } from 'lucide-react';
+
 import type { Product } from '@/lib/types';
 
 interface HeroSearchBarProps {
@@ -32,29 +30,37 @@ export default function HeroSearchBar({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [userInteracted, setUserInteracted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const searchSubmittedRef = useRef(false);
-  const userInteractedRef = useRef(false);
+  const submittedRef = useRef(false);
+
   const closeSuggestions = () => {
+    abortControllerRef.current?.abort();
     setOpen(false);
     setSelectedIndex(-1);
+    setLoading(false);
   };
 
-  useEffect(() => { 
-  const cleanQuery = query.trim();
-
-  // لا تفتح الاقتراحات تلقائياً عند وصول البحث من الرابط
-  if (!userInteractedRef.current) {
+  useEffect(() => {
+    setQuery(initialQuery);
+    setSuggestions([]);
     setOpen(false);
+    setSelectedIndex(-1);
+    setUserInteracted(false);
+    submittedRef.current = true;
+    abortControllerRef.current?.abort();
     setLoading(false);
-    return;
-  }
+    inputRef.current?.blur();
+  }, [initialQuery, pathname, searchParams]);
 
-  if (searchSubmittedRef.current) {
-      closeSuggestions();
+  useEffect(() => {
+    const cleanQuery = query.trim();
+
+    if (!userInteracted || submittedRef.current) {
+      setOpen(false);
       setLoading(false);
       return;
     }
@@ -62,38 +68,36 @@ export default function HeroSearchBar({
     if (cleanQuery.length < 1) {
       abortControllerRef.current?.abort();
       setSuggestions([]);
-      closeSuggestions();
+      setOpen(false);
+      setSelectedIndex(-1);
       setLoading(false);
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const timer = window.setTimeout(async () => {
       abortControllerRef.current?.abort();
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
-
       setLoading(true);
 
       try {
-        const res = await fetch(
+        const response = await fetch(
           `/api/search-products?q=${encodeURIComponent(cleanQuery)}`,
-          {
-            signal: controller.signal,
-          }
+          { signal: controller.signal }
         );
 
-        if (!res.ok) {
-          throw new Error(`Search failed: ${res.status}`);
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
         }
 
-        const data = await res.json();
+        const data = await response.json();
 
-        if (controller.signal.aborted || searchSubmittedRef.current) {
+        if (controller.signal.aborted || submittedRef.current) {
           return;
         }
 
-        const products = Array.isArray(data)
+        const products: Product[] = Array.isArray(data)
           ? data
           : Array.isArray(data?.products)
             ? data.products
@@ -103,15 +107,13 @@ export default function HeroSearchBar({
         setSelectedIndex(-1);
         setOpen(true);
       } catch (error) {
-        if (
-          error instanceof Error &&
-          error.name === 'AbortError'
-        ) {
+        if (error instanceof Error && error.name === 'AbortError') {
           return;
         }
 
-        if (!searchSubmittedRef.current) {
+        if (!submittedRef.current) {
           setSuggestions([]);
+          setSelectedIndex(-1);
           setOpen(true);
         }
       } finally {
@@ -121,10 +123,8 @@ export default function HeroSearchBar({
       }
     }, 250);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [query]);
+    return () => window.clearTimeout(timer);
+  }, [query, userInteracted]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -132,143 +132,93 @@ export default function HeroSearchBar({
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        closeSuggestions();
+        setOpen(false);
+        setSelectedIndex(-1);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
-    abortControllerRef.current?.abort();
-    searchSubmittedRef.current = true;
+    return () => abortControllerRef.current?.abort();
+  }, []);
 
+  const submitSearch = (searchValue?: string) => {
+    const cleanQuery = String(searchValue ?? query).trim();
+    if (!cleanQuery) return;
+
+    submittedRef.current = true;
+    setUserInteracted(false);
     closeSuggestions();
-    setLoading(false);
     inputRef.current?.blur();
-  }, [pathname, searchParams]);
 
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, []);
+    router.push(`/products?q=${encodeURIComponent(cleanQuery)}`);
+  };
 
-  const handleSearch = () => {
-  const cleanQuery = query.trim();
+  const openProduct = (product: Product) => {
+    submittedRef.current = true;
+    setUserInteracted(false);
+    closeSuggestions();
+    inputRef.current?.blur();
+    router.push(`/products/${product.slug}`);
+  };
 
-  if (!cleanQuery) return;
+  const handleQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    submittedRef.current = false;
+    setUserInteracted(true);
+    setQuery(event.target.value);
+    setSelectedIndex(-1);
+  };
 
-  userInteractedRef.current = false;
-  searchSubmittedRef.current = true;
-  abortControllerRef.current?.abort();
-
-  closeSuggestions();
-  setLoading(false);
-  inputRef.current?.blur();
-
-  router.push(`/products?q=${encodeURIComponent(cleanQuery)}`);
-};
-
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
-
-      abortControllerRef.current?.abort();
-      closeSuggestions();
-      setLoading(false);
+      setOpen(false);
+      setSelectedIndex(-1);
       inputRef.current?.blur();
       return;
     }
 
-    if (
-      event.key === 'ArrowDown' &&
-      open &&
-      suggestions.length > 0
-    ) {
-      event.preventDefault();
-
-      setSelectedIndex((currentIndex) =>
-        currentIndex < suggestions.length - 1
-          ? currentIndex + 1
-          : 0
-      );
-
+    if (!open || suggestions.length === 0) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        submitSearch();
+      }
       return;
     }
 
-    if (
-      event.key === 'ArrowUp' &&
-      open &&
-      suggestions.length > 0
-    ) {
+    if (event.key === 'ArrowDown') {
       event.preventDefault();
-
-      setSelectedIndex((currentIndex) =>
-        currentIndex > 0
-          ? currentIndex - 1
-          : suggestions.length - 1
+      setSelectedIndex((index) =>
+        index < suggestions.length - 1 ? index + 1 : 0
       );
+      return;
+    }
 
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setSelectedIndex((index) =>
+        index > 0 ? index - 1 : suggestions.length - 1
+      );
       return;
     }
 
     if (event.key === 'Enter') {
       event.preventDefault();
 
-      if (
-        open &&
-        selectedIndex >= 0 &&
-        suggestions[selectedIndex]
-      ) {
-        const selectedProduct = suggestions[selectedIndex];
-
-        searchSubmittedRef.current = true;
-        abortControllerRef.current?.abort();
-
-        closeSuggestions();
-        setLoading(false);
-        inputRef.current?.blur();
-
-        router.push(`/products/${selectedProduct.slug}`);
-        return;
+      const selectedProduct = suggestions[selectedIndex];
+      if (selectedProduct) {
+        openProduct(selectedProduct);
+      } else {
+        submitSearch();
       }
-
-      handleSearch();
     }
   };
 
-  const handleQueryChange = (
-  event: React.ChangeEvent<HTMLInputElement>
-) => {
-  userInteractedRef.current = true;
-  searchSubmittedRef.current = false;
-
-  setQuery(event.target.value);
-  setSelectedIndex(-1);
-};
-
-  const closeSearch = () => {
-    searchSubmittedRef.current = true;
-    abortControllerRef.current?.abort();
-
-    closeSuggestions();
-    setLoading(false);
-    setQuery('');
-    inputRef.current?.blur();
-  };
-
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full max-w-2xl"
-    >
+    <div ref={containerRef} className="relative w-full max-w-2xl">
       <div className="flex items-center overflow-hidden rounded-lg border-2 border-transparent bg-white shadow-xl shadow-black/30 transition-all focus-within:border-gold-500">
         <div className="flex min-w-0 flex-1 items-center gap-2 pl-4">
           {loading ? (
@@ -277,10 +227,7 @@ export default function HeroSearchBar({
               className="shrink-0 animate-spin text-slate-400"
             />
           ) : (
-            <Search
-              size={20}
-              className="shrink-0 text-slate-400"
-            />
+            <Search size={20} className="shrink-0 text-slate-400" />
           )}
 
           <input
@@ -289,13 +236,13 @@ export default function HeroSearchBar({
             value={query}
             autoComplete="off"
             onFocus={() => {
-  userInteractedRef.current = true;
-  searchSubmittedRef.current = false;
+              submittedRef.current = false;
+              setUserInteracted(true);
 
-  if (query.trim() && suggestions.length > 0) {
-    setOpen(true);
-  }
-}}
+              if (query.trim() && suggestions.length > 0) {
+                setOpen(true);
+              }
+            }}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
             placeholder="Part Number..."
@@ -305,7 +252,7 @@ export default function HeroSearchBar({
 
         <button
           type="button"
-          onClick={handleSearch}
+          onClick={() => submitSearch()}
           className="flex shrink-0 items-center gap-1 bg-gold-500 px-4 py-3 text-sm font-semibold text-navy-900 transition-colors hover:bg-gold-400 md:gap-2 md:px-6 md:py-4"
         >
           Search <ArrowRight size={16} />
@@ -314,7 +261,11 @@ export default function HeroSearchBar({
 
       {open && query.trim() && (
         <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-navy-600 bg-navy-800 shadow-2xl shadow-black/60">
-          {suggestions.length > 0 ? (
+          {loading ? (
+            <div className="px-4 py-5 text-center text-sm text-slate-400">
+              Searching...
+            </div>
+          ) : suggestions.length > 0 ? (
             <>
               <div className="border-b border-navy-700 px-3 py-2">
                 <p className="text-xs font-medium text-slate-400">
@@ -324,15 +275,12 @@ export default function HeroSearchBar({
               </div>
 
               {suggestions.map((product, index) => (
-                <Link
+                <button
                   key={product.id}
-                  href={`/products/${product.slug}`}
+                  type="button"
                   onMouseEnter={() => setSelectedIndex(index)}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                  }}
-                  onClick={closeSearch}
-                  className={`flex items-start gap-4 border-b border-navy-700 px-4 py-3 transition-colors last:border-0 ${
+                  onClick={() => openProduct(product)}
+                  className={`flex w-full items-start gap-4 border-b border-navy-700 px-4 py-3 text-left transition-colors last:border-0 ${
                     selectedIndex === index
                       ? 'bg-navy-700'
                       : 'hover:bg-navy-700'
@@ -340,10 +288,7 @@ export default function HeroSearchBar({
                 >
                   <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white">
                     <Image
-                      src={
-                        product.imageUrl ||
-                        '/placeholder-product.jpg'
-                      }
+                      src={product.imageUrl || '/placeholder-product.jpg'}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -356,11 +301,9 @@ export default function HeroSearchBar({
                       <span className="font-mono text-sm font-bold text-gold-500">
                         {product.partNumber}
                       </span>
-
                       <span className="text-xs font-medium text-slate-500">
                         {product.brand}
                       </span>
-
                       <span
                         className={`rounded px-1.5 py-0.5 text-xs ${
                           product.condition === 'New'
@@ -382,7 +325,6 @@ export default function HeroSearchBar({
                       <span className="text-xs text-slate-500">
                         {product.category}
                       </span>
-
                       <span
                         className={`flex items-center gap-1 text-xs ${
                           product.inStock
@@ -397,7 +339,6 @@ export default function HeroSearchBar({
                               : 'bg-slate-500'
                           }`}
                         />
-
                         {product.inStock
                           ? 'In Stock'
                           : 'Check Availability'}
@@ -408,12 +349,12 @@ export default function HeroSearchBar({
                   <span className="shrink-0 self-center text-xs text-gold-500">
                     View →
                   </span>
-                </Link>
+                </button>
               ))}
 
               <button
                 type="button"
-                onClick={handleSearch}
+                onClick={() => submitSearch()}
                 className="w-full px-4 py-3 text-center text-sm font-medium text-gold-500 transition-colors hover:bg-navy-700"
               >
                 Search all results for &ldquo;{query}&rdquo; →
@@ -424,17 +365,16 @@ export default function HeroSearchBar({
               <p className="text-sm font-semibold text-white">
                 No exact match found for &ldquo;{query}&rdquo;
               </p>
-
               <p className="mt-1 text-xs text-slate-400">
-                Submit an RFQ and our team will help source
-                this part.
+                Submit an RFQ and our team will help source this part.
               </p>
-
               <Link
-                href={`/rfq?part=${encodeURIComponent(
-                  query.trim()
-                )}`}
-                onClick={closeSearch}
+                href={`/rfq?part=${encodeURIComponent(query.trim())}`}
+                onClick={() => {
+                  submittedRef.current = true;
+                  setUserInteracted(false);
+                  closeSuggestions();
+                }}
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-navy-900 transition hover:bg-gold-400"
               >
                 Submit RFQ <ArrowRight size={14} />
