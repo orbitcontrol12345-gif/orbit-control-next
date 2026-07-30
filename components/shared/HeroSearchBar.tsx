@@ -37,16 +37,24 @@ export default function HeroSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const searchSubmittedRef = useRef(false);
-
+ 
   const closeSuggestions = () => {
     setOpen(false);
     setSelectedIndex(-1);
   };
 
   useEffect(() => {
-    const cleanQuery = query.trim();
+    useEffect(() => {
+  const cleanQuery = query.trim();
 
-    if (searchSubmittedRef.current) {
+  // لا تفتح الاقتراحات تلقائياً عند وصول البحث من الرابط
+  if (!userInteractedRef.current) {
+    setOpen(false);
+    setLoading(false);
+    return;
+  }
+
+  if (searchSubmittedRef.current) {
       closeSuggestions();
       setLoading(false);
       return;
@@ -152,19 +160,20 @@ export default function HeroSearchBar({
   }, []);
 
   const handleSearch = () => {
-    const cleanQuery = query.trim();
+  const cleanQuery = query.trim();
 
-    if (!cleanQuery) return;
+  if (!cleanQuery) return;
 
-    searchSubmittedRef.current = true;
-    abortControllerRef.current?.abort();
+  userInteractedRef.current = false;
+  searchSubmittedRef.current = true;
+  abortControllerRef.current?.abort();
 
-    closeSuggestions();
-    setLoading(false);
-    inputRef.current?.blur();
+  closeSuggestions();
+  setLoading(false);
+  inputRef.current?.blur();
 
-    router.push(`/products?q=${encodeURIComponent(cleanQuery)}`);
-  };
+  router.push(`/products?q=${encodeURIComponent(cleanQuery)}`);
+};
 
   const handleKeyDown = (
     event: KeyboardEvent<HTMLInputElement>
@@ -237,12 +246,14 @@ export default function HeroSearchBar({
   };
 
   const handleQueryChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    searchSubmittedRef.current = false;
-    setQuery(event.target.value);
-    setSelectedIndex(-1);
-  };
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  userInteractedRef.current = true;
+  searchSubmittedRef.current = false;
+
+  setQuery(event.target.value);
+  setSelectedIndex(-1);
+};
 
   const closeSearch = () => {
     searchSubmittedRef.current = true;
@@ -279,15 +290,13 @@ export default function HeroSearchBar({
             value={query}
             autoComplete="off"
             onFocus={() => {
-              searchSubmittedRef.current = false;
+  userInteractedRef.current = true;
+  searchSubmittedRef.current = false;
 
-              if (
-                query.trim() &&
-                suggestions.length > 0
-              ) {
-                setOpen(true);
-              }
-            }}
+  if (query.trim() && suggestions.length > 0) {
+    setOpen(true);
+  }
+}}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
             placeholder="Part Number..."
