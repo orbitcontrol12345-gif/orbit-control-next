@@ -54,76 +54,91 @@ function mapSupabaseProduct(item: any): Product {
 
 export async function getSupabaseProductsPage({
   search = '',
+  brand = '',
+  category = '',
+  condition = '',
+  inStockOnly = false,
+  sort = 'relevance',
   page = 1,
   perPage = 24,
 }: {
   search?: string;
+  brand?: string;
+  category?: string;
+  condition?: string;
+  inStockOnly?: boolean;
+  sort?: 'relevance' | 'name' | 'brand' | 'condition';
   page?: number;
   perPage?: number;
 }) {
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
+  const safePage = Math.max(1, page);
+  const safePerPage = Math.max(1, perPage);
+
+  const from = (safePage - 1) * safePerPage;
+  const to = from + safePerPage - 1;
 
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
-    .neq('catalog_visible', false)
-    .order('id', { ascending: false })
-    .range(from, to);
+    .neq('catalog_visible', false);
 
-  if (search) {
+  const cleanSearch = search.trim();
+  const cleanBrand = brand.trim();
+  const cleanCategory = category.trim();
+  const cleanCondition = condition.trim();
+
+  if (cleanSearch) {
     query = query.or(
-      `name.ilike.%${search}%,sku.ilike.%${search}%,part_number.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%`
+      [
+        `name.ilike.%${cleanSearch}%`,
+        `sku.ilike.%${cleanSearch}%`,
+        `part_number.ilike.%${cleanSearch}%`,
+        `brand.ilike.%${cleanSearch}%`,
+        `category.ilike.%${cleanSearch}%`,
+      ].join(','),
     );
   }
 
-  const { data, count, error } = await query;
-
-  if (error) return { products: [], totalProducts: 0, totalPages: 0 };
-
-  return {
-    products: (data || []).map(mapSupabaseProduct),
-    totalProducts: count || 0,
-    totalPages: Math.max(1, Math.ceil((count || 0) / perPage)),
-  };
-}
-
-export async function getSupabaseProductsByCategoryTerms({
-  terms,
-  excludeTerms = [],
-  page = 1,
-  perPage = 24,
-}: {
-  terms: string[];
-  excludeTerms?: string[];
-  page?: number;
-  perPage?: number;
-}) {
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
-
-  const filters = terms
-    .map((term) => `name.ilike.%${term}%`)
-    .join(',');
-
-  let query = supabaseAdmin
-    .from(PRODUCTS_TABLE)
-    .select('*', { count: 'exact' })
-    .eq('is_active', true)
-    .neq('catalog_visible', false)
-    .or(filters);
-
-  for (const term of excludeTerms) {
-    query = query.not('name', 'ilike', `%${term}%`);
+  if (cleanBrand) {
+    query = query.ilike('brand', cleanBrand);
   }
 
-  const { data, count, error } = await query
-    .order('id', { ascending: true })
-    .range(from, to);
+  if (cleanCategory) {
+    query = query.ilike('category', cleanCategory);
+  }
+
+  if (cleanCondition) {
+    query = query.ilike('condition', cleanCondition);
+  }
+
+  if (inStockOnly) {
+    query = query.eq('in_stock', true);
+  }
+
+  switch (sort) {
+    case 'name':
+      query = query.order('name', { ascending: true });
+      break;
+
+    case 'brand':
+      query = query.order('brand', { ascending: true });
+      break;
+
+    case 'condition':
+      query = query.order('condition', { ascending: true });
+      break;
+
+    case 'relevance':
+    default:
+      query = query.order('id', { ascending: false });
+      break;
+  }
+
+  const { data, count, error } = await query.range(from, to);
 
   if (error) {
-    console.error('Category products query failed:', error);
+    console.error('Products page query failed:', error);
 
     return {
       products: [],
@@ -135,7 +150,10 @@ export async function getSupabaseProductsByCategoryTerms({
   return {
     products: (data || []).map(mapSupabaseProduct),
     totalProducts: count || 0,
-    totalPages: Math.max(1, Math.ceil((count || 0) / perPage)),
+    totalPages: Math.max(
+      1,
+      Math.ceil((count || 0) / safePerPage),
+    ),
   };
 }
 
