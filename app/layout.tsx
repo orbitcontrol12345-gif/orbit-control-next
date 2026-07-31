@@ -174,8 +174,7 @@ const globalSchema = {
         },
       ],
     },
-
-    {
+  {
   '@type': 'WebSite',
   '@id': `${SITE_URL}/#website`,
 
@@ -191,23 +190,28 @@ const globalSchema = {
 
   inLanguage: 'en',
 },
-      url: SITE_URL,
-      name: 'Orbit Control Automation',
 
-      isPartOf: {
-        '@id': `${SITE_URL}/#website`,
-      },
+{
+  '@type': 'WebPage',
+  '@id': `${SITE_URL}/#webpage`,
 
-      about: {
-        '@id': `${SITE_URL}/#organization`,
-      },
+  url: SITE_URL,
+  name: 'Orbit Control Automation',
 
-      primaryImageOfPage: {
-        '@id': `${SITE_URL}/#logo`,
-      },
+  isPartOf: {
+    '@id': `${SITE_URL}/#website`,
+  },
 
-      inLanguage: 'en',
-    },
+  about: {
+    '@id': `${SITE_URL}/#organization`,
+  },
+
+  primaryImageOfPage: {
+    '@id': `${SITE_URL}/#logo`,
+  },
+
+  inLanguage: 'en',
+},
   ],
 };
 
