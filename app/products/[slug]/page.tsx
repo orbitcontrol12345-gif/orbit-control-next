@@ -1,5 +1,5 @@
 import ProductGallery from '@/components/product/ProductGallery';
-import { buildBreadcrumbSchema } from '@/lib/seo/breadcrumb';
+
 import JsonLd from '@/components/seo/JsonLd';
 import ProductCard from '@/components/products/ProductCard';
 import { buildProductSeo } from '@/lib/seo/productSeo';
@@ -88,14 +88,14 @@ export async function generateMetadata({
     };
   }
 
-  const seo = buildProductSeo({
+ const seo = buildProductSeo({
   brand: product.brand,
   partNumber: product.partNumber,
   name: product.name,
   description: product.description,
   condition: product.condition,
 });
-
+  
 const {
   brand,
   partNumber,
@@ -225,26 +225,7 @@ export default async function ProductDetailPage({
   ]);
 
  const schemaDescription = seo.description;
-const breadcrumbSchema = buildBreadcrumbSchema([
-  {
-    name: 'Home',
-    url: SITE_URL,
-  },
-  {
-    name: 'Products',
-    url: `${SITE_URL}/products`,
-  },
-  {
-    name: product.brand,
-    url: `${SITE_URL}/brands/${encodeURIComponent(
-      product.brand.toLowerCase()
-    )}`,
-  },
-  {
-    name: product.partNumber,
-    url: productUrl,
-  },
-]);
+
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
