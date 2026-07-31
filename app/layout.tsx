@@ -176,24 +176,21 @@ const globalSchema = {
     },
 
     {
-      '@type': 'WebSite',
-      '@id': `${SITE_URL}/#website`,
+  '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
 
-      url: SITE_URL,
-      name: 'Orbit Control Automation',
+  url: SITE_URL,
+  name: 'Orbit Control Automation',
 
-      description:
-        'Industrial automation, electrical, obsolete and surplus spare parts supplied worldwide.',
+  description:
+    'Industrial automation, electrical, obsolete and surplus spare parts supplied worldwide.',
 
-      publisher: {
-        '@id': `${SITE_URL}/#organization`,
-      },
+  publisher: {
+    '@id': `${SITE_URL}/#organization`,
+  },
 
-      inLanguage: 'en',
-    {
-      '@type': 'WebPage',
-      '@id': `${SITE_URL}/#webpage`,
-
+  inLanguage: 'en',
+},
       url: SITE_URL,
       name: 'Orbit Control Automation',
 
