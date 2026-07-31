@@ -190,11 +190,6 @@ const globalSchema = {
       },
 
       inLanguage: 'en',
-
-              'query-input': 'required name=search_term_string',
-      },
-    },
-
     {
       '@type': 'WebPage',
       '@id': `${SITE_URL}/#webpage`,
