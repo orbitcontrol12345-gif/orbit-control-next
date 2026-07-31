@@ -1,6 +1,6 @@
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
 
-const SITE_URL = 'https://orbit-surplus.com';
+const SITE_URL = 'https://www.orbit-surplus.com';
 
 const PRODUCTS_PER_PAGE = 100;
 const PAGES_PER_BATCH = 35;
@@ -121,9 +121,7 @@ export async function GET(
     ).values(),
   );
 
-  const sitemapGeneratedAt =
-    new Date().toISOString();
-
+  
   const urls = uniqueProducts
     .map((product) => {
       const productUrl =
@@ -132,8 +130,6 @@ export async function GET(
 
       return `  <url>
     <loc>${escapeXml(productUrl)}</loc>
-    <lastmod>${sitemapGeneratedAt}</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
     })
