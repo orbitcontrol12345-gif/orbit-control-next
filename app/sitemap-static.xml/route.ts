@@ -4,7 +4,7 @@ export const dynamic = 'force-static';
 export const revalidate = 86400;
 
 export async function GET() {
-  const lastModified = new Date().toISOString();
+  
 
   const pages = [
     { path: '', priority: '1.0', changefreq: 'daily' },
@@ -28,7 +28,6 @@ ${pages
     ({ path, priority, changefreq }) => `
   <url>
     <loc>${SITE_URL}${path}</loc>
-    <lastmod>${lastModified}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`
