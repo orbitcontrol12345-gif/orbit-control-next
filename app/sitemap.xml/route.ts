@@ -4,23 +4,23 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
-    <loc>https://orbit-surplus.com/sitemap-static.xml</loc>
+    <loc>https://www.orbit-surplus.com/sitemap-static.xml</loc>
   </sitemap>
 
   <sitemap>
-    <loc>https://orbit-surplus.com/sitemap-products/1.xml</loc>
+    <loc>https://www.orbit-surplus.com/sitemap-products/1.xml</loc>
   </sitemap>
 
   <sitemap>
-    <loc>https://orbit-surplus.com/sitemap-products/2.xml</loc>
+    <loc>https://www.orbit-surplus.com/sitemap-products/2.xml</loc>
   </sitemap>
 
   <sitemap>
-    <loc>https://orbit-surplus.com/sitemap-products/3.xml</loc>
+    <loc>https://www.orbit-surplus.com/sitemap-products/3.xml</loc>
   </sitemap>
 
   <sitemap>
-    <loc>https://orbit-surplus.com/sitemap-products/4.xml</loc>
+    <loc>https://www.orbit-surplus.com/sitemap-products/4.xml</loc>
   </sitemap>
 </sitemapindex>`;
 
