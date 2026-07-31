@@ -138,10 +138,157 @@ export async function getSupabaseProductsPage({
     query = query.ilike('brand', cleanBrand);
   }
 
-  if (cleanCategory) {
-    query = query.ilike('category', cleanCategory);
-  }
+ if (cleanCategory) {
+  switch (cleanCategory) {
+    case 'PLCs':
+      query = query.or(
+        [
+          'category.ilike.%PLC%',
+          'name.ilike.%PLC%',
+          'name.ilike.%Programmable Logic Controller%',
+          'name.ilike.%PLC Processor%',
+          'name.ilike.%PLC CPU%',
+          'name.ilike.%CPU Module%',
+          'name.ilike.%CompactLogix%',
+          'name.ilike.%ControlLogix%',
+          'name.ilike.%MicroLogix%',
+          'name.ilike.%S7-200%',
+          'name.ilike.%S7-300%',
+          'name.ilike.%S7-400%',
+          'name.ilike.%S7-1200%',
+          'name.ilike.%S7-1500%',
+        ].join(','),
+      );
+      break;
 
+    case 'HMIs':
+      query = query.or(
+        [
+          'category.ilike.%HMI%',
+          'name.ilike.%HMI%',
+          'name.ilike.%Human Machine Interface%',
+          'name.ilike.%Touch Panel%',
+          'name.ilike.%Operator Panel%',
+          'name.ilike.%Touchscreen%',
+          'name.ilike.%PanelView%',
+        ].join(','),
+      );
+      break;
+
+    case 'Drives & VFDs':
+      query = query.or(
+        [
+          'category.ilike.%Drive%',
+          'category.ilike.%VFD%',
+          'name.ilike.%Drive%',
+          'name.ilike.%VFD%',
+          'name.ilike.%Variable Frequency Drive%',
+          'name.ilike.%Inverter%',
+          'name.ilike.%Servo Drive%',
+          'name.ilike.%Speed Control%',
+          'name.ilike.%Soft Starter%',
+        ].join(','),
+      );
+      break;
+
+    case 'Sensors':
+      query = query.or(
+        [
+          'category.ilike.%Sensor%',
+          'name.ilike.%Sensor%',
+        ].join(','),
+      );
+      break;
+
+    case 'Circuit Breakers':
+      query = query.or(
+        [
+          'category.ilike.%Breaker%',
+          'name.ilike.%Circuit Breaker%',
+          'name.ilike.%MCB%',
+          'name.ilike.%MCCB%',
+          'name.ilike.%ACB%',
+        ].join(','),
+      );
+      break;
+
+    case 'Relays':
+      query = query.or(
+        [
+          'category.ilike.%Relay%',
+          'name.ilike.%Relay%',
+        ].join(','),
+      );
+      break;
+
+    case 'Power Supplies':
+      query = query.or(
+        [
+          'category.ilike.%Power Supply%',
+          'name.ilike.%Power Supply%',
+          'name.ilike.%PSU%',
+        ].join(','),
+      );
+      break;
+
+    case 'Control Boards':
+      query = query.or(
+        [
+          'category.ilike.%Control Board%',
+          'name.ilike.%Control Board%',
+          'name.ilike.%Circuit Board%',
+          'name.ilike.%PCB%',
+        ].join(','),
+      );
+      break;
+
+    case 'Servo Systems':
+      query = query.or(
+        [
+          'category.ilike.%Servo%',
+          'name.ilike.%Servo%',
+        ].join(','),
+      );
+      break;
+
+    case 'Safety Devices':
+      query = query.or(
+        [
+          'category.ilike.%Safety%',
+          'name.ilike.%Safety%',
+          'name.ilike.%Light Curtain%',
+          'name.ilike.%E-Stop%',
+        ].join(','),
+      );
+      break;
+
+    case 'Obsolete Parts':
+      query = query.or(
+        [
+          'category.ilike.%Obsolete%',
+          'name.ilike.%Obsolete%',
+          'name.ilike.%Discontinued%',
+          'name.ilike.%Legacy%',
+        ].join(','),
+      );
+      break;
+
+    case 'Contactors':
+      query = query.or(
+        [
+          'category.ilike.%Contactor%',
+          'name.ilike.%Contactor%',
+        ].join(','),
+      );
+      break;
+
+    default:
+      query = query.ilike(
+        'category',
+        `%${cleanCategory}%`,
+      );
+  }
+}
   if (cleanCondition) {
     query = query.ilike('condition', cleanCondition);
   }
