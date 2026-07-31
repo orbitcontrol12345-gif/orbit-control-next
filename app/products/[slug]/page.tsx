@@ -206,7 +206,7 @@ export default async function ProductDetailPage({
     brand: product.brand,
     partNumber: product.partNumber,
     name: product.name,
-    description: schemaDescription,
+    description: product.description,
     condition: product.condition,
   });
 
