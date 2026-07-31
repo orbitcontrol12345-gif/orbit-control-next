@@ -469,9 +469,8 @@ export default async function ProductDetailPage({
               </h2>
 
               <p className="text-sm leading-relaxed text-slate-300">
-                {cleanText(product.description) ||
-                  'Product available for RFQ. Contact us for availability, condition, and delivery time.'}
-              </p>
+  {seo.description}
+</p>
             </div>
 
             <div className="mb-6 flex flex-col gap-3 sm:flex-row">
