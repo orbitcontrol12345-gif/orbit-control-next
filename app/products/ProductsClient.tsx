@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   ArrowUpDown,
   ChevronDown,
@@ -28,66 +28,81 @@ const CONDITIONS: ProductCondition[] = [
   'Not Working',
 ];
 
-type SortOption = 'relevance' | 'name' | 'brand' | 'condition';
+type SortOption =
+  | 'relevance'
+  | 'name'
+  | 'brand'
+  | 'condition';
 
-function safeText(value: unknown) {
+type ProductsClientProps = {
+  initialProducts?: Product[];
+  initialQuery?: string;
+  initialBrand?: string;
+  initialCategory?: string;
+  initialCondition?: string;
+  initialInStockOnly?: boolean;
+  initialSort?: SortOption;
+};
+
+function safeText(value: unknown): string {
   return String(value ?? '').trim();
-}
-
-function normalizeBrand(value: unknown) {
-  return safeText(value)
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/\bco(?:mpany)?\b/g, '')
-    .replace(/\bcorp(?:oration)?\b/g, '')
-    .replace(/\binc(?:orporated)?\b/g, '')
-    .replace(/\bltd\b/g, '')
-    .replace(/[^a-z0-9]+/g, '');
-}
-
-function matchesBrandName(productBrand: unknown, selectedBrand: unknown) {
-  const productValue = normalizeBrand(productBrand);
-  const selectedValue = normalizeBrand(selectedBrand);
-
-  if (!selectedValue) return true;
-  if (!productValue) return false;
-
-  return (
-    productValue === selectedValue ||
-    productValue.includes(selectedValue) ||
-    selectedValue.includes(productValue)
-  );
 }
 
 export default function ProductsClient({
   initialProducts = [],
-}: {
-  initialProducts?: Product[];
-}) {
+  initialQuery = '',
+  initialBrand = '',
+  initialCategory = '',
+  initialCondition = '',
+  initialInStockOnly = false,
+  initialSort = 'relevance',
+}: ProductsClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const initialQuery = searchParams.get('q') || '';
 
   const [query, setQuery] = useState(initialQuery);
-  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedBrand, setSelectedBrand] =
+    useState(initialBrand);
   const [selectedCategory, setSelectedCategory] =
-    useState<ProductCategory | ''>('');
+    useState<ProductCategory | ''>(
+      initialCategory as ProductCategory | '',
+    );
   const [selectedCondition, setSelectedCondition] =
-    useState<ProductCondition | ''>('');
-  const [inStockOnly, setInStockOnly] = useState(false);
+    useState<ProductCondition | ''>(
+      initialCondition as ProductCondition | '',
+    );
+  const [inStockOnly, setInStockOnly] = useState(
+    initialInStockOnly,
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  const [suggestions, setSuggestions] = useState<Product[]>([]);
-  const [allowSuggestions, setAllowSuggestions] = useState(false);
+  const [sortBy, setSortBy] =
+    useState<SortOption>(initialSort);
+  const [suggestions, setSuggestions] = useState<Product[]>(
+    [],
+  );
+  const [allowSuggestions, setAllowSuggestions] =
+    useState(false);
 
   useEffect(() => {
-    const urlQuery = searchParams.get('q') || '';
-
-    setQuery(urlQuery);
+    setQuery(initialQuery);
+    setSelectedBrand(initialBrand);
+    setSelectedCategory(
+      initialCategory as ProductCategory | '',
+    );
+    setSelectedCondition(
+      initialCondition as ProductCondition | '',
+    );
+    setInStockOnly(initialInStockOnly);
+    setSortBy(initialSort);
     setSuggestions([]);
     setAllowSuggestions(false);
-  }, [searchParams]);
+  }, [
+    initialQuery,
+    initialBrand,
+    initialCategory,
+    initialCondition,
+    initialInStockOnly,
+    initialSort,
+  ]);
 
   useEffect(() => {
     const cleanQuery = query.trim();
@@ -102,15 +117,19 @@ export default function ProductsClient({
     const timer = window.setTimeout(async () => {
       try {
         const response = await fetch(
-          `/api/search-products?q=${encodeURIComponent(cleanQuery)}`,
+          `/api/search-products?q=${encodeURIComponent(
+            cleanQuery,
+          )}`,
           {
             cache: 'no-store',
             signal: controller.signal,
-          }
+          },
         );
 
         if (!response.ok) {
-          throw new Error(`Search failed: ${response.status}`);
+          throw new Error(
+            `Search failed: ${response.status}`,
+          );
         }
 
         const data = await response.json();
@@ -127,7 +146,10 @@ export default function ProductsClient({
       } catch (error) {
         if (
           !controller.signal.aborted &&
-          !(error instanceof Error && error.name === 'AbortError')
+          !(
+            error instanceof Error &&
+            error.name === 'AbortError'
+          )
         ) {
           setSuggestions([]);
         }
@@ -140,91 +162,46 @@ export default function ProductsClient({
     };
   }, [query, allowSuggestions]);
 
-  const filtered = useMemo(() => {
-    const normalizedQuery = query.toLowerCase().trim();
+  const navigateWithFilters = ({
+    nextQuery = query,
+    nextBrand = selectedBrand,
+    nextCategory = selectedCategory,
+    nextCondition = selectedCondition,
+    nextInStockOnly = inStockOnly,
+    nextSort = sortBy,
+  }: {
+    nextQuery?: string;
+    nextBrand?: string;
+    nextCategory?: string;
+    nextCondition?: string;
+    nextInStockOnly?: boolean;
+    nextSort?: SortOption;
+  } = {}) => {
+    const params = new URLSearchParams();
+    const cleanQuery = nextQuery.trim();
 
-    const results = initialProducts.filter((product) => {
-      const partNumber = safeText(product.partNumber).toLowerCase();
-      const name = safeText(product.name).toLowerCase();
-      const brand = safeText(product.brand).toLowerCase();
-      const sku = safeText(product.sku).toLowerCase();
-      const category = safeText(product.category).toLowerCase();
-      const tags = Array.isArray(product.tags) ? product.tags : [];
-
-      const matchesQuery =
-        !normalizedQuery ||
-        partNumber.includes(normalizedQuery) ||
-        name.includes(normalizedQuery) ||
-        brand.includes(normalizedQuery) ||
-        sku.includes(normalizedQuery) ||
-        category.includes(normalizedQuery) ||
-        tags.some((tag) =>
-          safeText(tag).toLowerCase().includes(normalizedQuery)
-        );
-
-      const matchesBrand = matchesBrandName(
-        product.brand,
-        selectedBrand
-      );
-
-      const matchesCategory =
-        !selectedCategory || product.category === selectedCategory;
-
-      const matchesCondition =
-        !selectedCondition || product.condition === selectedCondition;
-
-      const matchesStock = !inStockOnly || product.inStock;
-
-      return (
-        matchesQuery &&
-        matchesBrand &&
-        matchesCategory &&
-        matchesCondition &&
-        matchesStock
-      );
-    });
-
-    return [...results].sort((a, b) => {
-      if (sortBy === 'name') {
-        return safeText(a.name).localeCompare(safeText(b.name));
-      }
-
-      if (sortBy === 'brand') {
-        return safeText(a.brand).localeCompare(safeText(b.brand));
-      }
-
-      if (sortBy === 'condition') {
-        return safeText(a.condition).localeCompare(
-          safeText(b.condition)
-        );
-      }
-
-      return 0;
-    });
-  }, [
-    initialProducts,
-    query,
-    selectedBrand,
-    selectedCategory,
-    selectedCondition,
-    inStockOnly,
-    sortBy,
-  ]);
-
-  const submitSearch = () => {
-    const cleanQuery = query.trim();
-
-    setSuggestions([]);
-    setAllowSuggestions(false);
-
-    if (!cleanQuery) {
-      router.push('/products?page=1');
-      return;
+    if (cleanQuery) params.set('q', cleanQuery);
+    if (nextBrand) params.set('brand', nextBrand);
+    if (nextCategory) params.set('category', nextCategory);
+    if (nextCondition) {
+      params.set('condition', nextCondition);
+    }
+    if (nextInStockOnly) {
+      params.set('stock', 'in-stock');
+    }
+    if (nextSort !== 'relevance') {
+      params.set('sort', nextSort);
     }
 
-    router.push(
-      `/products?q=${encodeURIComponent(cleanQuery)}&page=1`
-    );
+    params.set('page', '1');
+
+    router.push(`/products?${params.toString()}`);
+  };
+
+  const submitSearch = () => {
+    setSuggestions([]);
+    setAllowSuggestions(false);
+    navigateWithFilters();
   };
 
   const clearFilters = () => {
@@ -246,8 +223,12 @@ export default function ProductsClient({
       selectedCategory ||
       selectedCondition ||
       inStockOnly ||
-      sortBy !== 'relevance'
+      sortBy !== 'relevance',
   );
+
+  const displayedProducts = useMemo(() => {
+    return initialProducts;
+  }, [initialProducts]);
 
   return (
     <div className="min-h-screen bg-navy-900 pt-24">
@@ -262,9 +243,10 @@ export default function ProductsClient({
           </h1>
 
           <p className="mt-2 max-w-2xl text-slate-400">
-            Search by part number, SKU, brand, category, model, or
-            keyword. Browse PLCs, HMIs, drives, sensors, circuit
-            breakers and obsolete spare parts.
+            Search by part number, SKU, brand, category,
+            model, or keyword. Browse PLCs, HMIs, drives,
+            sensors, circuit breakers and obsolete spare
+            parts.
           </p>
         </div>
       </div>
@@ -354,7 +336,9 @@ export default function ProductsClient({
 
             <button
               type="button"
-              onClick={() => setFiltersOpen((current) => !current)}
+              onClick={() =>
+                setFiltersOpen((current) => !current)
+              }
               className="flex items-center justify-center gap-2 rounded-xl border border-navy-600 bg-navy-700 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:border-gold-500/50 hover:text-white"
             >
               <SlidersHorizontal size={16} />
@@ -378,15 +362,25 @@ export default function ProductsClient({
 
               <select
                 value={sortBy}
-                onChange={(event) =>
-                  setSortBy(event.target.value as SortOption)
-                }
+                onChange={(event) => {
+                  const nextSort =
+                    event.target.value as SortOption;
+
+                  setSortBy(nextSort);
+                  navigateWithFilters({
+                    nextSort,
+                  });
+                }}
                 className="h-full min-w-[180px] rounded-xl border border-navy-600 bg-navy-700 py-3 pl-11 pr-4 text-sm font-semibold text-slate-300 outline-none transition focus:border-gold-500"
               >
-                <option value="relevance">Sort: Relevance</option>
+                <option value="relevance">
+                  Sort: Relevance
+                </option>
                 <option value="name">Sort: Name</option>
                 <option value="brand">Sort: Brand</option>
-                <option value="condition">Sort: Condition</option>
+                <option value="condition">
+                  Sort: Condition
+                </option>
               </select>
             </div>
 
@@ -411,14 +405,22 @@ export default function ProductsClient({
 
                 <select
                   value={selectedBrand}
-                  onChange={(event) =>
-                    setSelectedBrand(event.target.value)
-                  }
+                  onChange={(event) => {
+                    const nextBrand = event.target.value;
+
+                    setSelectedBrand(nextBrand);
+                    navigateWithFilters({
+                      nextBrand,
+                    });
+                  }}
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
                   <option value="">All Brands</option>
                   {BRANDS.map((brand) => (
-                    <option key={brand.slug} value={brand.name}>
+                    <option
+                      key={brand.slug}
+                      value={brand.name}
+                    >
                       {brand.name}
                     </option>
                   ))}
@@ -432,11 +434,16 @@ export default function ProductsClient({
 
                 <select
                   value={selectedCategory}
-                  onChange={(event) =>
-                    setSelectedCategory(
-                      event.target.value as ProductCategory | ''
-                    )
-                  }
+                  onChange={(event) => {
+                    const nextCategory =
+                      event.target
+                        .value as ProductCategory | '';
+
+                    setSelectedCategory(nextCategory);
+                    navigateWithFilters({
+                      nextCategory,
+                    });
+                  }}
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
                   <option value="">All Categories</option>
@@ -458,17 +465,24 @@ export default function ProductsClient({
 
                 <select
                   value={selectedCondition}
-                  onChange={(event) =>
-                    setSelectedCondition(
+                  onChange={(event) => {
+                    const nextCondition =
                       event.target
-                        .value as ProductCondition | ''
-                    )
-                  }
+                        .value as ProductCondition | '';
+
+                    setSelectedCondition(nextCondition);
+                    navigateWithFilters({
+                      nextCondition,
+                    });
+                  }}
                   className="w-full rounded-xl border border-navy-600 bg-navy-900 px-4 py-3 text-sm text-white outline-none focus:border-gold-500"
                 >
                   <option value="">All Conditions</option>
                   {CONDITIONS.map((condition) => (
-                    <option key={condition} value={condition}>
+                    <option
+                      key={condition}
+                      value={condition}
+                    >
                       {condition}
                     </option>
                   ))}
@@ -482,9 +496,14 @@ export default function ProductsClient({
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setInStockOnly((current) => !current)
-                  }
+                  onClick={() => {
+                    const nextInStockOnly = !inStockOnly;
+
+                    setInStockOnly(nextInStockOnly);
+                    navigateWithFilters({
+                      nextInStockOnly,
+                    });
+                  }}
                   className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
                     inStockOnly
                       ? 'border-gold-500 bg-gold-500/10 text-gold-400'
@@ -502,20 +521,26 @@ export default function ProductsClient({
           <p className="text-sm text-slate-400">
             Showing{' '}
             <span className="font-semibold text-white">
-              {filtered.length}
+              {displayedProducts.length}
             </span>{' '}
-            {filtered.length === 1 ? 'result' : 'results'}
+            {displayedProducts.length === 1
+              ? 'result'
+              : 'results'}
           </p>
 
           <p className="text-xs text-slate-500">
-            Search by part number, model, SKU, brand or category
+            Search by part number, model, SKU, brand or
+            category
           </p>
         </div>
 
-        {filtered.length > 0 ? (
+        {displayedProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {displayedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+              />
             ))}
           </div>
         ) : (
@@ -530,10 +555,10 @@ export default function ProductsClient({
             </h3>
 
             <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
-              We couldn&apos;t find an exact match in the current
-              catalog. Send us the part number, brand, quantity and
-              photos if available, and we&apos;ll help source it
-              worldwide.
+              We couldn&apos;t find an exact match in the
+              current catalog. Send us the part number, brand,
+              quantity and photos if available, and we&apos;ll
+              help source it worldwide.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
