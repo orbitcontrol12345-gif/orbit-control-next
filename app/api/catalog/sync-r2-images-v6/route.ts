@@ -11,8 +11,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const ROUTE_VERSION = 'R2-GALLERY-V7-EBAY-FIRST';
-const JOB_KEY = 'sync-r2-images-v6-upgrade';
+const ROUTE_VERSION = 'R2-GALLERY-V8-REPLACE-ALL';
+const JOB_KEY = 'sync-r2-images-v8-replace-all';
 
 const LIMIT = 25;
 const MAX_IMAGES = 10;
@@ -283,9 +283,7 @@ export async function GET() {
       throw new Error('Missing eBay access token');
     }
 
-    const statusFilter = UPGRADE_STATUSES.join(',');
-
-    const { data: products, error } =
+        const { data: products, error } =
       await supabaseAdmin
         .from('products')
         .select(`
@@ -302,9 +300,6 @@ export async function GET() {
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
         .gt('id', currentCursor)
-        .or(
-          `image_status.is.null,image_status.in.(${statusFilter})`
-        )
         .order('id', { ascending: true })
         .limit(LIMIT);
 
@@ -315,30 +310,13 @@ export async function GET() {
     const rows = (products ?? []) as ProductRow[];
 
     if (rows.length === 0) {
-      const { error: resetError } = await supabaseAdmin
-        .from('catalog_jobs')
-        .update({
-          cursor_offset: 0,
-          last_processed: 0,
-          last_updated: 0,
-          last_unresolved: 0,
-          last_failed: 0,
-          last_rate_limited: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('job_key', JOB_KEY);
-
-      if (resetError) {
-        throw resetError;
-      }
-
       return NextResponse.json({
         success: true,
         routeVersion: ROUTE_VERSION,
         job: JOB_KEY,
-        status: 'UPGRADE_CYCLE_COMPLETE_CURSOR_RESET',
+        status: 'REPLACE_ALL_COMPLETE',
         currentCursor,
-        nextCursor: 0,
+        nextCursor: currentCursor,
         processed: 0,
         updated: 0,
         failed: 0,
@@ -352,6 +330,7 @@ export async function GET() {
     let lastCompletedId = currentCursor;
 
     const results: Array<Record<string, unknown>> = [];
+    const cacheVersion = Date.now();
 
     for (const product of rows) {
       const ebayItemId = String(
@@ -437,7 +416,9 @@ export async function GET() {
               contentType: downloaded.contentType,
             });
 
-            r2Urls.push(getPublicR2Url(key));
+            // The same R2 key is overwritten, and the version query prevents
+            // browsers/CDNs from showing the previously cached low-resolution file.
+            r2Urls.push(`${getPublicR2Url(key)}?v=${cacheVersion}`);
           } catch (imageError) {
             console.error(
               `R2 IMAGE FAILED ${ebayItemId} IMAGE ${index}:`,
@@ -576,9 +557,7 @@ export async function GET() {
         })
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
-        .or(
-          `image_status.is.null,image_status.in.(${statusFilter})`
-        ),
+        .gt('id', nextCursor),
 
       supabaseAdmin
         .from('products')
@@ -624,8 +603,6 @@ export async function GET() {
         upgradeCountResult.count ?? 0,
       failedProducts:
         failedCountResult.count ?? 0,
-
-      upgradeStatuses: UPGRADE_STATUSES,
 
       results,
     });
