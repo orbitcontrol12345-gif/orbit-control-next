@@ -1,7 +1,7 @@
 import ProductGallery from '@/components/product/ProductGallery';
 import JsonLd from '@/components/seo/JsonLd';
 import ProductCard from '@/components/products/ProductCard';
-
+import { buildProductSeo } from '@/lib/seo/productSeo';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -87,16 +87,21 @@ export async function generateMetadata({
     };
   }
 
-  const brand = cleanText(product.brand) || 'Industrial Automation';
-  const partNumber = cleanText(product.partNumber);
-  const productName = cleanText(product.name);
+  const seo = buildProductSeo({
+  brand: product.brand,
+  partNumber: product.partNumber,
+  name: product.name,
+  description: product.description,
+  condition: product.condition,
+});
 
-  const title = `${partNumber} — ${productName}`;
-
-  const description = (
-    cleanText(product.description) ||
-    `${brand} ${partNumber} industrial automation spare part available for RFQ, worldwide shipping and fast quotation support.`
-  ).slice(0, 160);
+const {
+  brand,
+  partNumber,
+  title,
+  description,
+  imageAlt,
+} = seo;
 
   const productPath = `/products/${encodeURIComponent(params.slug)}`;
   const productUrl = `${SITE_URL}${productPath}`;
@@ -137,7 +142,7 @@ export async function generateMetadata({
       images: [
         {
           url: image,
-          alt: `${brand} ${partNumber} - ${productName}`,
+          alt: imageAlt,
         },
       ],
     },
