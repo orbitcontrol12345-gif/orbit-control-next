@@ -3,7 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const PRODUCTS_TABLE = 'products';
 
-function cleanProductName(name: string) {
+type ProductSortOption = 'relevance' | 'name' | 'brand' | 'condition';
+
+function cleanProductName(name: string): string {
   return name
     .replace(/\bnew without box\b/gi, '')
     .replace(/\bnew w\/o box\b/gi, '')
@@ -25,7 +27,8 @@ function mapSupabaseProduct(item: any): Product {
       ? item.r2_gallery_urls[0]
       : null) ||
     item.r2_image_url ||
-    (Array.isArray(item.ebay_gallery_urls) && item.ebay_gallery_urls.length > 0
+    (Array.isArray(item.ebay_gallery_urls) &&
+    item.ebay_gallery_urls.length > 0
       ? item.ebay_gallery_urls[0]
       : null) ||
     item.ebay_image_url ||
@@ -47,9 +50,40 @@ function mapSupabaseProduct(item: any): Product {
     r2ImageUrl: item.r2_image_url || null,
     r2GalleryUrls: item.r2_gallery_urls || [],
     ebayGalleryUrls: item.ebay_gallery_urls || [],
-    tags: [item.sku, item.part_number, item.brand, item.category, item.name].filter(Boolean),
-    slug: item.slug || item.sku || item.ebay_item_id || String(item.id),
+    tags: [
+      item.sku,
+      item.part_number,
+      item.brand,
+      item.category,
+      item.name,
+    ].filter(Boolean),
+    slug:
+      item.slug ||
+      item.sku ||
+      item.ebay_item_id ||
+      String(item.id),
   };
+}
+
+function normalizePage(value: number): number {
+  return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
+}
+
+function normalizePerPage(value: number): number {
+  return Number.isFinite(value)
+    ? Math.min(100, Math.max(1, Math.floor(value)))
+    : 24;
+}
+
+/**
+ * Removes characters that can break a PostgREST `.or()` expression.
+ * This does not change normal part numbers, brand names, or search terms.
+ */
+function cleanFilterValue(value: string): string {
+  return value
+    .trim()
+    .replace(/[(),]/g, ' ')
+    .replace(/\s+/g, ' ');
 }
 
 export async function getSupabaseProductsPage({
@@ -67,26 +101,26 @@ export async function getSupabaseProductsPage({
   category?: string;
   condition?: string;
   inStockOnly?: boolean;
-  sort?: 'relevance' | 'name' | 'brand' | 'condition';
+  sort?: ProductSortOption;
   page?: number;
   perPage?: number;
 }) {
-  const safePage = Math.max(1, page);
-  const safePerPage = Math.max(1, perPage);
+  const safePage = normalizePage(page);
+  const safePerPage = normalizePerPage(perPage);
 
   const from = (safePage - 1) * safePerPage;
   const to = from + safePerPage - 1;
+
+  const cleanSearch = cleanFilterValue(search);
+  const cleanBrand = cleanFilterValue(brand);
+  const cleanCategory = cleanFilterValue(category);
+  const cleanCondition = cleanFilterValue(condition);
 
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select('*', { count: 'exact' })
     .eq('is_active', true)
     .neq('catalog_visible', false);
-
-  const cleanSearch = search.trim();
-  const cleanBrand = brand.trim();
-  const cleanCategory = category.trim();
-  const cleanCondition = condition.trim();
 
   if (cleanSearch) {
     query = query.or(
@@ -112,8 +146,13 @@ export async function getSupabaseProductsPage({
     query = query.ilike('condition', cleanCondition);
   }
 
+  /*
+   * The current Product mapping treats every active product as in stock.
+   * Keep this flag accepted for compatibility with the filters UI.
+   * When a real stock column is confirmed, apply it here.
+   */
   if (inStockOnly) {
-    query = query.eq('in_stock', true);
+    query = query.eq('is_active', true);
   }
 
   switch (sort) {
@@ -147,17 +186,104 @@ export async function getSupabaseProductsPage({
     };
   }
 
+  const totalProducts = count || 0;
+
   return {
     products: (data || []).map(mapSupabaseProduct),
-    totalProducts: count || 0,
+    totalProducts,
     totalPages: Math.max(
       1,
-      Math.ceil((count || 0) / safePerPage),
+      Math.ceil(totalProducts / safePerPage),
     ),
   };
 }
 
-export async function getSupabaseProductBySlug(slug: string): Promise<Product | null> {
+export async function getSupabaseProductsByCategoryTerms({
+  terms,
+  excludeTerms = [],
+  page = 1,
+  perPage = 24,
+}: {
+  terms: string[];
+  excludeTerms?: string[];
+  page?: number;
+  perPage?: number;
+}) {
+  const safePage = normalizePage(page);
+  const safePerPage = normalizePerPage(perPage);
+
+  const from = (safePage - 1) * safePerPage;
+  const to = from + safePerPage - 1;
+
+  const cleanTerms = terms
+    .map(cleanFilterValue)
+    .filter(Boolean);
+
+  if (cleanTerms.length === 0) {
+    return {
+      products: [],
+      totalProducts: 0,
+      totalPages: 1,
+    };
+  }
+
+  const filters = cleanTerms
+    .flatMap((term) => [
+      `name.ilike.%${term}%`,
+      `category.ilike.%${term}%`,
+      `brand.ilike.%${term}%`,
+      `part_number.ilike.%${term}%`,
+    ])
+    .join(',');
+
+  let query = supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select('*', { count: 'exact' })
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .or(filters);
+
+  for (const rawTerm of excludeTerms) {
+    const term = cleanFilterValue(rawTerm);
+
+    if (!term) {
+      continue;
+    }
+
+    query = query
+      .not('name', 'ilike', `%${term}%`)
+      .not('category', 'ilike', `%${term}%`);
+  }
+
+  const { data, count, error } = await query
+    .order('id', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error('Category products query failed:', error);
+
+    return {
+      products: [],
+      totalProducts: 0,
+      totalPages: 0,
+    };
+  }
+
+  const totalProducts = count || 0;
+
+  return {
+    products: (data || []).map(mapSupabaseProduct),
+    totalProducts,
+    totalPages: Math.max(
+      1,
+      Math.ceil(totalProducts / safePerPage),
+    ),
+  };
+}
+
+export async function getSupabaseProductBySlug(
+  slug: string,
+): Promise<Product | null> {
   const decodedSlug = decodeURIComponent(slug);
 
   let { data, error } = await supabaseAdmin
@@ -169,39 +295,77 @@ export async function getSupabaseProductBySlug(slug: string): Promise<Product | 
     .maybeSingle();
 
   if (!data) {
-    const { data: fallback } = await supabaseAdmin
-      .from(PRODUCTS_TABLE)
-      .select('*')
-      .eq('is_active', true)
-      .neq('catalog_visible', false)
-      .or(
-        `slug.eq.${decodedSlug},sku.eq.${decodedSlug},ebay_item_id.eq.${decodedSlug},part_number.eq.${decodedSlug},model_number.eq.${decodedSlug}`
-      )
-      .limit(1)
-      .maybeSingle();
+    const { data: fallback, error: fallbackError } =
+      await supabaseAdmin
+        .from(PRODUCTS_TABLE)
+        .select('*')
+        .eq('is_active', true)
+        .neq('catalog_visible', false)
+        .or(
+          [
+            `slug.eq.${decodedSlug}`,
+            `sku.eq.${decodedSlug}`,
+            `ebay_item_id.eq.${decodedSlug}`,
+            `part_number.eq.${decodedSlug}`,
+            `model_number.eq.${decodedSlug}`,
+          ].join(','),
+        )
+        .limit(1)
+        .maybeSingle();
 
     data = fallback;
+    error = fallbackError;
   }
 
-  if (error || !data) return null;
+  if (error || !data) {
+    return null;
+  }
 
   return mapSupabaseProduct(data);
 }
 
-export async function getSupabaseRelatedProducts(product: Product): Promise<Product[]> {
-  const { data, error } = await supabaseAdmin
+export async function getSupabaseRelatedProducts(
+  product: Product,
+): Promise<Product[]> {
+  const brand = cleanFilterValue(product.brand);
+  const category = cleanFilterValue(product.category);
+
+  const relatedFilters = [
+    brand ? `brand.eq.${brand}` : '',
+    category ? `category.eq.${category}` : '',
+  ]
+    .filter(Boolean)
+    .join(',');
+
+  if (!relatedFilters) {
+    return [];
+  }
+
+  let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select('*')
     .eq('is_active', true)
     .neq('catalog_visible', false)
-    .or(`brand.eq.${product.brand},category.eq.${product.category}`)
-    .neq('sku', product.sku)
+    .or(relatedFilters)
     .limit(12);
 
-  if (error) return [];
+  if (product.sku) {
+    query = query.neq('sku', product.sku);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Related products query failed:', error);
+    return [];
+  }
 
   return (data || [])
     .map(mapSupabaseProduct)
-    .filter((p) => p.imageUrl && p.imageUrl !== '/placeholder-product.jpg')
+    .filter(
+      (item) =>
+        item.imageUrl &&
+        item.imageUrl !== '/placeholder-product.jpg',
+    )
     .slice(0, 4);
 }
