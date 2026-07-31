@@ -1,4 +1,4 @@
-const SITE_URL = 'https://orbit-surplus.com';
+const SITE_URL = 'https://www.orbit-surplus.com';
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
