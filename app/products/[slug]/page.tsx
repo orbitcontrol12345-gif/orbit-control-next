@@ -1,4 +1,5 @@
 import ProductGallery from '@/components/product/ProductGallery';
+import { buildBreadcrumbSchema } from '@/lib/seo/breadcrumb';
 import JsonLd from '@/components/seo/JsonLd';
 import ProductCard from '@/components/products/ProductCard';
 import { buildProductSeo } from '@/lib/seo/productSeo';
@@ -201,6 +202,14 @@ export default async function ProductDetailPage({
     notFound();
   }
 
+  const seo = buildProductSeo({
+    brand: product.brand,
+    partNumber: product.partNumber,
+    name: product.name,
+    description: schemaDescription,
+    condition: product.condition,
+  });
+
   const related =
     await getSupabaseRelatedProducts(product);
 
@@ -215,10 +224,27 @@ export default async function ProductDetailPage({
     ...(product.ebayGalleryUrls || []),
   ]);
 
-  const schemaDescription =
-    cleanText(product.description) ||
-    `${product.brand} ${product.partNumber} industrial automation spare part available for RFQ and worldwide shipping.`;
-
+ const schemaDescription = seo.description;
+const breadcrumbSchema = buildBreadcrumbSchema([
+  {
+    name: 'Home',
+    url: SITE_URL,
+  },
+  {
+    name: 'Products',
+    url: `${SITE_URL}/products`,
+  },
+  {
+    name: product.brand,
+    url: `${SITE_URL}/brands/${encodeURIComponent(
+      product.brand.toLowerCase()
+    )}`,
+  },
+  {
+    name: product.partNumber,
+    url: productUrl,
+  },
+]);
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
