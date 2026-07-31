@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
-const ROUTE_VERSION = 'R2-GALLERY-V6-UPGRADE';
+const ROUTE_VERSION = 'R2-GALLERY-V7-EBAY-FIRST';
 const JOB_KEY = 'sync-r2-images-v6-upgrade';
 
 const LIMIT = 25;
@@ -302,7 +302,9 @@ export async function GET() {
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
         .gt('id', currentCursor)
-        .is('r2_image_url', null)
+        .or(
+          `image_status.is.null,image_status.in.(${statusFilter})`
+        )
         .order('id', { ascending: true })
         .limit(LIMIT);
 
@@ -364,9 +366,12 @@ export async function GET() {
         const storedGallery = getStoredGallery(product);
 
         let ebayGallery: string[] = [];
-        let source = 'stored_gallery';
+        let source = 'ebay_item_details';
+        let ebayFetchError: string | null = null;
 
-        if (storedGallery.length <= 1) {
+        // Always ask eBay first. Stored images are only a fallback when
+        // eBay has no images or the request fails for a non-rate-limit reason.
+        try {
           const item = await fetchEbayItemDetails(
             ebayItemId,
             accessToken
@@ -375,17 +380,33 @@ export async function GET() {
           ebayGallery = item
             ? getEbayGallery(item)
             : [];
+        } catch (ebayError) {
+          const message =
+            ebayError instanceof Error
+              ? ebayError.message
+              : String(ebayError);
 
-          source =
-            ebayGallery.length > 0
-              ? 'ebay_item_details'
-              : 'stored_gallery_fallback';
+          if (message === 'EBAY_RATE_LIMIT_429') {
+            throw ebayError;
+          }
+
+          ebayFetchError = message;
+          console.error(
+            `EBAY IMAGE FETCH FAILED ${ebayItemId}:`,
+            ebayError
+          );
         }
 
         const gallery =
           ebayGallery.length > 0
             ? ebayGallery
             : storedGallery;
+
+        if (ebayGallery.length === 0) {
+          source = ebayFetchError
+            ? 'stored_gallery_fallback_after_ebay_error'
+            : 'stored_gallery_fallback_no_ebay_images';
+        }
 
         if (gallery.length === 0) {
           throw new Error('No product images found');
@@ -464,6 +485,7 @@ export async function GET() {
           ebay_image_count: gallery.length,
           image_count: r2Urls.length,
           image_url: r2Urls[0],
+          ebay_fetch_error: ebayFetchError,
         });
       } catch (err) {
         const errorMessage =
