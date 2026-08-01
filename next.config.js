@@ -36,6 +36,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+       source: '/shop-by-category',
+       destination: '/categories',
+      permanent: true,
+      },
+      {
         source: '/daily-deals',
         destination: '/products',
         permanent: true,
