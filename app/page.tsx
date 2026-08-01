@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import IndustrialHero from '@/components/home/IndustrialHero';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -21,11 +22,8 @@ import {
   MapPin,
   Gauge,
   Headphones,
-  Layers,
 } from 'lucide-react';
 
-import HeroSearchBar from '@/components/shared/HeroSearchBar';
-import HeroGlobe from '@/components/home/HeroGlobe';
 import TrustedBrands from '@/components/home/TrustedBrands';
 import ProductCard from '@/components/products/ProductCard';
 import { CATEGORIES, BRANDS } from '@/lib/data';
@@ -91,109 +89,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* HERO */}
-      <section className="relative min-h-[78vh] overflow-hidden border-b border-cyan-400/10 bg-[#04101b] lg:min-h-[88vh]">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(circle at 18% 18%, rgba(34,211,238,0.18), transparent 28%), radial-gradient(circle at 82% 12%, rgba(245,158,11,0.16), transparent 30%), radial-gradient(circle at 55% 85%, rgba(14,165,233,0.10), transparent 38%), linear-gradient(135deg, #04101b 0%, #071827 42%, #050b13 100%)',
-          }}
-        />
-
-        <div
-          className="absolute inset-0 opacity-[0.08]"
-          style={{
-            background:
-              'linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
-          }}
-        />
-
-        <div className="absolute left-[-120px] top-28 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute right-[-100px] top-20 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
-
-        <div className="page-container relative grid min-h-[78vh] items-center gap-10 py-14 lg:min-h-[88vh] lg:gap-14 lg:py-24 lg:grid-cols-[1.12fr_0.88fr]">
-          <div>
-            <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-100 shadow-lg shadow-cyan-950/30">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
-              </span>
-              Orbit Control Automation — UAE
-            </div>
-
-            <h1 className="max-w-5xl text-[38px] font-black leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-              Industrial Automation
-              <span className="block bg-gradient-to-r from-cyan-200 via-white to-amber-200 bg-clip-text text-transparent">
-                Parts Delivered Worldwide.
-              </span>
-            </h1>
-
-            <p className="mt-5 max-w-xl text-[15px] leading-7 text-slate-300 sm:mt-7 sm:max-w-2xl sm:text-lg sm:leading-8">
-              Source PLCs, HMIs, VFDs, sensors, relays, circuit breakers, control boards,
-              obsolete and surplus automation spare parts with fast RFQ support.
-            </p>
-
-            <div className="mt-8 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-2xl shadow-black/30 backdrop-blur">
-              <div className="mb-3 flex flex-wrap gap-2 px-1 text-xs font-bold uppercase tracking-wider text-slate-400">
-                <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-cyan-200">Part Number</span>
-                <span className="rounded-full bg-white/5 px-3 py-1">Manufacturer</span>
-                <span className="rounded-full bg-white/5 px-3 py-1">Model</span>
-                <span className="rounded-full bg-white/5 px-3 py-1">Obsolete Stock</span>
-              </div>
-              <HeroSearchBar />
-            </div>
-
-            <div className="mt-8 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-              <Link
-  href="/rfq"
-  className="btn-gold w-full justify-center shadow-xl shadow-amber-950/30"
->
-  <FileText size={18} />
-  Request a Quote
-</Link>
-
-              <Link
-  href="/products"
-  className="btn-outline-slate w-full justify-center"
->
-  Browse Inventory
-  <ArrowRight size={18} />
-</Link>
-            </div>
-
-            <div className="mt-8 grid max-w-3xl grid-cols-3 gap-2 sm:gap-3 lg:mt-12 lg:gap-4">
-  {[
-    ['64,000+', 'Industrial Items', 'Live inventory'],
-    ['200+', 'Global Brands', 'Automation supply'],
-    ['24h', 'RFQ Target', 'Fast response'],
-  ].map(([value, label, note]) => (
-    <div
-      key={label}
-      className="group rounded-2xl border border-white/10 bg-white/[0.06] p-3 shadow-lg shadow-black/20 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.07] sm:p-4 lg:p-5"
-    >
-      <div className="text-xl font-black text-white sm:text-2xl lg:text-3xl">
-        {value}
-      </div>
-
-      <div className="mt-1 text-[9px] font-black uppercase leading-tight tracking-wider text-cyan-200 sm:text-[10px] lg:text-xs">
-        {label}
-      </div>
-
-      <div className="mt-2 hidden text-[9px] leading-tight text-slate-400 sm:block sm:text-[10px] lg:text-xs">
-        {note}
-      </div>
-    </div>
-  ))}
-</div>
-          </div>
-
-          <div className="hidden lg:block">
-            <HeroGlobe />
-          </div>
-        </div>
-      </section>
+      <IndustrialHero />
 
       <TrustedBrands />
 
