@@ -16,6 +16,16 @@ const nextConfig = {
       permanent: true,
     },
     {
+  source: '/home',
+  destination: '/',
+  permanent: true,
+},
+{
+  source: '/home/:path*',
+  destination: '/:path*',
+  permanent: true,
+},
+    {
       source: '/shop/:path*',
       destination: '/products',
       permanent: true,
