@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V3-FALLBACK';
+const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V4-SEO-404';
 
 type RouteContext = {
   params: Promise<{
@@ -32,6 +32,142 @@ function normalizePath(pathname: string): string {
   return clean === '/' ? '/' : `${clean}/`;
 }
 
+function createNotFoundResponse(oldPath: string) {
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  />
+  <meta name="robots" content="noindex, nofollow" />
+
+  <title>
+    Product Not Found | Orbit Control Automation
+  </title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #030b1a;
+      color: #ffffff;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    }
+
+    main {
+      width: 100%;
+      max-width: 620px;
+      padding: 48px 32px;
+      text-align: center;
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 18px;
+      background: #0b1730;
+    }
+
+    .code {
+      margin: 0;
+      color: #d4af37;
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    h1 {
+      margin: 20px 0 12px;
+      font-size: 30px;
+    }
+
+    p {
+      margin: 0 auto;
+      max-width: 480px;
+      color: #aab6cc;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 22px;
+      border-radius: 9px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .primary {
+      background: #d4af37;
+      color: #071126;
+    }
+
+    .secondary {
+      border: 1px solid #42516d;
+      color: #ffffff;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <p class="code">404</p>
+
+    <h1>Product Page Not Found</h1>
+
+    <p>
+      This legacy product page is no longer available.
+      Browse our current industrial automation inventory
+      or submit a request for quotation.
+    </p>
+
+    <div class="actions">
+      <a class="primary" href="/products">
+        Browse Products
+      </a>
+
+      <a class="secondary" href="/rfq">
+        Submit RFQ
+      </a>
+    </div>
+  </main>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control':
+        'public, max-age=300, s-maxage=3600',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'X-Orbit-Legacy-Path': oldPath,
+      'X-Orbit-Route-Version': ROUTE_VERSION,
+    },
+  });
+}
+
 export async function GET(
   req: Request,
   context: RouteContext
@@ -39,14 +175,28 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    const decodedSlug = decodeURIComponent(slug);
+    let decodedSlug = '';
+
+    try {
+      decodedSlug = decodeURIComponent(
+        String(slug || '').trim()
+      );
+    } catch {
+      decodedSlug = String(slug || '').trim();
+    }
+
+    if (!decodedSlug) {
+      return createNotFoundResponse('/product/');
+    }
 
     const oldPath = normalizePath(
       `/product/${decodedSlug}`
     );
 
     const oldPathWithoutSlash =
-      oldPath.replace(/\/+$/, '');
+      oldPath.length > 1
+        ? oldPath.replace(/\/+$/, '')
+        : oldPath;
 
     const candidatePaths = Array.from(
       new Set([
@@ -55,18 +205,17 @@ export async function GET(
       ])
     );
 
-    const canonicalOldUrls = [
-      `https://www.orbit-surplus.com${oldPath}`,
-      `https://www.orbit-surplus.com${oldPathWithoutSlash}`,
-      `https://orbit-surplus.com${oldPath}`,
-      `https://orbit-surplus.com${oldPathWithoutSlash}`,
-    ];
+    const canonicalOldUrls = Array.from(
+      new Set([
+        `https://www.orbit-surplus.com${oldPath}`,
+        `https://www.orbit-surplus.com${oldPathWithoutSlash}`,
+        `https://orbit-surplus.com${oldPath}`,
+        `https://orbit-surplus.com${oldPathWithoutSlash}`,
+      ])
+    );
 
     let redirectRow: RedirectRow | null = null;
 
-    /*
-     * First attempt: search by old_path.
-     */
     const pathResult = await supabaseAdmin
       .from('migration_redirects')
       .select(`
@@ -91,9 +240,6 @@ export async function GET(
     redirectRow =
       pathResult.data as RedirectRow | null;
 
-    /*
-     * Fallback: search by complete old_url.
-     */
     if (!redirectRow?.new_url) {
       const urlResult = await supabaseAdmin
         .from('migration_redirects')
@@ -121,28 +267,7 @@ export async function GET(
     }
 
     if (!redirectRow?.new_url) {
-      return NextResponse.json(
-        {
-          success: false,
-          routeVersion: ROUTE_VERSION,
-          status:
-            'LEGACY_REDIRECT_NOT_ENABLED_OR_NOT_FOUND',
-          slug: decodedSlug,
-          oldPath,
-          candidatePaths,
-          canonicalOldUrls,
-          redirectEnabled: false,
-        },
-        {
-          status: 404,
-          headers: {
-            'Cache-Control':
-              'no-store, no-cache, must-revalidate',
-            'X-Robots-Tag':
-              'noindex, nofollow',
-          },
-        }
-      );
+      return createNotFoundResponse(oldPath);
     }
 
     const destination = new URL(
@@ -182,24 +307,32 @@ export async function GET(
       error
     );
 
-    return NextResponse.json(
-      {
-        success: false,
-        routeVersion: ROUTE_VERSION,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
+    return new NextResponse(
+      'Internal Server Error',
       {
         status: 500,
         headers: {
-          'Cache-Control':
-            'no-store, no-cache, must-revalidate',
+          'Content-Type':
+            'text/plain; charset=utf-8',
+          'Cache-Control': 'no-store',
           'X-Robots-Tag':
             'noindex, nofollow',
+          'X-Orbit-Route-Version':
+            ROUTE_VERSION,
         },
       }
     );
   }
+}
+
+export async function HEAD(
+  req: Request,
+  context: RouteContext
+) {
+  const response = await GET(req, context);
+
+  return new NextResponse(null, {
+    status: response.status,
+    headers: response.headers,
+  });
 }
