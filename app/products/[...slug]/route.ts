@@ -4,11 +4,11 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V1-SAFE';
+const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V2-SEO';
 
 type RouteContext = {
   params: Promise<{
-    slug: string[];
+    slug: string;
   }>;
 };
 
@@ -21,6 +21,35 @@ function normalizePath(pathname: string): string {
   return clean === '/' ? '/' : `${clean}/`;
 }
 
+function createNotFoundResponse(oldPath: string) {
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page Not Found | Orbit Control Automation</title>
+</head>
+<body>
+  <main>
+    <h1>404 - Page Not Found</h1>
+    <p>The requested product page is no longer available.</p>
+    <p><a href="/products">Browse our current products</a></p>
+  </main>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=300, s-maxage=3600',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'X-Orbit-Legacy-Path': oldPath,
+    },
+  });
+}
+
 export async function GET(
   req: Request,
   context: RouteContext
@@ -28,8 +57,16 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
+    const decodedSlug = decodeURIComponent(
+      String(slug || '').trim()
+    );
+
+    if (!decodedSlug) {
+      return createNotFoundResponse('/product/');
+    }
+
     const oldPath = normalizePath(
-      `/product/${Array.isArray(slug) ? slug.join('/') : ''}`
+      `/product/${decodedSlug}`
     );
 
     const pathWithoutTrailingSlash =
@@ -66,21 +103,7 @@ export async function GET(
     }
 
     if (!redirectRow?.new_url) {
-      return NextResponse.json(
-        {
-          success: false,
-          routeVersion: ROUTE_VERSION,
-          status: 'LEGACY_REDIRECT_NOT_ENABLED_OR_NOT_FOUND',
-          oldPath,
-        },
-        {
-          status: 404,
-          headers: {
-            'Cache-Control': 'no-store',
-            'X-Robots-Tag': 'noindex, nofollow',
-          },
-        }
-      );
+      return createNotFoundResponse(oldPath);
     }
 
     const destination = new URL(
@@ -103,6 +126,11 @@ export async function GET(
       'legacy-product-redirect'
     );
 
+    response.headers.set(
+      'X-Robots-Tag',
+      'noindex, follow'
+    );
+
     return response;
   } catch (error) {
     console.error(
@@ -110,22 +138,28 @@ export async function GET(
       error
     );
 
-    return NextResponse.json(
-      {
-        success: false,
-        routeVersion: ROUTE_VERSION,
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
+    return new NextResponse(
+      'Internal Server Error',
       {
         status: 500,
         headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'no-store',
           'X-Robots-Tag': 'noindex, nofollow',
         },
       }
     );
   }
+}
+
+export async function HEAD(
+  req: Request,
+  context: RouteContext
+) {
+  const response = await GET(req, context);
+
+  return new NextResponse(null, {
+    status: response.status,
+    headers: response.headers,
+  });
 }
