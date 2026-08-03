@@ -4,6 +4,9 @@ export type ProductSeoInput = {
   name?: string | null;
   description?: string | null;
   condition?: string | null;
+
+  category?: string | null;
+  manufacturer?: string | null;
 };
 
 function cleanSeoText(value?: string | null): string {
@@ -90,7 +93,279 @@ function normalizeCondition(value: string): string {
 
   return condition || 'surplus';
 }
+type ProductTypeKey =
+  | 'plc'
+  | 'hmi'
+  | 'vfd'
+  | 'servo'
+  | 'relay'
+  | 'circuit-breaker'
+  | 'sensor'
+  | 'power-supply'
+  | 'controller'
+  | 'module'
+  | 'transmitter'
+  | 'encoder'
+  | 'analyzer'
+  | 'drive'
+  | 'industrial-part';
 
+function detectProductType(
+  name: string,
+  category: string,
+): ProductTypeKey {
+  const text = `${name} ${category}`.toLowerCase();
+
+  if (
+    /\bplc\b|programmable logic controller/.test(text)
+  ) {
+    return 'plc';
+  }
+
+  if (
+    /\bhmi\b|human machine interface|touch screen|touchscreen|operator panel/.test(
+      text,
+    )
+  ) {
+    return 'hmi';
+  }
+
+  if (
+    /\bvfd\b|variable frequency drive|frequency inverter|inverter drive/.test(
+      text,
+    )
+  ) {
+    return 'vfd';
+  }
+
+  if (
+    /servo motor|servo drive|servo amplifier|servomotor/.test(
+      text,
+    )
+  ) {
+    return 'servo';
+  }
+
+  if (
+    /\brelay\b|protective relay|auxiliary relay|solid state relay/.test(
+      text,
+    )
+  ) {
+    return 'relay';
+  }
+
+  if (
+    /circuit breaker|\bmccb\b|\bmcb\b|\bacb\b|breaker/.test(
+      text,
+    )
+  ) {
+    return 'circuit-breaker';
+  }
+
+  if (
+    /\bsensor\b|proximity sensor|photoelectric|pressure sensor|temperature sensor|level sensor/.test(
+      text,
+    )
+  ) {
+    return 'sensor';
+  }
+
+  if (
+    /power supply|power module|ac\/dc|dc\/dc/.test(
+      text,
+    )
+  ) {
+    return 'power-supply';
+  }
+
+  if (
+    /\bcontroller\b|control unit|control board/.test(
+      text,
+    )
+  ) {
+    return 'controller';
+  }
+
+  if (
+    /\bmodule\b|input module|output module|i\/o module|interface module/.test(
+      text,
+    )
+  ) {
+    return 'module';
+  }
+
+  if (
+    /\btransmitter\b|signal transmitter|pressure transmitter|temperature transmitter/.test(
+      text,
+    )
+  ) {
+    return 'transmitter';
+  }
+
+  if (
+    /\bencoder\b|rotary encoder|absolute encoder|incremental encoder/.test(
+      text,
+    )
+  ) {
+    return 'encoder';
+  }
+
+  if (
+    /\banalyzer\b|analyser|gas analyzer|process analyzer/.test(
+      text,
+    )
+  ) {
+    return 'analyzer';
+  }
+
+  if (
+    /\bdrive\b|motor drive|industrial drive/.test(
+      text,
+    )
+  ) {
+    return 'drive';
+  }
+
+  return 'industrial-part';
+}
+function getProductTypeContent(
+  productType: ProductTypeKey,
+): {
+  label: string;
+  applications: string;
+  systems: string;
+} {
+  const content: Record<
+    ProductTypeKey,
+    {
+      label: string;
+      applications: string;
+      systems: string;
+    }
+  > = {
+    plc: {
+      label: 'programmable logic controller',
+      applications:
+        'machine control, factory automation, production lines and process control',
+      systems:
+        'industrial PLC systems, control cabinets and automated machinery',
+    },
+
+    hmi: {
+      label: 'human-machine interface',
+      applications:
+        'operator control, process visualization, machine monitoring and production supervision',
+      systems:
+        'industrial control panels, automated machines and process systems',
+    },
+
+    vfd: {
+      label: 'variable frequency drive',
+      applications:
+        'motor speed control, energy management, pumps, fans and conveyor systems',
+      systems:
+        'industrial motor-control systems, HVAC equipment and automated machinery',
+    },
+
+    servo: {
+      label: 'servo control component',
+      applications:
+        'precision motion control, robotics, CNC machines and automated production equipment',
+      systems:
+        'servo systems, positioning equipment and high-accuracy machinery',
+    },
+
+    relay: {
+      label: 'industrial relay',
+      applications:
+        'electrical switching, protection, signal isolation and control-circuit operation',
+      systems:
+        'control panels, protection systems and industrial electrical equipment',
+    },
+
+    'circuit-breaker': {
+      label: 'industrial circuit breaker',
+      applications:
+        'electrical protection, overload protection, short-circuit protection and power distribution',
+      systems:
+        'switchboards, distribution panels and industrial electrical installations',
+    },
+
+    sensor: {
+      label: 'industrial sensor',
+      applications:
+        'machine detection, process monitoring, measurement and automated control',
+      systems:
+        'factory automation, production equipment and industrial instrumentation systems',
+    },
+
+    'power-supply': {
+      label: 'industrial power supply',
+      applications:
+        'control-voltage supply, automation-panel power and electronic equipment operation',
+      systems:
+        'PLCs, HMIs, control cabinets and industrial electronic systems',
+    },
+
+    controller: {
+      label: 'industrial controller',
+      applications:
+        'machine control, process regulation, automation and equipment management',
+      systems:
+        'industrial control systems, automated machinery and production equipment',
+    },
+
+    module: {
+      label: 'industrial automation module',
+      applications:
+        'signal processing, input/output control, machine communication and system expansion',
+      systems:
+        'PLC racks, control systems, industrial networks and automated machinery',
+    },
+
+    transmitter: {
+      label: 'industrial transmitter',
+      applications:
+        'process measurement, signal transmission, monitoring and instrumentation',
+      systems:
+        'process-control systems, industrial instrumentation and monitoring equipment',
+    },
+
+    encoder: {
+      label: 'industrial encoder',
+      applications:
+        'position feedback, speed measurement, motion control and machine synchronization',
+      systems:
+        'servo systems, motors, CNC equipment and automated machinery',
+    },
+
+    analyzer: {
+      label: 'industrial analyzer',
+      applications:
+        'process analysis, quality monitoring, measurement and industrial diagnostics',
+      systems:
+        'process plants, laboratory systems and industrial monitoring equipment',
+    },
+
+    drive: {
+      label: 'industrial drive',
+      applications:
+        'motor control, machine operation, speed regulation and automated equipment control',
+      systems:
+        'industrial machinery, production lines and motor-control systems',
+    },
+
+    'industrial-part': {
+      label: 'industrial automation spare part',
+      applications:
+        'maintenance, repair, replacement, equipment servicing and MRO inventory',
+      systems:
+        'industrial automation, electrical control and production equipment',
+    },
+  };
+
+  return content[productType];
+}
 function getConditionSentence(
   fullProductName: string,
   condition: string,
@@ -165,7 +440,10 @@ export function buildProductSeo(input: ProductSeoInput) {
     `${brand} ${partNumber} Industrial Spare Part`;
 
   const rawDescription = cleanSeoText(input.description);
+const category = cleanSeoText(input.category);
 
+const manufacturer =
+  cleanSeoText(input.manufacturer) || brand;
   const normalizedCondition = normalizeCondition(
     cleanSeoText(input.condition),
   );
@@ -175,7 +453,13 @@ export function buildProductSeo(input: ProductSeoInput) {
     brand,
     partNumber,
   );
+const productType = detectProductType(
+  normalizedName,
+  category,
+);
 
+const productTypeContent =
+  getProductTypeContent(productType);
   const fullProductName = [
     brand,
     partNumber !== 'Unknown Part Number'
@@ -202,19 +486,31 @@ export function buildProductSeo(input: ProductSeoInput) {
     : '';
 
   const smartDescription = [
-    originalDescription,
-    conditionSentence,
-    `${brand} industrial products are commonly used in automation, electrical control, factory maintenance, equipment repair and replacement applications.`,
-    `Orbit Control Automation supplies new, used, refurbished, surplus and obsolete industrial parts to customers worldwide, with international delivery available through DHL and FedEx.`,
-    `Contact our sales team to request current pricing, availability, additional photos or technical information for part number ${partNumber}.`,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  originalDescription,
 
-  const metaDescription = trimToLength(
-    `${brand} ${partNumber} ${normalizedName} available in ${normalizedCondition} condition. Request pricing and worldwide DHL or FedEx delivery from Orbit Control Automation.`,
-    155,
-  );
+  `${fullProductName} is a ${productTypeContent.label} manufactured by ${manufacturer}.`,
+
+  conditionSentence,
+
+  `This product is commonly used for ${productTypeContent.applications}.`,
+
+  `It is suitable for integration with ${productTypeContent.systems}.`,
+
+  `${brand} industrial products are commonly selected for factory maintenance, automation upgrades, equipment repair, production support and OEM replacement projects.`,
+
+  `Orbit Control Automation supplies new, used, refurbished, surplus and obsolete industrial automation parts to customers worldwide.`,
+
+  `International delivery is available through DHL and FedEx from the United Arab Emirates.`,
+
+  `Contact our sales team to request current pricing, availability, compatibility information, additional photos or technical details for part number ${partNumber}.`,
+]
+  .filter(Boolean)
+  .join(' ');
+
+ const metaDescription = trimToLength(
+  `${fullProductName} available in ${normalizedCondition} condition. Request pricing, availability and worldwide DHL or FedEx delivery from Orbit Control Automation.`,
+  155,
+);
 
   const imageAlt = trimToLength(
     `${brand} ${partNumber} ${normalizedName} ${normalizedCondition} industrial spare part`,
@@ -222,19 +518,17 @@ export function buildProductSeo(input: ProductSeoInput) {
   );
 
   return {
-    brand,
-    partNumber,
-    productName,
-    normalizedName,
-    condition: normalizedCondition,
-    title: seoTitle,
-
-    // الوصف الطويل الظاهر في الصفحة وداخل Product Schema
-    description: smartDescription,
-
-    // وصف Meta القصير المخصص لنتائج Google
-    metaDescription,
-
-    imageAlt,
-  };
+  brand,
+  partNumber,
+  productName,
+  normalizedName,
+  condition: normalizedCondition,
+  category,
+  manufacturer,
+  productType,
+  title: seoTitle,
+  description: smartDescription,
+  metaDescription,
+  imageAlt,
+};
 }
