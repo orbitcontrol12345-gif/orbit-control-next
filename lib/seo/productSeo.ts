@@ -509,9 +509,7 @@ const supportSection =
 const shippingSection =
   'Worldwide shipping is available via DHL and FedEx with secure packaging and fast international delivery from the United Arab Emirates.';
   
-  .filter(Boolean)
-  .join(' ');
- const smartDescription = [
+  const smartDescription = [
   originalDescription,
 
   `${manufacturer} ${partNumber} ${normalizedName} is a ${productTypeContent.label} designed for ${productTypeContent.applications}.`,
