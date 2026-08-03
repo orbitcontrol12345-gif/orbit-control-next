@@ -508,16 +508,26 @@ const supportSection =
 
 const shippingSection =
   'Worldwide shipping is available via DHL and FedEx with secure packaging and fast international delivery from the United Arab Emirates.';
-  const smartDescription = [
+  const specificationsSection = [
+  `Manufacturer: ${manufacturer}.`,
+  `Brand: ${brand}.`,
+  `Part number: ${partNumber}.`,
+  `Condition: ${normalizedCondition}.`,
+  category
+    ? `Category: ${category}.`
+    : '',
+  `Product type: ${productTypeContent.label}.`,
+]
+  .filter(Boolean)
+  .join(' ');
+ const smartDescription = [
   originalDescription,
-
-  `The ${partNumber} ${normalizedName} from ${manufacturer} is a ${productTypeContent.label} developed for industrial automation, maintenance and equipment replacement requirements.`,
-
+  specificationsSection,
   conditionSentence,
 
-  `This product is commonly used for ${productTypeContent.applications}.`,
+  `Designed for ${productTypeContent.applications}.`,
 
-  `It is suitable for integration with ${productTypeContent.systems}.`,
+  `Compatible with ${productTypeContent.systems}.`,
 
   applicationsSection,
 
@@ -525,18 +535,18 @@ const shippingSection =
 
   industriesSection,
 
-  `${brand} products are widely used in factory automation, electrical control, machine maintenance, production support and OEM replacement projects.`,
+  `${brand} industrial automation products are widely used in manufacturing, factory automation, machine maintenance, OEM replacement and process control applications.`,
 
-  `Orbit Control Automation supplies new, used, refurbished, surplus and obsolete industrial automation parts to customers worldwide.`,
+  `Orbit Control Automation supplies genuine new, used, refurbished, surplus and obsolete industrial automation spare parts with worldwide availability.`,
 
   shippingSection,
 
   supportSection,
 
-  `Request a quotation for part number ${partNumber} to confirm pricing, stock availability, compatibility, additional photos and estimated delivery time.`,
+  `Contact our sales team for pricing, stock availability, compatibility verification, additional product photos and fast worldwide delivery.`,
 ]
-  .filter(Boolean)
-  .join(' ');
+.filter(Boolean)
+.join(' ');
  const metaDescription = trimToLength(
   `${fullProductName} available in ${normalizedCondition} condition. Request pricing, availability and worldwide DHL or FedEx delivery from Orbit Control Automation.`,
   155,
