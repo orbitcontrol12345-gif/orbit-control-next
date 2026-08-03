@@ -462,7 +462,57 @@ export default async function ProductDetailPage({
                 )}
               </div>
             </div>
+<div className="mb-8 rounded-xl border border-navy-700 bg-navy-800 overflow-hidden">
+  <div className="border-b border-navy-700 px-5 py-4">
+    <h2 className="text-lg font-bold text-white">
+      Product Specifications
+    </h2>
+  </div>
 
+  <div className="grid grid-cols-1 md:grid-cols-2">
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">Manufacturer</span>
+      <span className="font-semibold text-white">{product.brand}</span>
+    </div>
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">Part Number</span>
+      <span className="font-mono font-semibold text-gold-500">
+        {product.partNumber}
+      </span>
+    </div>
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">Condition</span>
+      <span className="text-white">
+        {product.condition}
+      </span>
+    </div>
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">Availability</span>
+      <span className="text-white">
+        {product.inStock ? 'In Stock' : 'Request For Quote'}
+      </span>
+    </div>
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">SKU</span>
+      <span className="font-mono text-white">
+        {product.sku || product.partNumber}
+      </span>
+    </div>
+
+    <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+      <span className="text-slate-400">Shipping</span>
+      <span className="text-white">
+        DHL / FedEx Worldwide
+      </span>
+    </div>
+
+  </div>
+</div>
             <div className="mb-6">
               <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-slate-300">
                 Description
