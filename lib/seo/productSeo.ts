@@ -472,8 +472,20 @@ const productTypeContent =
     .replace(/\s+/g, ' ')
     .trim();
 
-  const seoTitle = trimToLength(fullProductName, 65);
-
+  const seoTitle = trimToLength(
+  [
+    manufacturer,
+    partNumber,
+    normalizedName,
+    productTypeContent.label,
+    normalizedCondition !== 'surplus'
+      ? `(${normalizedCondition})`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' '),
+  65,
+);
   const conditionSentence = getConditionSentence(
     fullProductName,
     normalizedCondition,
@@ -484,11 +496,22 @@ const productTypeContent =
   )
     ? rawDescription
     : '';
+const applicationsSection = `Typical applications include ${productTypeContent.applications}.`;
 
+const systemsSection = `Compatible with ${productTypeContent.systems} requiring reliable industrial performance.`;
+
+const industriesSection =
+  'Suitable for manufacturing, process automation, oil and gas, water treatment, power generation, food processing, packaging, pharmaceutical and OEM industrial applications.';
+
+const supportSection =
+  'Our technical sales team can assist with part identification, compatibility verification, replacement options and worldwide logistics support.';
+
+const shippingSection =
+  'Worldwide shipping is available via DHL and FedEx with secure packaging and fast international delivery from the United Arab Emirates.';
   const smartDescription = [
   originalDescription,
 
-  `${fullProductName} is a ${productTypeContent.label} manufactured by ${manufacturer}.`,
+  `The ${partNumber} ${normalizedName} from ${manufacturer} is a ${productTypeContent.label} developed for industrial automation, maintenance and equipment replacement requirements.`,
 
   conditionSentence,
 
@@ -496,17 +519,24 @@ const productTypeContent =
 
   `It is suitable for integration with ${productTypeContent.systems}.`,
 
-  `${brand} industrial products are commonly selected for factory maintenance, automation upgrades, equipment repair, production support and OEM replacement projects.`,
+  applicationsSection,
+
+  systemsSection,
+
+  industriesSection,
+
+  `${brand} products are widely used in factory automation, electrical control, machine maintenance, production support and OEM replacement projects.`,
 
   `Orbit Control Automation supplies new, used, refurbished, surplus and obsolete industrial automation parts to customers worldwide.`,
 
-  `International delivery is available through DHL and FedEx from the United Arab Emirates.`,
+  shippingSection,
 
-  `Contact our sales team to request current pricing, availability, compatibility information, additional photos or technical details for part number ${partNumber}.`,
+  supportSection,
+
+  `Request a quotation for part number ${partNumber} to confirm pricing, stock availability, compatibility, additional photos and estimated delivery time.`,
 ]
   .filter(Boolean)
   .join(' ');
-
  const metaDescription = trimToLength(
   `${fullProductName} available in ${normalizedCondition} condition. Request pricing, availability and worldwide DHL or FedEx delivery from Orbit Control Automation.`,
   155,
