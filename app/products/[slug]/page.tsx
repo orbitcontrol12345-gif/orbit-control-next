@@ -95,11 +95,12 @@ export async function generateMetadata({
   description: product.description,
   condition: product.condition,
 });
-  
+
 const {
   brand,
   partNumber,
   title,
+  metaDescription,
   description,
   imageAlt,
 } = seo;
@@ -113,8 +114,8 @@ const {
     `${SITE_URL}/logo.png`;
 
   return {
-    title,
-    description,
+  title,
+  description: metaDescription,
 
     alternates: {
       canonical: productPath,
@@ -134,11 +135,11 @@ const {
     },
 
     openGraph: {
-      type: 'website',
-      siteName: 'Orbit Control Automation',
-      title,
-      description,
-      url: productUrl,
+  type: 'website',
+  siteName: 'Orbit Control Automation',
+  title,
+  description: metaDescription,
+  url: productUrl,
 
       images: [
         {
@@ -149,11 +150,11 @@ const {
     },
 
     twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [image],
-    },
+  card: 'summary_large_image',
+  title,
+  description: metaDescription,
+  images: [image],
+},
 
     other: {
       'product:brand': brand,
