@@ -7,6 +7,15 @@ export const metadata: Metadata = {
   title: 'Request a Quote — Industrial Automation Parts',
   description:
     'Submit an RFQ for industrial automation spare parts. PLCs, HMIs, drives, sensors, and more. Fast 24-hour quote response. Worldwide shipping.',
+
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
 };
 
 export default function RFQPage() {
