@@ -519,9 +519,9 @@ export default async function ProductDetailPage({
                 Description
               </h2>
 
-              <p className="text-sm leading-relaxed text-slate-300">
+              <div className="space-y-4 whitespace-pre-line text-sm leading-7 text-slate-300">
   {seo.description}
-</p>
+</div>
             </div>
 
             <div className="mb-6 flex flex-col gap-3 sm:flex-row">
