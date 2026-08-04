@@ -431,8 +431,8 @@ manufacturer: {
           </div>
 
           <div className="lg:col-span-3">
-            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-5">
-              <div className="rounded-xl border border-gold-500/30 bg-gold-500/5 p-5 sm:col-span-2">
+            <div className="mb-5 grid grid-cols-12 gap-3">
+              <div className="col-span-7 rounded-xl border border-gold-500/30 bg-gold-500/5 p-5">
                 <p className="mb-1 flex items-center gap-1 text-xs uppercase tracking-wider text-gold-500">
                   <Tag size={12} />
                   Part Number
@@ -444,7 +444,7 @@ manufacturer: {
               </div>
 
               
-              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
+              <div className="col-span-2 rounded-lg border border-navy-700 bg-navy-800 p-3">
                 <p className="mb-1 text-xs text-slate-500">
                   Condition
                 </p>
@@ -454,7 +454,7 @@ manufacturer: {
                 />
               </div>
 
-              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
+             <div className="col-span-3 rounded-lg border border-navy-700 bg-navy-800 p-3">
                 <p className="mb-1 text-xs text-slate-500">
                   Availability
                 </p>
