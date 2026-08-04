@@ -519,8 +519,22 @@ export default async function ProductDetailPage({
                 Description
               </h2>
 
-              <div className="space-y-4 whitespace-pre-line text-sm leading-7 text-slate-300">
-  {seo.description}
+              <div className="space-y-5 text-sm leading-8 text-slate-300">
+  {seo.description
+    .split('\n\n')
+    .filter(Boolean)
+    .map((paragraph, index) => (
+      <p
+        key={`${product.id}-description-${index}`}
+        className={
+          index === 0
+            ? 'font-medium text-slate-200'
+            : ''
+        }
+      >
+        {paragraph}
+      </p>
+    ))}
 </div>
             </div>
 
