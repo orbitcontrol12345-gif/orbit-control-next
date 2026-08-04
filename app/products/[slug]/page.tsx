@@ -90,10 +90,15 @@ export async function generateMetadata({
 
  const seo = buildProductSeo({
   brand: product.brand,
+  manufacturer: product.brand,
   partNumber: product.partNumber,
   name: product.name,
   description: product.description,
   condition: product.condition,
+  category:
+    product.category ||
+    product.tags?.[0] ||
+    'Industrial Automation Parts',
 });
 
 const {
@@ -227,62 +232,89 @@ export default async function ProductDetailPage({
 
  const schemaDescription = seo.description;
 
-  const productSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    '@id': `${productUrl}#product`,
+ const productSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  '@id': `${productUrl}#product`,
+
+  url: productUrl,
+
+  name: title,
+
+  description: schemaDescription,
+
+  image:
+    productImages.length > 0
+      ? productImages
+      : [`${SITE_URL}/logo.png`],
+
+  sku: product.sku || product.partNumber,
+
+  mpn: product.partNumber,
+
+  brand: {
+    '@type': 'Brand',
+    name: brand,
+  },
+
+  manufacturer: {
+    '@type': 'Organization',
+    name: brand,
+  },
+
+  category:
+    product.category ||
+    product.tags?.[0] ||
+    'Industrial Automation Parts',
+
+  itemCondition: getSchemaCondition(
+    product.condition,
+  ),
+
+  additionalProperty: [
+    {
+      '@type': 'PropertyValue',
+      name: 'Part Number',
+      value: partNumber,
+    },
+    {
+      '@type': 'PropertyValue',
+      name: 'Manufacturer',
+      value: brand,
+    },
+    {
+      '@type': 'PropertyValue',
+      name: 'Condition',
+      value: product.condition,
+    },
+    {
+      '@type': 'PropertyValue',
+      name: 'Availability',
+      value: product.inStock
+        ? 'In Stock'
+        : 'Request for Quote',
+    },
+  ],
+
+  offers: {
+    '@type': 'Offer',
 
     url: productUrl,
-    name: product.name,
-    description: schemaDescription,
 
-    image:
-      productImages.length > 0
-        ? productImages
-        : [`${SITE_URL}/logo.png`],
-
-    sku: product.sku || product.partNumber,
-    mpn: product.partNumber,
-
-    brand: {
-      '@type': 'Brand',
-      name: product.brand,
-    },
-
-    manufacturer: {
-      '@type': 'Organization',
-      name: product.brand,
-    },
+    availability: product.inStock
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/PreOrder',
 
     itemCondition: getSchemaCondition(
       product.condition,
     ),
 
-    category:
-      product.tags?.length > 0
-        ? product.tags[0]
-        : 'Industrial Automation Parts',
-
-    additionalProperty: [
-      {
-        '@type': 'PropertyValue',
-        name: 'Part Number',
-        value: product.partNumber,
-      },
-      {
-        '@type': 'PropertyValue',
-        name: 'Condition',
-        value: product.condition,
-      },
-      {
-        '@type': 'PropertyValue',
-        name: 'Availability',
-        value: product.inStock
-          ? 'In Stock'
-          : 'Request for Quote',
-      },
-    ],
-  };
+    seller: {
+      '@type': 'Organization',
+      name: 'Orbit Control Automation',
+    },
+  },
+};
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
