@@ -494,7 +494,11 @@ export async function getSupabaseRelatedProducts(
     .eq('is_active', true)
     .neq('catalog_visible', false)
     .or(relatedFilters)
-    .limit(12);
+    .limit(30);
+
+  if (product.id) {
+    query = query.neq('id', product.id);
+  }
 
   if (product.sku) {
     query = query.neq('sku', product.sku);
@@ -503,16 +507,103 @@ export async function getSupabaseRelatedProducts(
   const { data, error } = await query;
 
   if (error) {
-    console.error('Related products query failed:', error);
+    console.error(
+      'Related products query failed:',
+      error,
+    );
+
     return [];
   }
 
-  return (data || [])
-    .map(mapSupabaseProduct)
-    .filter(
-      (item) =>
-        item.imageUrl &&
-        item.imageUrl !== '/placeholder-product.jpg',
-    )
+  const normalizedBrand = String(
+    product.brand || '',
+  )
+    .trim()
+    .toLowerCase();
+
+  const normalizedCategory = String(
+    product.category || '',
+  )
+    .trim()
+    .toLowerCase();
+
+  const uniqueProducts = new Map<
+    string,
+    Product
+  >();
+
+  for (const row of data || []) {
+    const item = mapSupabaseProduct(row);
+
+    if (
+      !item.imageUrl ||
+      item.imageUrl === '/placeholder-product.jpg'
+    ) {
+      continue;
+    }
+
+    if (
+      item.id === product.id ||
+      (product.sku && item.sku === product.sku)
+    ) {
+      continue;
+    }
+
+    const uniqueKey = String(
+      item.id ||
+        item.sku ||
+        item.slug ||
+        item.partNumber,
+    );
+
+    if (!uniqueProducts.has(uniqueKey)) {
+      uniqueProducts.set(uniqueKey, item);
+    }
+  }
+
+  return Array.from(uniqueProducts.values())
+    .map((item) => {
+      const itemBrand = String(item.brand || '')
+        .trim()
+        .toLowerCase();
+
+      const itemCategory = String(
+        item.category || '',
+      )
+        .trim()
+        .toLowerCase();
+
+      let score = 0;
+
+      if (
+        normalizedBrand &&
+        itemBrand === normalizedBrand
+      ) {
+        score += 10;
+      }
+
+      if (
+        normalizedCategory &&
+        itemCategory === normalizedCategory
+      ) {
+        score += 6;
+      }
+
+      if (
+        normalizedBrand &&
+        normalizedCategory &&
+        itemBrand === normalizedBrand &&
+        itemCategory === normalizedCategory
+      ) {
+        score += 10;
+      }
+
+      return {
+        item,
+        score,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map(({ item }) => item)
     .slice(0, 4);
 }
