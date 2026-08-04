@@ -239,7 +239,7 @@ export default async function ProductDetailPage({
 
   url: productUrl,
 
-  name: title,
+ name: product.name,
 
   description: schemaDescription,
 
