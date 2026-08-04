@@ -443,18 +443,7 @@ manufacturer: {
                 </p>
               </div>
 
-              <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
-                <p className="mb-1 flex items-center gap-1 text-xs text-slate-500">
-                  <Boxes size={11} />
-                  SKU
-                </p>
-
-                <p className="font-mono text-sm text-slate-300">
-                  {product.sku ||
-                    product.partNumber}
-                </p>
-              </div>
-
+              
               <div className="rounded-lg border border-navy-700 bg-navy-800 p-3">
                 <p className="mb-1 text-xs text-slate-500">
                   Condition
