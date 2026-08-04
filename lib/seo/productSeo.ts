@@ -532,8 +532,8 @@ const smartDescription = [
 
   `Request a quotation for part number ${partNumber} to confirm current pricing, stock availability, compatibility, additional photos and estimated delivery time.`,
 ]
-  .filter(Boolean)
-  .join(' ');
+.filter(Boolean)
+.join('\n\n');
  const metaDescription = trimToLength(
   `${fullProductName} available in ${normalizedCondition} condition. Request pricing, availability and worldwide DHL or FedEx delivery from Orbit Control Automation.`,
   155,
