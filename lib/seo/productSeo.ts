@@ -1,3 +1,4 @@
+import { PRODUCT_TYPES } from './productTypeLibrary';
 export type ProductSeoInput = {
   brand?: string | null;
   partNumber?: string | null;
@@ -453,13 +454,29 @@ const manufacturer =
     brand,
     partNumber,
   );
-const productType = detectProductType(
+const productSearchText = [
+  productName,
   normalizedName,
   category,
-);
+]
+  .filter(Boolean)
+  .join(' ')
+  .toUpperCase();
+
+const productType = (
+  Object.entries(PRODUCT_TYPES).find(
+    ([key, type]) =>
+      key !== 'INDUSTRIAL_PART' &&
+      type.keywords.some((keyword) =>
+        productSearchText.includes(
+          keyword.toUpperCase(),
+        ),
+      ),
+  )?.[0] || 'INDUSTRIAL_PART'
+) as keyof typeof PRODUCT_TYPES;
 
 const productTypeContent =
-  getProductTypeContent(productType);
+  PRODUCT_TYPES[productType];
   const fullProductName = [
     brand,
     partNumber !== 'Unknown Part Number'
