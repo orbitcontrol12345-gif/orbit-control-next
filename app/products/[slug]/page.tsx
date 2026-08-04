@@ -252,15 +252,15 @@ export default async function ProductDetailPage({
 
   mpn: product.partNumber,
 
-  brand: {
-    '@type': 'Brand',
-    name: brand,
-  },
+ brand: {
+  '@type': 'Brand',
+  name: product.brand,
+},
 
-  manufacturer: {
-    '@type': 'Organization',
-    name: brand,
-  },
+manufacturer: {
+  '@type': 'Organization',
+  name: product.brand,
+},
 
   category:
     product.category ||
@@ -275,12 +275,12 @@ export default async function ProductDetailPage({
     {
       '@type': 'PropertyValue',
       name: 'Part Number',
-      value: partNumber,
+      value: product.partNumber,
     },
     {
       '@type': 'PropertyValue',
-      name: 'Manufacturer',
-      value: brand,
+  name: 'Manufacturer',
+  value: product.brand,
     },
     {
       '@type': 'PropertyValue',
