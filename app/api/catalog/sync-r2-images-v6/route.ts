@@ -283,25 +283,25 @@ export async function GET() {
       throw new Error('Missing eBay access token');
     }
 
-        const { data: products, error } =
-      await supabaseAdmin
-        .from('products')
-        .select(`
-          id,
-          ebay_item_id,
-          image_url,
-          ebay_image_url,
-          ebay_gallery_urls,
-          r2_image_url,
-          r2_gallery_urls,
-          image_status,
-          image_count
-        `)
-        .eq('marketplace', MARKETPLACE)
-        .not('ebay_item_id', 'is', null)
-        .gt('id', currentCursor)
-        .order('id', { ascending: true })
-        .limit(LIMIT);
+       const { data: products, error } =
+  await supabaseAdmin
+    .from('products')
+    .select(`
+      id,
+      ebay_item_id,
+      image_url,
+      ebay_image_url,
+      ebay_gallery_urls,
+      r2_image_url,
+      r2_gallery_urls,
+      image_status,
+      image_count
+    `)
+    .eq('marketplace', MARKETPLACE)
+    .not('ebay_item_id', 'is', null)
+    .is('image_status', null)
+    .order('id', { ascending: true })
+    .limit(LIMIT);
 
     if (error) {
       throw error;
@@ -557,7 +557,7 @@ export async function GET() {
         })
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
-        .gt('id', nextCursor),
+        .is('image_status', null)
 
       supabaseAdmin
         .from('products')
