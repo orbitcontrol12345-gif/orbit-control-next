@@ -414,10 +414,7 @@ console.log(
               await downloadImageToBuffer(imageUrl);
 
             const key = makeR2ProductImageKey({
-              ebayItemId,
-              index,
-              ext: 'jpg',
-            });
+             
 
             await uploadBufferToR2({
               key,
