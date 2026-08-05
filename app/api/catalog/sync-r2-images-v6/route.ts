@@ -535,39 +535,38 @@ export async function GET() {
       throw jobUpdateError;
     }
 
-    const [
-      doneCountResult,
-      upgradeCountResult,
-      failedCountResult,
-    ] = await Promise.all([
-      supabaseAdmin
-        .from('products')
-        .select('*', {
-          count: 'exact',
-          head: true,
-        })
-        .eq('marketplace', MARKETPLACE)
-        .eq('image_status', DONE_STATUS),
+   const [
+  doneCountResult,
+  upgradeCountResult,
+  failedCountResult,
+] = await Promise.all([
+  supabaseAdmin
+    .from('products')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('marketplace', MARKETPLACE)
+    .eq('image_status', DONE_STATUS),
 
-      supabaseAdmin
-        .from('products')
-        .select('*', {
-          count: 'exact',
-          head: true,
-        })
-        .eq('marketplace', MARKETPLACE)
-        .not('ebay_item_id', 'is', null)
-        .is('image_status', null)
+  supabaseAdmin
+    .from('products')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('marketplace', MARKETPLACE)
+    .is('image_status', null),
 
-      supabaseAdmin
-        .from('products')
-        .select('*', {
-          count: 'exact',
-          head: true,
-        })
-        .eq('marketplace', MARKETPLACE)
-        .eq('image_status', FAILED_STATUS),
-    ]);
+  supabaseAdmin
+    .from('products')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('marketplace', MARKETPLACE)
+    .eq('image_status', FAILED_STATUS),
+]);
 
     if (doneCountResult.error) {
       throw doneCountResult.error;
