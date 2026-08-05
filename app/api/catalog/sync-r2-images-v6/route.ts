@@ -283,25 +283,25 @@ export async function GET() {
       throw new Error('Missing eBay access token');
     }
 
-       const { data: products, error } =
-  await supabaseAdmin
-    .from('products')
-    .select(`
-      id,
-      ebay_item_id,
-      image_url,
-      ebay_image_url,
-      ebay_gallery_urls,
-      r2_image_url,
-      r2_gallery_urls,
-      image_status,
-      image_count
-    `)
-    .eq('marketplace', MARKETPLACE)
-    .not('ebay_item_id', 'is', null)
-    .is('image_status', null)
-    .order('id', { ascending: true })
-    .limit(LIMIT);
+        const { data: products, error } =
+      await supabaseAdmin
+        .from('products')
+        .select(`
+          id,
+          ebay_item_id,
+          image_url,
+          ebay_image_url,
+          ebay_gallery_urls,
+          r2_image_url,
+          r2_gallery_urls,
+          image_status,
+          image_count
+        `)
+        .eq('marketplace', MARKETPLACE)
+        .not('ebay_item_id', 'is', null)
+        .gt('id', currentCursor)
+        .order('id', { ascending: true })
+        .limit(LIMIT);
 
     if (error) {
       throw error;
@@ -355,15 +355,7 @@ export async function GET() {
             ebayItemId,
             accessToken
           );
-console.log(
-  'MAIN IMAGE:',
-  item?.image?.imageUrl
-);
 
-console.log(
-  'ADDITIONAL IMAGES:',
-  item?.additionalImages
-);
           ebayGallery = item
             ? getEbayGallery(item)
             : [];
@@ -543,38 +535,39 @@ console.log(
       throw jobUpdateError;
     }
 
-   const [
-  doneCountResult,
-  upgradeCountResult,
-  failedCountResult,
-] = await Promise.all([
-  supabaseAdmin
-    .from('products')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('marketplace', MARKETPLACE)
-    .eq('image_status', DONE_STATUS),
+    const [
+      doneCountResult,
+      upgradeCountResult,
+      failedCountResult,
+    ] = await Promise.all([
+      supabaseAdmin
+        .from('products')
+        .select('*', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('marketplace', MARKETPLACE)
+        .eq('image_status', DONE_STATUS),
 
-  supabaseAdmin
-    .from('products')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('marketplace', MARKETPLACE)
-    .is('image_status', null),
+      supabaseAdmin
+        .from('products')
+        .select('*', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('marketplace', MARKETPLACE)
+        .not('ebay_item_id', 'is', null)
+        .gt('id', nextCursor),
 
-  supabaseAdmin
-    .from('products')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('marketplace', MARKETPLACE)
-    .eq('image_status', FAILED_STATUS),
-]);
+      supabaseAdmin
+        .from('products')
+        .select('*', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('marketplace', MARKETPLACE)
+        .eq('image_status', FAILED_STATUS),
+    ]);
 
     if (doneCountResult.error) {
       throw doneCountResult.error;
