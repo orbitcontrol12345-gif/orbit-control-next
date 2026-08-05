@@ -350,25 +350,7 @@ export async function GET() {
 
         // Always ask eBay first. Stored images are only a fallback when
         // eBay has no images or the request fails for a non-rate-limit reason.
-        try {
-         const item = await fetchEbayItemDetails(
-  ebayItemId,
-  accessToken
-);
-
-console.log(
-  'EBAY GALLERY',
-  ebayItemId,
-  JSON.stringify(item, null, 2)
-);
-            ebayItemId,
-            accessToken
-          );
-
-          ebayGallery = item
-            ? getEbayGallery(item)
-            : [];
-        } catch (ebayError) {
+       
           const message =
             ebayError instanceof Error
               ? ebayError.message
