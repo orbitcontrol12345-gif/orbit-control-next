@@ -350,7 +350,24 @@ export async function GET() {
 
         // Always ask eBay first. Stored images are only a fallback when
         // eBay has no images or the request fails for a non-rate-limit reason.
-       
+        try {
+          const item = await fetchEbayItemDetails(
+            ebayItemId,
+            accessToken
+          );
+console.log(
+  'MAIN IMAGE:',
+  item?.image?.imageUrl
+);
+
+console.log(
+  'ADDITIONAL IMAGES:',
+  item?.additionalImages
+);
+          ebayGallery = item
+            ? getEbayGallery(item)
+            : [];
+        } catch (ebayError) {
           const message =
             ebayError instanceof Error
               ? ebayError.message
@@ -396,7 +413,10 @@ export async function GET() {
               await downloadImageToBuffer(imageUrl);
 
             const key = makeR2ProductImageKey({
-             
+              ebayItemId,
+              index,
+              ext: 'jpg',
+            });
 
             await uploadBufferToR2({
               key,
