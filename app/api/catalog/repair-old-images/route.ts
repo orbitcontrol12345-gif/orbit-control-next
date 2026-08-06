@@ -248,9 +248,9 @@ export async function GET() {
         `)
         .eq('marketplace', MARKETPLACE)
         .not('ebay_item_id', 'is', null)
-       .eq('image_count', 1)
+.eq('image_count', 1)
 .lt('created_at', '2026-07-16T00:00:00.000Z')
-.gt('id', nextCursor),
+.gt('id', nextCursor)
 .order('id', { ascending: true })
 .limit(LIMIT);
     if (error) {
