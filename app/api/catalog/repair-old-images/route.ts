@@ -17,7 +17,6 @@ const JOB_KEY = 'repair-old-images';
 const LIMIT = 1;
 const MAX_IMAGES = 10;
 const MARKETPLACE = 'EBAY_US';
-const SELLER = 'orbitcontrol';
 
 const DONE_STATUS = 'r2_gallery_hd_synced';
 const FAILED_STATUS = 'r2_gallery_failed';
@@ -92,139 +91,89 @@ function uniqueImageUrls(values: unknown[]): string[] {
   ).slice(0, MAX_IMAGES);
 }
 
-function getStoredGallery(product: ProductRow): string[] {
-  const ebayGallery = Array.isArray(
-    product.ebay_gallery_urls
-  )
-    ? product.ebay_gallery_urls
-    : [];
-
-  return uniqueImageUrls([
-    ...ebayGallery,
-    product.ebay_image_url,
-    product.image_url,
-  ]);
+function decodeXml(value: string): string {
+  return value
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
 }
 
-async function fetchEbayItemDetails(
+async function fetchEbayGalleryFromTrading(
   ebayItemId: string,
   accessToken: string
-): Promise<any | null> {
-  const params = new URLSearchParams({
-    q: ebayItemId,
-    limit: '10',
-    filter: `sellers:{${SELLER}}`,
-  });
+): Promise<string[]> {
+  const requestXml = `<?xml version="1.0" encoding="utf-8"?>
+<GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <ItemID>${ebayItemId}</ItemID>
+  <DetailLevel>ReturnAll</DetailLevel>
+</GetItemRequest>`;
 
-  const searchResponse = await fetch(
-    `https://api.ebay.com/buy/browse/v1/item_summary/search?${params.toString()}`,
+  const response = await fetch(
+    'https://api.ebay.com/ws/api.dll',
     {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-        'Accept-Language': 'en-US',
+        'Content-Type': 'text/xml',
+        'X-EBAY-API-CALL-NAME': 'GetItem',
+        'X-EBAY-API-SITEID': '0',
+        'X-EBAY-API-COMPATIBILITY-LEVEL': '1423',
+        'X-EBAY-API-IAF-TOKEN': accessToken,
       },
+      body: requestXml,
       cache: 'no-store',
     }
   );
 
-  if (searchResponse.status === 429) {
+  const responseText = await response.text();
+
+  if (response.status === 429) {
     throw new Error('EBAY_RATE_LIMIT_429');
   }
 
-  const searchData = await searchResponse
-    .json()
-    .catch(() => null);
-
-  if (!searchResponse.ok) {
+  if (!response.ok) {
     throw new Error(
-      `EBAY_SEARCH_${searchResponse.status}: ${JSON.stringify(
-        searchData || {}
-      ).slice(0, 500)}`
+      `EBAY_TRADING_HTTP_${response.status}: ${responseText.slice(
+        0,
+        500
+      )}`
     );
   }
 
-  const summaries = Array.isArray(
-    searchData?.itemSummaries
-  )
-    ? searchData.itemSummaries
-    : [];
+  const acknowledgement =
+    responseText.match(
+      /<(?:\w+:)?Ack>([\s\S]*?)<\/(?:\w+:)?Ack>/i
+    )?.[1]?.trim() || '';
 
-  const itemSummary =
-    summaries.find((item: any) => {
-      const legacyItemId = String(
-        item?.legacyItemId || ''
-      ).trim();
+  if (
+    acknowledgement &&
+    acknowledgement !== 'Success' &&
+    acknowledgement !== 'Warning'
+  ) {
+    const errorMessage =
+      responseText.match(
+        /<(?:\w+:)?LongMessage>([\s\S]*?)<\/(?:\w+:)?LongMessage>/i
+      )?.[1] ||
+      responseText.match(
+        /<(?:\w+:)?ShortMessage>([\s\S]*?)<\/(?:\w+:)?ShortMessage>/i
+      )?.[1] ||
+      'Unknown eBay Trading API error';
 
-      const browseItemId = String(
-        item?.itemId || ''
-      ).trim();
-
-      const itemIdFromComposite =
-        browseItemId.split('|')?.[1] || '';
-
-      return (
-        legacyItemId === ebayItemId ||
-        itemIdFromComposite === ebayItemId
-      );
-    }) ||
-    summaries[0] ||
-    null;
-
-  if (!itemSummary) {
-    return null;
+    throw new Error(
+      `EBAY_TRADING_ERROR: ${decodeXml(
+        errorMessage.trim()
+      )}`
+    );
   }
 
-  const browseItemId = String(
-    itemSummary.itemId || ''
-  ).trim();
+  const pictureUrls = Array.from(
+    responseText.matchAll(
+      /<(?:\w+:)?PictureURL>([\s\S]*?)<\/(?:\w+:)?PictureURL>/gi
+    )
+  ).map((match) => decodeXml(match[1].trim()));
 
-  if (!browseItemId) {
-    return itemSummary;
-  }
-
-  const detailResponse = await fetch(
-    `https://api.ebay.com/buy/browse/v1/item/${encodeURIComponent(
-      browseItemId
-    )}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-        'Accept-Language': 'en-US',
-      },
-      cache: 'no-store',
-    }
-  );
-
-  if (detailResponse.status === 429) {
-    throw new Error('EBAY_RATE_LIMIT_429');
-  }
-
-  if (!detailResponse.ok) {
-    return itemSummary;
-  }
-
-  const itemDetails = await detailResponse
-    .json()
-    .catch(() => null);
-
-  return itemDetails || itemSummary;
-}
-
-function getEbayGallery(item: any): string[] {
-  const additionalImages = Array.isArray(
-    item?.additionalImages
-  )
-    ? item.additionalImages.map(
-        (image: any) => image?.imageUrl
-      )
-    : [];
-
-  return uniqueImageUrls([
-    item?.image?.imageUrl,
-    ...additionalImages,
-  ]);
+  return uniqueImageUrls(pictureUrls);
 }
 
 async function ensureJobRow() {
@@ -343,23 +292,16 @@ export async function GET() {
           throw new Error('Missing ebay_item_id');
         }
 
-        const storedGallery = getStoredGallery(product);
-
         let ebayGallery: string[] = [];
-        let source = 'ebay_item_details';
+        let source = 'ebay_trading_get_item';
         let ebayFetchError: string | null = null;
 
-        // Always ask eBay first. Stored images are only a fallback when
-        // eBay has no images or the request fails for a non-rate-limit reason.
         try {
-          const item = await fetchEbayItemDetails(
-            ebayItemId,
-            accessToken
-          );
-
-          ebayGallery = item
-            ? getEbayGallery(item)
-            : [];
+          ebayGallery =
+            await fetchEbayGalleryFromTrading(
+              ebayItemId,
+              accessToken
+            );
         } catch (ebayError) {
           const message =
             ebayError instanceof Error
@@ -372,25 +314,24 @@ export async function GET() {
 
           ebayFetchError = message;
           console.error(
-            `EBAY IMAGE FETCH FAILED ${ebayItemId}:`,
+            `EBAY TRADING IMAGE FETCH FAILED ${ebayItemId}:`,
             ebayError
           );
         }
 
         if (ebayFetchError) {
-  throw new Error(
-    `EBAY_GALLERY_FETCH_FAILED: ${ebayFetchError}`
-  );
-}
+          throw new Error(
+            `EBAY_GALLERY_FETCH_FAILED: ${ebayFetchError}`
+          );
+        }
 
-if (ebayGallery.length < 2) {
-  throw new Error(
-    `EBAY_GALLERY_INCOMPLETE: eBay returned ${ebayGallery.length} image(s)`
-  );
-}
+        if (ebayGallery.length < 2) {
+          throw new Error(
+            `EBAY_GALLERY_INCOMPLETE: eBay returned ${ebayGallery.length} image(s)`
+          );
+        }
 
-const gallery = ebayGallery;
-source = 'ebay_item_details';
+        const gallery = ebayGallery;
 
         const r2Urls: string[] = [];
 
