@@ -247,12 +247,12 @@ export async function GET() {
           image_count
         `)
         .eq('marketplace', MARKETPLACE)
-        .not('ebay_item_id', 'is', null)
-        .eq('image_count', 1)
-        .gt('id', currentCursor)
-        .order('id', { ascending: true })
-        .limit(LIMIT);
-
+.not('ebay_item_id', 'is', null)
+.eq('image_count', 1)
+.lt('created_at', '2026-07-16T00:00:00.000Z')
+.gt('id', currentCursor)
+.order('id', { ascending: true })
+.limit(LIMIT);
     if (error) {
       throw error;
     }
@@ -498,9 +498,10 @@ export async function GET() {
           head: true,
         })
         .eq('marketplace', MARKETPLACE)
-        .not('ebay_item_id', 'is', null)
-        .eq('image_count', 1)
-        .gt('id', nextCursor),
+.not('ebay_item_id', 'is', null)
+.eq('image_count', 1)
+.lt('created_at', '2026-07-16T00:00:00.000Z')
+.gt('id', nextCursor),
 
       supabaseAdmin
         .from('products')
