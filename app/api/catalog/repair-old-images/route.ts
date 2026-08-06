@@ -14,7 +14,7 @@ export const maxDuration = 300;
 const ROUTE_VERSION = 'REPAIR-OLD-IMAGES';
 const JOB_KEY = 'repair-old-images';
 
-const LIMIT = 5;
+const LIMIT = 1;
 const MAX_IMAGES = 10;
 const MARKETPLACE = 'EBAY_US';
 const SELLER = 'orbitcontrol';
@@ -377,20 +377,20 @@ export async function GET() {
           );
         }
 
-        const gallery =
-          ebayGallery.length > 0
-            ? ebayGallery
-            : storedGallery;
+        if (ebayFetchError) {
+  throw new Error(
+    `EBAY_GALLERY_FETCH_FAILED: ${ebayFetchError}`
+  );
+}
 
-        if (ebayGallery.length === 0) {
-          source = ebayFetchError
-            ? 'stored_gallery_fallback_after_ebay_error'
-            : 'stored_gallery_fallback_no_ebay_images';
-        }
+if (ebayGallery.length < 2) {
+  throw new Error(
+    `EBAY_GALLERY_INCOMPLETE: eBay returned ${ebayGallery.length} image(s)`
+  );
+}
 
-        if (gallery.length === 0) {
-          throw new Error('No product images found');
-        }
+const gallery = ebayGallery;
+source = 'ebay_item_details';
 
         const r2Urls: string[] = [];
 
