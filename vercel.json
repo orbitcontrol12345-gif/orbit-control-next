@@ -24,5 +24,12 @@
       "path": "/api/cron/bridge-health",
       "schedule": "* * * * *"
     }
+    {
+      "$schema": "https://openapi.vercel.sh/vercel.json",
+      "crons": [
+    {
+      "path": "/api/catalog/repair-old-images",
+      "schedule": "*/10 * * * *"
+    }
   ]
 }
