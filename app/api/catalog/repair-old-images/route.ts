@@ -247,10 +247,7 @@ export async function GET() {
           image_count
         `)
         .eq('marketplace', MARKETPLACE)
-.not('ebay_item_id', 'is', null)
-.eq('image_count', 1)
-.lt('created_at', '2026-07-16T00:00:00.000Z')
-.gt('id', currentCursor)
+.eq('image_status', 'repair_duplicate_gallery')
 .order('id', { ascending: true })
 .limit(LIMIT);
     if (error) {
@@ -430,12 +427,39 @@ export async function GET() {
         }
 
         failed++;
-        lastCompletedId = product.id;
 
-        await supabaseAdmin
-          .from('products')
-          .update({
-            image_status: FAILED_STATUS,
+let failureStatus = FAILED_STATUS;
+
+if (
+  errorMessage.includes('EBAY_GALLERY_INCOMPLETE')
+) {
+  failureStatus = 'repair_single_image_source';
+} else if (
+  errorMessage.includes(
+    'intellectual property rights owner'
+  )
+) {
+  failureStatus = 'repair_ebay_unavailable';
+} else {
+  failureStatus = 'repair_retry';
+}
+
+await supabaseAdmin
+  .from('products')
+  .update({
+    image_status: failureStatus,
+    images_sync_error: errorMessage,
+    updated_at: new Date().toISOString(),
+  })
+  .eq('id', product.id);
+
+results.push({
+  id: product.id,
+  ebay_item_id: ebayItemId,
+  previous_status: product.image_status,
+  status: failureStatus,
+  error: errorMessage,
+});
             images_sync_error: errorMessage,
             updated_at: new Date().toISOString(),
           })
@@ -498,10 +522,7 @@ export async function GET() {
           head: true,
         })
         .eq('marketplace', MARKETPLACE)
-.not('ebay_item_id', 'is', null)
-.eq('image_count', 1)
-.lt('created_at', '2026-07-16T00:00:00.000Z')
-.gt('id', nextCursor),
+        .eq('image_status', 'repair_duplicate_gallery'),
 
       supabaseAdmin
         .from('products')
