@@ -11,7 +11,7 @@
     },
     {
       "path": "/api/catalog/sync-r2-images-v6",
-      "schedule": "7,27,47 * * * *"
+      "schedule": "15 */2 * * *"
     },
     {
       "path": "/api/catalog/fix-brands-auto",
@@ -19,7 +19,7 @@
     },
     {
       "path": "/api/ebay/auto-import?limit=50",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 */2 * * *"
     },
     {
       "path": "/api/cron/bridge-health",
@@ -27,7 +27,7 @@
     },
     {
       "path": "/api/catalog/repair-old-images",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
