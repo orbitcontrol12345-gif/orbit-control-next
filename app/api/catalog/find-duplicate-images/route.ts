@@ -9,7 +9,7 @@ export const maxDuration = 300;
 
 const LIMIT = 25;
 const MARKETPLACE = 'EBAY_US';
-
+const APPLY_FIX = true;
 type ProductRow = {
   id: number;
   ebay_item_id: string | null;
@@ -99,12 +99,26 @@ export async function GET() {
         const isDuplicate =
           firstHash === secondHash;
 
-        if (isDuplicate) {
-          exactDuplicates++;
-        } else {
-          differentImages++;
-        }
+       if (isDuplicate) {
+  exactDuplicates++;
 
+  if (APPLY_FIX) {
+    const { error: markError } =
+      await supabaseAdmin
+        .from('products')
+        .update({
+          image_status: 'repair_duplicate_gallery',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', product.id);
+
+    if (markError) {
+      throw markError;
+    }
+  }
+} else {
+  differentImages++;
+}
         results.push({
           id: product.id,
           ebay_item_id: product.ebay_item_id,
