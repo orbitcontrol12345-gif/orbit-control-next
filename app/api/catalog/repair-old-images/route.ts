@@ -460,18 +460,6 @@ results.push({
   status: failureStatus,
   error: errorMessage,
 });
-            images_sync_error: errorMessage,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', product.id);
-
-        results.push({
-          id: product.id,
-          ebay_item_id: ebayItemId,
-          previous_status: product.image_status,
-          status: FAILED_STATUS,
-          error: errorMessage,
-        });
       }
     }
 
