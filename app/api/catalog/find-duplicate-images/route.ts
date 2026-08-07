@@ -156,7 +156,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      mode: 'READ_ONLY_DUPLICATE_SCAN',
+     mode: APPLY_FIX ? 'DUPLICATE_FIX_MODE' : 'READ_ONLY_DUPLICATE_SCAN',
 
       processed: products.length,
 
