@@ -14,7 +14,7 @@ export const maxDuration = 300;
 const ROUTE_VERSION = 'REPAIR-OLD-IMAGES';
 const JOB_KEY = 'repair-old-images';
 
-const LIMIT = 30;
+const LIMIT = 10;
 const MAX_IMAGES = 10;
 const MARKETPLACE = 'EBAY_US';
 
