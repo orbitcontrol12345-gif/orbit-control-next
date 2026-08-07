@@ -10,6 +10,7 @@ export const maxDuration = 300;
 const LIMIT = 25;
 const MARKETPLACE = 'EBAY_US';
 const APPLY_FIX = true;
+const JOB_KEY = 'duplicate-image-scan';
 type ProductRow = {
   id: number;
   ebay_item_id: string | null;
@@ -37,21 +38,33 @@ function hashBuffer(buffer: Buffer): string {
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select(`
-        id,
-        ebay_item_id,
-        part_number,
-        name,
-        image_count,
-        r2_gallery_urls
-      `)
-      .eq('marketplace', MARKETPLACE)
-      .eq('image_count', 2)
-      .not('r2_gallery_urls', 'is', null)
-      .order('id', { ascending: true })
-      .limit(LIMIT);
+   const { data: job } =
+  await supabaseAdmin
+    .from('catalog_jobs')
+    .select('cursor_offset')
+    .eq('job_key', JOB_KEY)
+    .single();
+
+const currentCursor =
+  job?.cursor_offset ?? 0;
+
+const { data, error } =
+  await supabaseAdmin
+    .from('products')
+    .select(`
+      id,
+      ebay_item_id,
+      part_number,
+      name,
+      image_count,
+      r2_gallery_urls
+    `)
+    .eq('marketplace', MARKETPLACE)
+    .eq('image_count', 2)
+    .not('r2_gallery_urls', 'is', null)
+    .gt('id', currentCursor)
+    .order('id', { ascending: true })
+    .limit(LIMIT);
 
     if (error) {
       throw error;
@@ -153,7 +166,18 @@ export async function GET() {
         });
       }
     }
+const nextCursor =
+  products.length > 0
+    ? products[products.length - 1].id
+    : currentCursor;
 
+await supabaseAdmin
+  .from('catalog_jobs')
+  .update({
+    cursor_offset: nextCursor,
+    updated_at: new Date().toISOString(),
+  })
+  .eq('job_key', JOB_KEY);
     return NextResponse.json({
       success: true,
      mode: APPLY_FIX ? 'DUPLICATE_FIX_MODE' : 'READ_ONLY_DUPLICATE_SCAN',
