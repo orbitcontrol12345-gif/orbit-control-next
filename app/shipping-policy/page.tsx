@@ -126,8 +126,8 @@ export default function ShippingPolicyPage() {
 
           <Section title="8. Contact">
             <p>For shipping-related questions or to track your order, please contact us:</p>
-            <p>Email: <a href="mailto:info@xeltronic.com" className="text-gold-500 hover:text-gold-400">info@xeltronic.com</a></p>
-            <p>Phone: +971 XX XXX XXXX</p>
+            <p>Email: <a href="mailto:info@xeltronic.com" className="text-gold-500 hover:text-gold-400">info@orbit-surplus.com</a></p>
+            <p>Phone: +971 6 767 7094</p>
           </Section>
 
           <div className="bg-navy-800 border border-gold-500/20 rounded-xl p-6 text-center">
