@@ -4,7 +4,10 @@ import JsonLd from '@/components/seo/JsonLd';
 import ProductCard from '@/components/products/ProductCard';
 import { buildProductSeo } from '@/lib/seo/productSeo';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import {
+  notFound,
+  permanentRedirect,
+} from 'next/navigation';
 import Link from 'next/link';
 
 import {
@@ -110,7 +113,8 @@ const {
   imageAlt,
 } = seo;
 
-  const productPath = `/products/${encodeURIComponent(params.slug)}`;
+  const canonicalSlug = product.slug || params.slug;
+const productPath = `/products/${encodeURIComponent(canonicalSlug)}`;
   const productUrl = `${SITE_URL}${productPath}`;
 
   const image =
@@ -207,7 +211,13 @@ export default async function ProductDetailPage({
   if (!product) {
     notFound();
   }
+const requestedSlug = decodeURIComponent(params.slug);
 
+if (product.slug && requestedSlug !== product.slug) {
+  permanentRedirect(
+    `/products/${encodeURIComponent(product.slug)}`,
+  );
+}
   const seo = buildProductSeo({
     brand: product.brand,
     partNumber: product.partNumber,
