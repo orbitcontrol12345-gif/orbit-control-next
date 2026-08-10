@@ -86,6 +86,38 @@ function cleanFilterValue(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
+type ProductLookupColumn =
+  | 'slug'
+  | 'sku'
+  | 'ebay_item_id'
+  | 'part_number'
+  | 'model_number';
+
+async function findVisibleProductBy(
+  column: ProductLookupColumn,
+  value: string,
+): Promise<any | null> {
+  const { data, error } = await supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select('*')
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .eq(column, value)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      `Product lookup failed for ${column}:`,
+      error,
+    );
+
+    return null;
+  }
+
+  return data || null;
+}
+
 export async function getSupabaseProductsPage({
   search = '',
   brand = '',
@@ -431,40 +463,69 @@ export async function getSupabaseProductsByCategoryTerms({
 export async function getSupabaseProductBySlug(
   slug: string,
 ): Promise<Product | null> {
-  const decodedSlug = decodeURIComponent(slug);
+  let decodedSlug: string;
 
-  let { data, error } = await supabaseAdmin
-    .from(PRODUCTS_TABLE)
-    .select('*')
-    .eq('slug', decodedSlug)
-    .eq('is_active', true)
-    .neq('catalog_visible', false)
-    .maybeSingle();
-
-  if (!data) {
-    const { data: fallback, error: fallbackError } =
-      await supabaseAdmin
-        .from(PRODUCTS_TABLE)
-        .select('*')
-        .eq('is_active', true)
-        .neq('catalog_visible', false)
-        .or(
-          [
-            `slug.eq.${decodedSlug}`,
-            `sku.eq.${decodedSlug}`,
-            `ebay_item_id.eq.${decodedSlug}`,
-            `part_number.eq.${decodedSlug}`,
-            `model_number.eq.${decodedSlug}`,
-          ].join(','),
-        )
-        .limit(1)
-        .maybeSingle();
-
-    data = fallback;
-    error = fallbackError;
+  try {
+    decodedSlug = decodeURIComponent(slug).trim();
+  } catch {
+    return null;
   }
 
-  if (error || !data) {
+  if (!decodedSlug) {
+    return null;
+  }
+
+  let data = await findVisibleProductBy(
+    'slug',
+    decodedSlug,
+  );
+
+  if (!data) {
+    const embeddedEbayItemId = decodedSlug.match(
+      /^(\d{12})(?:-|$)/,
+    )?.[1];
+
+    const fallbackLookups: Array<{
+      column: ProductLookupColumn;
+      value: string;
+    }> = [
+      ...(embeddedEbayItemId
+        ? [
+            {
+              column: 'ebay_item_id' as const,
+              value: embeddedEbayItemId,
+            },
+          ]
+        : []),
+      { column: 'sku', value: decodedSlug },
+      { column: 'ebay_item_id', value: decodedSlug },
+      { column: 'part_number', value: decodedSlug },
+      { column: 'model_number', value: decodedSlug },
+    ];
+
+    const attemptedLookups = new Set<string>();
+
+    for (const lookup of fallbackLookups) {
+      const lookupKey = `${lookup.column}:${lookup.value}`;
+
+      if (attemptedLookups.has(lookupKey)) {
+        continue;
+      }
+
+      attemptedLookups.add(lookupKey);
+
+      data = await findVisibleProductBy(
+        lookup.column,
+        lookup.value,
+      );
+
+      if (data) {
+        break;
+      }
+    }
+  }
+
+  if (!data) {
     return null;
   }
 
