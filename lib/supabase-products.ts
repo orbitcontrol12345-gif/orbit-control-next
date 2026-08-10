@@ -2,6 +2,8 @@ import type { Product } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const PRODUCTS_TABLE = 'products';
+const MIGRATION_REDIRECTS_TABLE = 'migration_redirects';
+const SITE_URL = 'https://www.orbit-surplus.com';
 
 type ProductSortOption = 'relevance' | 'name' | 'brand' | 'condition';
 
@@ -116,6 +118,80 @@ async function findVisibleProductBy(
   }
 
   return data || null;
+}
+
+function getRedirectTargetProductSlug(
+  newUrl: string,
+): string | null {
+  try {
+    const targetUrl = new URL(newUrl, SITE_URL);
+    const match = targetUrl.pathname.match(
+      /^\/products\/([^/]+)\/?$/,
+    );
+
+    return match
+      ? decodeURIComponent(match[1]).trim()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+async function findVisibleProductFromRedirect(
+  decodedSlug: string,
+): Promise<any | null> {
+  if (
+    !decodedSlug ||
+    decodedSlug.includes('/') ||
+    decodedSlug.includes('\\')
+  ) {
+    return null;
+  }
+
+  const oldPaths = [
+    `/products/${decodedSlug}`,
+    `/products/${decodedSlug}/`,
+  ];
+
+  for (const oldPath of oldPaths) {
+    const { data: redirectRow, error } =
+      await supabaseAdmin
+        .from(MIGRATION_REDIRECTS_TABLE)
+        .select('new_url')
+        .eq('old_path', oldPath)
+        .eq('is_active', true)
+        .eq('redirect_enabled', true)
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+      console.error(
+        'Product redirect lookup failed:',
+        error,
+      );
+
+      continue;
+    }
+
+    const targetSlug = getRedirectTargetProductSlug(
+      String(redirectRow?.new_url || ''),
+    );
+
+    if (!targetSlug || targetSlug === decodedSlug) {
+      continue;
+    }
+
+    const targetProduct = await findVisibleProductBy(
+      'slug',
+      targetSlug,
+    );
+
+    if (targetProduct) {
+      return targetProduct;
+    }
+  }
+
+  return null;
 }
 
 export async function getSupabaseProductsPage({
@@ -523,6 +599,12 @@ export async function getSupabaseProductBySlug(
         break;
       }
     }
+  }
+
+  if (!data) {
+    data = await findVisibleProductFromRedirect(
+      decodedSlug,
+    );
   }
 
   if (!data) {
