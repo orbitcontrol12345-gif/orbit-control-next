@@ -22,6 +22,10 @@ export async function GET() {
   <sitemap>
     <loc>https://www.orbit-surplus.com/sitemap-products/4.xml</loc>
   </sitemap>
+
+  <sitemap>
+    <loc>https://www.orbit-surplus.com/sitemap-products/5.xml</loc>
+  </sitemap>
 </sitemapindex>`;
 
   return new NextResponse(xml, {

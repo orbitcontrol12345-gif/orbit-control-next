@@ -12,6 +12,7 @@ export async function GET() {
     `${SITE_URL}/sitemap-products/2.xml`,
     `${SITE_URL}/sitemap-products/3.xml`,
     `${SITE_URL}/sitemap-products/4.xml`,
+    `${SITE_URL}/sitemap-products/5.xml`,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

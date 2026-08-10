@@ -4,7 +4,7 @@ const SITE_URL = 'https://www.orbit-surplus.com';
 
 const PRODUCTS_PER_PAGE = 100;
 const PAGES_PER_BATCH = 35;
-const MAX_BATCHES = 4;
+const MAX_BATCHES = 5;
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
