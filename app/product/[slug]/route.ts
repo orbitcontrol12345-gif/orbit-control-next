@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V4-SEO-404';
+const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V5-UNICODE';
 
 type RouteContext = {
   params: Promise<{
@@ -30,6 +30,13 @@ function normalizePath(pathname: string): string {
     .join('/')}`;
 
   return clean === '/' ? '/' : `${clean}/`;
+}
+
+function encodePathForLookup(pathname: string): string {
+  return encodeURI(pathname).replace(
+    /%[0-9A-F]{2}/g,
+    (value) => value.toLowerCase()
+  );
 }
 
 function createNotFoundResponse(oldPath: string) {
@@ -162,7 +169,8 @@ function createNotFoundResponse(oldPath: string) {
       'Cache-Control':
         'public, max-age=300, s-maxage=3600',
       'X-Robots-Tag': 'noindex, nofollow',
-      'X-Orbit-Legacy-Path': oldPath,
+      'X-Orbit-Legacy-Path':
+        encodePathForLookup(oldPath),
       'X-Orbit-Route-Version': ROUTE_VERSION,
     },
   });
@@ -198,10 +206,20 @@ export async function GET(
         ? oldPath.replace(/\/+$/, '')
         : oldPath;
 
+    const encodedOldPath =
+      encodePathForLookup(oldPath);
+
+    const encodedOldPathWithoutSlash =
+      encodedOldPath.length > 1
+        ? encodedOldPath.replace(/\/+$/, '')
+        : encodedOldPath;
+
     const candidatePaths = Array.from(
       new Set([
         oldPath,
         oldPathWithoutSlash,
+        encodedOldPath,
+        encodedOldPathWithoutSlash,
       ])
     );
 
@@ -209,8 +227,12 @@ export async function GET(
       new Set([
         `https://www.orbit-surplus.com${oldPath}`,
         `https://www.orbit-surplus.com${oldPathWithoutSlash}`,
+        `https://www.orbit-surplus.com${encodedOldPath}`,
+        `https://www.orbit-surplus.com${encodedOldPathWithoutSlash}`,
         `https://orbit-surplus.com${oldPath}`,
         `https://orbit-surplus.com${oldPathWithoutSlash}`,
+        `https://orbit-surplus.com${encodedOldPath}`,
+        `https://orbit-surplus.com${encodedOldPathWithoutSlash}`,
       ])
     );
 
