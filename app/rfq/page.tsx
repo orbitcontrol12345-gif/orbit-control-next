@@ -3,20 +3,44 @@ import { Suspense } from 'react';
 import { Clock, Globe, ShieldCheck, Zap, Phone, Mail } from 'lucide-react';
 import RFQForm from '@/components/rfq/RFQForm';
 
-export const metadata: Metadata = {
-  title: 'Request a Quote — Industrial Automation Parts',
-  description:
-    'Submit an RFQ for industrial automation spare parts. PLCs, HMIs, drives, sensors, and more. Fast 24-hour quote response. Worldwide shipping.',
+const SITE_URL = 'https://www.orbit-surplus.com';
+const RFQ_TITLE =
+  'Request a Quote — Industrial Automation Parts';
+const RFQ_DESCRIPTION =
+  'Submit an RFQ for industrial automation spare parts. PLCs, HMIs, drives, sensors, and more. Fast 24-hour quote response. Worldwide shipping.';
 
-  robots: {
-    index: false,
-    follow: true,
-    googleBot: {
-      index: false,
-      follow: true,
-    },
-  },
+type RFQSearchParams = {
+  part?: string;
+  name?: string;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: RFQSearchParams;
+}): Promise<Metadata> {
+  const hasPrefilledProduct = Boolean(
+    searchParams?.part?.trim() ||
+      searchParams?.name?.trim(),
+  );
+
+  return {
+    title: RFQ_TITLE,
+    description: RFQ_DESCRIPTION,
+    alternates: {
+      canonical: `${SITE_URL}/rfq`,
+    },
+    robots: {
+      index: !hasPrefilledProduct,
+      follow: true,
+      googleBot: {
+        index: !hasPrefilledProduct,
+        follow: true,
+        'max-snippet': -1,
+      },
+    },
+  };
+}
 
 export default function RFQPage() {
   return (

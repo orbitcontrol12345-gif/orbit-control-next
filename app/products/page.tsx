@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
 
@@ -6,6 +7,12 @@ import ProductsClient from './ProductsClient';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const SITE_URL = 'https://www.orbit-surplus.com';
+const PRODUCTS_TITLE =
+  'Industrial Automation Parts & Obsolete Spares';
+const PRODUCTS_DESCRIPTION =
+  'Browse PLCs, HMIs, VFDs, sensors, relays, circuit breakers, control boards, and obsolete industrial automation spare parts available for worldwide RFQ.';
 
 type ProductSortOption =
   | 'relevance'
@@ -23,6 +30,10 @@ type ProductsSearchParams = {
   page?: string;
 };
 
+type ProductsPageProps = {
+  searchParams?: ProductsSearchParams;
+};
+
 function parsePage(value?: string): number {
   const parsed = Number(value || 1);
 
@@ -31,11 +42,54 @@ function parsePage(value?: string): number {
     : 1;
 }
 
+function hasFilteredView(
+  searchParams?: ProductsSearchParams,
+): boolean {
+  return Boolean(
+    searchParams?.q?.trim() ||
+      searchParams?.brand?.trim() ||
+      searchParams?.category?.trim() ||
+      searchParams?.condition?.trim() ||
+      searchParams?.stock === 'in-stock' ||
+      (searchParams?.sort &&
+        searchParams.sort !== 'relevance'),
+  );
+}
+
+export async function generateMetadata({
+  searchParams,
+}: ProductsPageProps): Promise<Metadata> {
+  const filteredView = hasFilteredView(searchParams);
+  const currentPage = parsePage(searchParams?.page);
+
+  const canonicalUrl =
+    !filteredView && currentPage > 1
+      ? `${SITE_URL}/products?page=${currentPage}`
+      : `${SITE_URL}/products`;
+
+  return {
+    title: PRODUCTS_TITLE,
+    description: PRODUCTS_DESCRIPTION,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: !filteredView,
+      follow: true,
+      googleBot: {
+        index: !filteredView,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+  };
+}
+
 export default async function ProductsPage({
   searchParams,
-}: {
-  searchParams?: ProductsSearchParams;
-}) {
+}: ProductsPageProps) {
   const search = searchParams?.q?.trim() || '';
   const brand = searchParams?.brand?.trim() || '';
   const category = searchParams?.category?.trim() || '';
@@ -43,6 +97,7 @@ export default async function ProductsPage({
   const inStockOnly = searchParams?.stock === 'in-stock';
   const sort = searchParams?.sort || 'relevance';
   const currentPage = parsePage(searchParams?.page);
+  const filteredView = hasFilteredView(searchParams);
   const perPage = 24;
 
   const {
@@ -101,6 +156,7 @@ export default async function ProductsPage({
                 href={buildPageUrl(
                   Math.max(1, currentPage - 1),
                 )}
+                rel={filteredView ? 'nofollow' : undefined}
                 className={`rounded-lg px-4 py-2 text-sm font-semibold ${
                   currentPage <= 1
                     ? 'pointer-events-none bg-navy-700 text-slate-500 opacity-50'
@@ -185,6 +241,7 @@ export default async function ProductsPage({
                 href={buildPageUrl(
                   Math.min(totalPages, currentPage + 1),
                 )}
+                rel={filteredView ? 'nofollow' : undefined}
                 className={`rounded-lg px-4 py-2 text-sm font-semibold ${
                   currentPage >= totalPages
                     ? 'pointer-events-none bg-navy-700 text-slate-500 opacity-50'

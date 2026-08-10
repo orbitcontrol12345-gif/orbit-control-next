@@ -123,7 +123,7 @@ const {
   description: metaDescription,
 
     alternates: {
-      canonical: productPath,
+      canonical: productUrl,
     },
 
     robots: {
@@ -566,6 +566,7 @@ manufacturer: {
                 )}&name=${encodeURIComponent(
                   product.name,
                 )}`}
+                rel="nofollow"
                 className="btn-gold flex-1 justify-center py-3 text-base"
               >
                 <FileText size={17} />
@@ -573,9 +574,7 @@ manufacturer: {
               </Link>
 
               <Link
-                href={`/contact?part=${encodeURIComponent(
-                  product.partNumber,
-                )}`}
+                href="/contact"
                 className="btn-outline-slate flex-1 justify-center py-3 text-base"
               >
                 <MessageSquare size={17} />
@@ -630,6 +629,7 @@ manufacturer: {
                   href={`/products?q=${encodeURIComponent(
                     tag,
                   )}`}
+                  rel="nofollow"
                   className="rounded border border-navy-700 bg-navy-800 px-3 py-1 text-xs text-slate-400 hover:border-gold-500/40 hover:text-gold-400"
                 >
                   {tag}
