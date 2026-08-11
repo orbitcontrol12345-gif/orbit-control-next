@@ -60,6 +60,28 @@ function getValidPartNumber(value?: string | null): string | null {
   return cleaned;
 }
 
+const INVALID_BRANDS = new Set([
+  "UNKNOWN",
+  "UNBRANDED",
+  "NULL",
+  "N/A",
+  "NA",
+  "NONE",
+  "NOT AVAILABLE",
+  "NOT SPECIFIED",
+  "DOES NOT APPLY",
+]);
+
+function getValidBrand(value?: string | null): string | null {
+  const cleaned = cleanText(value);
+
+  if (!cleaned || INVALID_BRANDS.has(cleaned.toUpperCase())) {
+    return null;
+  }
+
+  return cleaned;
+}
+
 function getSchemaCondition(condition?: string): string {
   switch (condition?.trim().toLowerCase()) {
     case "new":
@@ -103,12 +125,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const validBrand = getValidBrand(product.brand);
+  const seoBrand = validBrand || "Industrial Automation";
   const validPartNumber = getValidPartNumber(product.partNumber);
   const seoPartNumber = validPartNumber || product.sku || String(product.id);
 
   const seo = buildProductSeo({
-    brand: product.brand,
-    manufacturer: product.brand,
+    brand: seoBrand,
+    manufacturer: seoBrand,
     partNumber: seoPartNumber,
     name: product.name,
     description: product.description,
@@ -117,8 +141,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       product.category || product.tags?.[0] || "Industrial Automation Parts",
   });
 
-  const { brand, partNumber, title, metaDescription, description, imageAlt } =
-    seo;
+  const { partNumber, title, metaDescription, description, imageAlt } = seo;
 
   const canonicalSlug = product.slug || params.slug;
   const productPath = `/products/${encodeURIComponent(canonicalSlug)}`;
@@ -171,7 +194,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
 
     other: {
-      "product:brand": brand,
+      ...(validBrand ? { "product:brand": validBrand } : {}),
       "product:retailer_item_id": product.sku || partNumber,
       "product:condition": product.condition || "Used",
       "product:availability": product.inStock
@@ -212,11 +235,14 @@ export default async function ProductDetailPage({ params }: Props) {
     permanentRedirect(`/products/${encodeURIComponent(product.slug)}`);
   }
 
+  const validBrand = getValidBrand(product.brand);
+  const seoBrand = validBrand || "Industrial Automation";
   const validPartNumber = getValidPartNumber(product.partNumber);
   const seoPartNumber = validPartNumber || product.sku || String(product.id);
 
   const seo = buildProductSeo({
-    brand: product.brand,
+    brand: seoBrand,
+    manufacturer: seoBrand,
     partNumber: seoPartNumber,
     name: product.name,
     description: product.description,
@@ -253,15 +279,18 @@ export default async function ProductDetailPage({ params }: Props) {
 
     ...(validPartNumber ? { mpn: validPartNumber } : {}),
 
-    brand: {
-      "@type": "Brand",
-      name: product.brand,
-    },
-
-    manufacturer: {
-      "@type": "Organization",
-      name: product.brand,
-    },
+    ...(validBrand
+      ? {
+          brand: {
+            "@type": "Brand",
+            name: validBrand,
+          },
+          manufacturer: {
+            "@type": "Organization",
+            name: validBrand,
+          },
+        }
+      : {}),
 
     category:
       product.category || product.tags?.[0] || "Industrial Automation Parts",
@@ -278,11 +307,15 @@ export default async function ProductDetailPage({ params }: Props) {
             },
           ]
         : []),
-      {
-        "@type": "PropertyValue",
-        name: "Manufacturer",
-        value: product.brand,
-      },
+      ...(validBrand
+        ? [
+            {
+              "@type": "PropertyValue",
+              name: "Manufacturer",
+              value: validBrand,
+            },
+          ]
+        : []),
       {
         "@type": "PropertyValue",
         name: "Condition",
@@ -373,13 +406,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
       <section className="border-b border-navy-600 bg-gradient-to-r from-navy-800 to-navy-700">
         <div className="page-container py-12">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="text-sm font-bold uppercase tracking-wider text-gold-500">
-              {product.brand}
-            </span>
+          {validBrand && (
+            <div className="mb-3 flex items-center gap-3">
+              <span className="text-sm font-bold uppercase tracking-wider text-gold-500">
+                {validBrand}
+              </span>
 
-            <span className="text-slate-600">•</span>
-          </div>
+              <span className="text-slate-600">•</span>
+            </div>
+          )}
 
           <h1 className="mb-3 text-4xl font-bold leading-tight text-white md:text-5xl">
             {product.name}
@@ -400,7 +435,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 r2GalleryUrls={product.r2GalleryUrls}
                 ebayGalleryUrls={product.ebayGalleryUrls}
                 mainImageUrl={product.r2ImageUrl || product.imageUrl}
-                alt={[product.brand, validPartNumber, product.name]
+                alt={[validBrand, validPartNumber, product.name]
                   .filter(Boolean)
                   .join(" ")}
               />
@@ -464,12 +499,14 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2">
-                <div className="flex justify-between border-b border-navy-700 px-5 py-3">
-                  <span className="text-slate-400">Manufacturer</span>
-                  <span className="font-semibold text-white">
-                    {product.brand}
-                  </span>
-                </div>
+                {validBrand && (
+                  <div className="flex justify-between border-b border-navy-700 px-5 py-3">
+                    <span className="text-slate-400">Manufacturer</span>
+                    <span className="font-semibold text-white">
+                      {validBrand}
+                    </span>
+                  </div>
+                )}
 
                 {validPartNumber && (
                   <div className="flex justify-between border-b border-navy-700 px-5 py-3">
@@ -566,16 +603,18 @@ export default async function ProductDetailPage({ params }: Props) {
               ))}
             </div>
 
-            <div className="flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-800 p-3">
-              <Building2 size={15} className="shrink-0 text-slate-400" />
+            {validBrand && (
+              <div className="flex items-center gap-2 rounded-lg border border-navy-700 bg-navy-800 p-3">
+                <Building2 size={15} className="shrink-0 text-slate-400" />
 
-              <p className="text-xs text-slate-400">
-                Manufactured by{" "}
-                <span className="font-semibold text-gold-500">
-                  {product.brand}
-                </span>
-              </p>
-            </div>
+                <p className="text-xs text-slate-400">
+                  Manufactured by{" "}
+                  <span className="font-semibold text-gold-500">
+                    {validBrand}
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
