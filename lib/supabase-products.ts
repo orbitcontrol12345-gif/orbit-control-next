@@ -1,6 +1,6 @@
 import type { Product } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-
+import { unstable_cache } from 'next/cache';
 const PRODUCTS_TABLE = 'products';
 const MIGRATION_REDIRECTS_TABLE = 'migration_redirects';
 const SITE_URL = 'https://www.orbit-surplus.com';
@@ -750,3 +750,27 @@ export async function getSupabaseRelatedProducts(
     .map(({ item }) => item)
     .slice(0, 4);
 }
+export const getVisibleProductsCount = unstable_cache(
+  async (): Promise<number | null> => {
+    const { count, error } = await supabaseAdmin
+      .from('products')
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('is_active', true)
+      .neq('catalog_visible', false);
+
+    if (error) {
+      console.error('Products count query failed:', error);
+      return null;
+    }
+
+    return count ?? 0;
+  },
+  ['homepage-visible-products-count-v1'],
+  {
+    revalidate: 3600, // يتحدث تلقائيًا كل ساعة
+    tags: ['products-count'],
+  },
+);
