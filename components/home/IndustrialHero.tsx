@@ -25,13 +25,14 @@ const FLOATING_CARDS = [
   { label: 'Control Systems', Icon: Settings2, className: 'right-[-4%] bottom-[22%]' },
 ];
 
-const TRUST_ITEMS = [
-  { label: 'Authentic Products', Icon: ShieldCheck },
-  { label: 'Worldwide Shipping', Icon: Globe2 },
-  { label: 'Fast RFQ Response', Icon: Gauge },
-  { label: 'Expert Support', Icon: Headphones },
-];
-
+function getStats(productsCount: string) {
+  return [
+    [productsCount, 'Listed Products', 'Active catalog'],
+    ['200+', 'Global Brands', 'Automation supply'],
+    ['24h', 'RFQ Target', 'Fast response'],
+    ['100+', 'Countries Served', 'Global distribution'],
+  ];
+}
 const STATS = [
   ['64,000+', 'Industrial Items', 'Live inventory'],
   ['200+', 'Global Brands', 'Automation supply'],
@@ -39,7 +40,12 @@ const STATS = [
   ['100+', 'Countries Served', 'Global distribution'],
 ];
 
-export default function IndustrialHero() {
+export default function IndustrialHero({
+  productsCount,
+}: {
+  productsCount: string;
+}) {
+  const STATS = getStats(productsCount);
   return (
     <section className="relative overflow-hidden border-b border-cyan-400/10 bg-[#04101b]">
       <div

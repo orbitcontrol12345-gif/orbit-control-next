@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import IndustrialHero from '@/components/home/IndustrialHero';
+import { getVisibleProductsCount } from '@/lib/supabase-products';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -86,10 +87,15 @@ const INDUSTRIES = [
 ];
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProductsSafe();
+const productsCount = await getVisibleProductsCount();
 
+const formattedProductsCount =
+  productsCount !== null
+    ? productsCount.toLocaleString('en-US')
+    : '15,000+';
   return (
     <>
-      <IndustrialHero />
+     <IndustrialHero productsCount={formattedProductsCount} />
 
       <TrustedBrands />
 
