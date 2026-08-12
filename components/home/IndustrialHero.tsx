@@ -26,7 +26,7 @@ const FLOATING_CARDS = [
 ];
 const TRUST_ITEMS = [
   { label: 'Authentic Products', Icon: ShieldCheck },
-  { label: 'Worldwide Shipping', Icon: Globe },
+ { label: 'Worldwide Shipping', Icon: Globe2 },
   { label: 'Fast RFQ Response', Icon: Gauge },
   { label: 'Expert Support', Icon: Headphones },
 ];
