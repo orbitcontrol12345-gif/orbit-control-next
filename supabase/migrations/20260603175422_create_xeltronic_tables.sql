@@ -1,5 +1,5 @@
 /*
-  # Xeltronic Electrical Solution - Core Tables
+  # Orbit Control Automition - Core Tables
 
   ## New Tables
 

@@ -83,7 +83,7 @@ export default function AdminPage() {
         <div className="page-container py-4 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
-            <p className="text-xs text-slate-500">Xeltronic Electrical Solution — Management</p>
+            <p className="text-xs text-slate-500">Orbit Control Elecronices Automation — Management</p>
           </div>
           <button
             onClick={loadData}

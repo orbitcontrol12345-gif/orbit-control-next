@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+×import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Cpu,
@@ -17,7 +17,7 @@ import {
 import { CATEGORIES } from '@/lib/data';
 
 export const metadata: Metadata = {
-  title: 'Industrial Automation Parts Categories | Xeltronic UAE',
+  title: 'Industrial Automation Parts Categories | Orbit Control Automation UAE',
   description:
     'Browse PLCs, HMIs, VFDs, circuit breakers, relays, sensors, power supplies and obsolete industrial automation spare parts.',
 };
