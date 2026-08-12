@@ -24,6 +24,12 @@ const FLOATING_CARDS = [
   { label: 'Drives', Icon: Zap, className: 'right-[2%] top-[27%]' },
   { label: 'Control Systems', Icon: Settings2, className: 'right-[-4%] bottom-[22%]' },
 ];
+const TRUST_ITEMS = [
+  { label: 'Authentic Products', Icon: ShieldCheck },
+  { label: 'Worldwide Shipping', Icon: Globe },
+  { label: 'Fast RFQ Response', Icon: Gauge },
+  { label: 'Expert Support', Icon: Headphones },
+];
 
 function getStats(productsCount: string) {
   return [
@@ -33,12 +39,6 @@ function getStats(productsCount: string) {
     ['100+', 'Countries Served', 'Global distribution'],
   ];
 }
-const STATS = [
-  ['64,000+', 'Industrial Items', 'Live inventory'],
-  ['200+', 'Global Brands', 'Automation supply'],
-  ['24h', 'RFQ Target', 'Fast response'],
-  ['100+', 'Countries Served', 'Global distribution'],
-];
 
 export default function IndustrialHero({
   productsCount,
