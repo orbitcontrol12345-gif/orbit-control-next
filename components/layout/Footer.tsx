@@ -94,7 +94,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="transition-colors hover:text-amber-300"
                 >
-                  WhatsApp: +971 54 427 2141
+                  WhatsApp: +971 55 483 5199
                 </a>
               </div>
 
