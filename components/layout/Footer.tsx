@@ -89,7 +89,7 @@ export default function Footer() {
               <div className="flex items-center gap-3 text-sm text-slate-400">
                 <Phone size={16} className="shrink-0 text-amber-400" />
                 <a
-                  href="https://wa.me/971544272141"
+                  href="https://wa.me/971554835199"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-colors hover:text-amber-300"
