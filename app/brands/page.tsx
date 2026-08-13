@@ -10,22 +10,68 @@ import {
   Package,
   Zap,
 } from 'lucide-react';
+
 import { BRANDS } from '@/lib/data';
 
-export const metadata: Metadata = {
-  title: 'Industrial Automation Brands | Orbit Control Automation',
-  description:
-    'Browse industrial automation brands including ABB, Siemens, Schneider Electric, Allen-Bradley, Omron, Honeywell, Mitsubishi Electric and more.',
-};
+const SITE_URL = 'https://www.orbit-surplus.com';
+
+const PAGE_DESCRIPTION =
+  'Browse industrial automation brands including ABB, Siemens, Schneider Electric, Allen-Bradley, Omron, Honeywell, Mitsubishi Electric and more.';
 
 interface Props {
   searchParams?: {
     q?: string;
+    search?: string;
   };
 }
 
-export default function BrandsPage({ searchParams }: Props) {
-  const query = searchParams?.q?.toLowerCase().trim() || '';
+function getSearchQuery(searchParams?: Props['searchParams']): string {
+  return (
+    searchParams?.q?.trim() ||
+    searchParams?.search?.trim() ||
+    ''
+  );
+}
+
+export function generateMetadata({
+  searchParams,
+}: Props): Metadata {
+  const hasSearchQuery =
+    getSearchQuery(searchParams).length > 0;
+
+  return {
+    title: 'Industrial Automation Brands',
+    description: PAGE_DESCRIPTION,
+    alternates: {
+      canonical: `${SITE_URL}/brands`,
+    },
+    robots: {
+      index: !hasSearchQuery,
+      follow: true,
+      googleBot: {
+        index: !hasSearchQuery,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+    openGraph: {
+      type: 'website',
+      url: `${SITE_URL}/brands`,
+      title:
+        'Industrial Automation Brands | Orbit Control Automation',
+      description: PAGE_DESCRIPTION,
+      siteName: 'Orbit Control Automation',
+    },
+  };
+}
+
+export default function BrandsPage({
+  searchParams,
+}: Props) {
+  const query =
+    getSearchQuery(searchParams).toLowerCase();
 
   const filteredBrands = BRANDS.filter((brand) => {
     return (
