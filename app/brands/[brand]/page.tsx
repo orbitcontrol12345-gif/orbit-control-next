@@ -152,7 +152,7 @@ export default async function BrandPage({
     totalProducts,
     totalPages,
   } = await getSupabaseProductsPage({
-    search: brand.name,
+    brand: brand.name,
     page: currentPage,
     perPage: PRODUCTS_PER_PAGE,
   });
