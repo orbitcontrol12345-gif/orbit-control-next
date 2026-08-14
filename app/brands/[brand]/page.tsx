@@ -5,9 +5,13 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { cache } from 'react';
 
 import { BRANDS } from '@/lib/data';
-import { getSupabaseProductsPage } from '@/lib/supabase-products';
+import {
+  getSupabaseBrandBySlug,
+  getSupabaseProductsPage,
+} from '@/lib/supabase-products';
 
 const SITE_URL = 'https://www.orbit-surplus.com';
 const PRODUCTS_PER_PAGE = 24;
@@ -20,6 +24,41 @@ interface Props {
     page?: string;
   };
 }
+
+type BrandRecord = {
+  name: string;
+  slug: string;
+  description: string;
+  productCount: number;
+};
+
+const getBrandBySlug = cache(
+  async (
+    slug: string,
+  ): Promise<BrandRecord | null> => {
+    const staticBrand = BRANDS.find(
+      (item) => item.slug === slug,
+    );
+
+    if (staticBrand) {
+      return staticBrand;
+    }
+
+    const supabaseBrand =
+      await getSupabaseBrandBySlug(slug);
+
+    if (!supabaseBrand) {
+      return null;
+    }
+
+    return {
+      name: supabaseBrand.name,
+      slug: supabaseBrand.slug,
+      description: `Browse ${supabaseBrand.name} industrial automation parts, PLCs, HMIs, drives, modules, control equipment and obsolete spare parts.`,
+      productCount: supabaseBrand.productCount,
+    };
+  },
+);
 
 function cleanText(value?: string | null): string {
   return (value || '')
@@ -45,8 +84,8 @@ export async function generateMetadata({
   params,
   searchParams,
 }: Props): Promise<Metadata> {
-  const brand = BRANDS.find(
-    (item) => item.slug === params.brand,
+  const brand = await getBrandBySlug(
+    params.brand,
   );
 
   if (!brand) {
@@ -135,8 +174,8 @@ export default async function BrandPage({
   params,
   searchParams,
 }: Props) {
-  const brand = BRANDS.find(
-    (item) => item.slug === params.brand,
+  const brand = await getBrandBySlug(
+    params.brand,
   );
 
   if (!brand) {
@@ -311,7 +350,7 @@ export default async function BrandPage({
           </h2>
 
           <Link
-            href={`/products?q=${encodeURIComponent(
+            href={`/products?brand=${encodeURIComponent(
               brand.name,
             )}`}
             className="text-sm font-semibold text-gold-500 hover:text-gold-400"

@@ -774,3 +774,153 @@ export const getVisibleProductsCount = unstable_cache(
     tags: ['products-count'],
   },
 );
+export type SupabaseBrandSummary = {
+  name: string;
+  slug: string;
+  productCount: number;
+};
+
+function createBrandSlug(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export async function getSupabaseBrandBySlug(
+  rawSlug: string,
+): Promise<SupabaseBrandSummary | null> {
+  let decodedSlug = rawSlug;
+
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    decodedSlug = rawSlug;
+  }
+
+  const safeSlug = createBrandSlug(decodedSlug);
+
+  if (!safeSlug) {
+    return null;
+  }
+
+  const readableName = decodedSlug
+    .replace(/-/g, ' ')
+    .trim();
+
+  const candidates = Array.from(
+    new Set([
+      readableName,
+      decodedSlug,
+      readableName.replace(/\band\b/gi, '&'),
+    ]),
+  ).filter(Boolean);
+
+  for (const candidate of candidates) {
+    const {
+      data,
+      error,
+      count,
+    } = await supabaseAdmin
+      .from(PRODUCTS_TABLE)
+      .select('brand', {
+        count: 'exact',
+      })
+      .eq('is_active', true)
+      .neq('catalog_visible', false)
+      .ilike('brand', candidate)
+      .limit(1);
+
+    if (error) {
+      throw new Error(
+        `Unable to load brand: ${error.message}`,
+      );
+    }
+
+    const brandName =
+      typeof data?.[0]?.brand === 'string'
+        ? data[0].brand.trim()
+        : '';
+
+    if (
+      brandName &&
+      createBrandSlug(brandName) === safeSlug
+    ) {
+      return {
+        name: brandName,
+        slug: safeSlug,
+        productCount: count ?? 0,
+      };
+    }
+  }
+
+  const anchorWord = safeSlug
+    .split('-')
+    .filter(Boolean)
+    .sort((first, second) => second.length - first.length)[0];
+
+  if (!anchorWord) {
+    return null;
+  }
+
+  const {
+    data: possibleBrands,
+    error: possibleBrandsError,
+  } = await supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select('brand')
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .ilike('brand', `%${anchorWord}%`)
+    .limit(500);
+
+  if (possibleBrandsError) {
+    throw new Error(
+      `Unable to search brands: ${possibleBrandsError.message}`,
+    );
+  }
+
+  const matchedBrandName = possibleBrands
+    ?.map((item) =>
+      typeof item.brand === 'string'
+        ? item.brand.trim()
+        : '',
+    )
+    .find(
+      (brandName) =>
+        brandName &&
+        createBrandSlug(brandName) === safeSlug,
+    );
+
+  if (!matchedBrandName) {
+    return null;
+  }
+
+  const {
+    count,
+    error: countError,
+  } = await supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select('id', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .eq('brand', matchedBrandName);
+
+  if (countError) {
+    throw new Error(
+      `Unable to count brand products: ${countError.message}`,
+    );
+  }
+
+  return {
+    name: matchedBrandName,
+    slug: safeSlug,
+    productCount: count ?? 0,
+  };
+}
