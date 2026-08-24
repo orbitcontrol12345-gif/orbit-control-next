@@ -1,54 +1,63 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import {
+  formatValidationError,
+  manualProductInputSchema,
+  slugifyManualProduct,
+} from '@/lib/manual-product';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 180);
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const parsed = manualProductInputSchema.safeParse({
+      ...body,
+      model_number: body.model_number || body.part_number,
+    });
 
-    const name = String(body.name || '').trim();
-    const brand = String(body.brand || 'UNKNOWN').trim();
-    const modelNumber = String(body.model_number || body.part_number || '').trim();
-
-    if (!name || !modelNumber) {
-      return NextResponse.json({
-        success: false,
-        error: 'Product name and model number are required',
-      }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: formatValidationError(parsed.error),
+        },
+        { status: 400 },
+      );
     }
 
-    const manualSku = `MANUAL-${Date.now()}`;
+    const input = parsed.data;
+    const manualSku = `MANUAL-${Date.now()}-${crypto
+      .randomUUID()
+      .slice(0, 8)
+      .toUpperCase()}`;
+    const description = input.description || input.name;
+    const brand = input.brand || 'Unknown';
 
     const product = {
       ebay_item_id: manualSku,
       sku: manualSku,
-      part_number: modelNumber,
-      model_number: modelNumber,
+      part_number: input.model_number,
+      model_number: input.model_number,
       brand,
-      category: body.category || 'Industrial Automation',
-      name,
-      condition: body.condition || 'Used',
-      image_url: body.image_url || '',
-      description: body.description || name,
-      slug: slugify(`${manualSku}-${brand}-${modelNumber}-${name}`),
+      category: input.category || 'Industrial Automation',
+      name: input.name,
+      condition: input.condition,
+      image_url: input.image_url,
+      description,
+      slug: slugifyManualProduct(
+        `${manualSku}-${brand}-${input.model_number}-${input.name}`,
+      ),
       marketplace: 'MANUAL',
       seller: 'orbitcontrol',
       source: 'manual',
       source_type: 'manual',
-      quantity: Number(body.quantity || 1),
-      price: body.price ? Number(body.price) : null,
-      currency: body.currency || 'USD',
+      quantity: input.quantity,
+      price: null,
+      currency: 'USD',
       is_active: true,
+      catalog_visible: true,
       last_seen_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -67,10 +76,13 @@ export async function POST(request: Request) {
       success: true,
       product: data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Unable to add manual product',
     }, { status: 500 });
   }
 }

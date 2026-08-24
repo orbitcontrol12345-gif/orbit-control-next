@@ -8,7 +8,7 @@ const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V2-SEO';
 
 type RouteContext = {
   params: Promise<{
-    slug: string;
+    slug: string[];
   }>;
 };
 
@@ -57,9 +57,10 @@ export async function GET(
   try {
     const { slug } = await context.params;
 
-    const decodedSlug = decodeURIComponent(
-      String(slug || '').trim()
-    );
+    const decodedSlug = slug
+      .map((segment) => decodeURIComponent(segment))
+      .join('/')
+      .trim();
 
     if (!decodedSlug) {
       return createNotFoundResponse('/product/');

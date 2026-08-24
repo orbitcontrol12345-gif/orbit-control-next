@@ -19,13 +19,18 @@ const PAGE_DESCRIPTION =
   'Browse industrial automation brands including ABB, Siemens, Schneider Electric, Allen-Bradley, Omron, Honeywell, Mitsubishi Electric and more.';
 
 interface Props {
-  searchParams?: {
+  searchParams?: Promise<{
     q?: string;
     search?: string;
-  };
+  }>;
 }
 
-function getSearchQuery(searchParams?: Props['searchParams']): string {
+type BrandSearchParams = {
+  q?: string;
+  search?: string;
+};
+
+function getSearchQuery(searchParams?: BrandSearchParams): string {
   return (
     searchParams?.q?.trim() ||
     searchParams?.search?.trim() ||
@@ -33,11 +38,12 @@ function getSearchQuery(searchParams?: Props['searchParams']): string {
   );
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   searchParams,
-}: Props): Metadata {
+}: Props): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
   const hasSearchQuery =
-    getSearchQuery(searchParams).length > 0;
+    getSearchQuery(resolvedSearchParams).length > 0;
 
   return {
     title: 'Industrial Automation Brands',
@@ -67,11 +73,12 @@ export function generateMetadata({
   };
 }
 
-export default function BrandsPage({
+export default async function BrandsPage({
   searchParams,
 }: Props) {
+  const resolvedSearchParams = await searchParams;
   const query =
-    getSearchQuery(searchParams).toLowerCase();
+    getSearchQuery(resolvedSearchParams).toLowerCase();
 
   const filteredBrands = BRANDS.filter((brand) => {
     return (

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import {
   ArrowRight,
   Cpu,
@@ -111,7 +112,9 @@ export default function IndustrialHero({
               <span className="rounded-full bg-white/5 px-3 py-1">Model</span>
               <span className="rounded-full bg-white/5 px-3 py-1">Obsolete Stock</span>
             </div>
-            <HeroSearchBar />
+            <Suspense fallback={null}>
+              <HeroSearchBar />
+            </Suspense>
           </div>
 
           <div className="mt-5 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">

@@ -133,7 +133,7 @@ export function cleanTitle(title: string) {
     .replace(/\bTESTED\s+OK\b/gi, ' ')
     .replace(/\bREFURBISHED\b/gi, ' ')
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
-    .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
+    .replace(/\bLOT\s*(?:-|:|#)?\s*\d+\b/gi, ' ')
     .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?)\b/gi, ' ')
     .replace(/\bNEW\b/gi, ' ')
     .replace(/\bUSED\b/gi, ' ')

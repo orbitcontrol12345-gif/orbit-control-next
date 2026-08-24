@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Upload, Send, CheckCircle, AlertCircle, Loader2, Phone, Mail, Globe, Package } from 'lucide-react';
 
@@ -113,9 +114,9 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
           >
             Submit Another RFQ
           </button>
-          <a href="/" className="btn-outline-slate">
+          <Link href="/" className="btn-outline-slate">
             Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     );

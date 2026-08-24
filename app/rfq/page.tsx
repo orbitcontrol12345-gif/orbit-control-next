@@ -17,11 +17,12 @@ type RFQSearchParams = {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams?: RFQSearchParams;
+  searchParams?: Promise<RFQSearchParams>;
 }): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
   const hasPrefilledProduct = Boolean(
-    searchParams?.part?.trim() ||
-      searchParams?.name?.trim(),
+    resolvedSearchParams?.part?.trim() ||
+      resolvedSearchParams?.name?.trim(),
   );
 
   return {

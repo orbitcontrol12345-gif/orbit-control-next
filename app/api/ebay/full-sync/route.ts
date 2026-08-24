@@ -263,7 +263,7 @@ function cleanTitle(title: string): string {
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
 
     // LOT 2 / LOT-3 / LOT #4 / LOT:5
-    .replace(/\bLOT\s*[-:#xX]?\s*\d+\b/gi, ' ')
+    .replace(/\bLOT\s*(?:-|:|#|x|X)?\s*\d+\b/gi, ' ')
 
     // 2 LOT / 3 LOTS
     .replace(/\b\d+\s+LOTS?\b/gi, ' ')
