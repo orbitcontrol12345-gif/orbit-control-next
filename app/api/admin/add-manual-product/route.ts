@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
   buildManualProductGallery,
@@ -83,6 +84,8 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ success: false, error }, { status: 500 });
     }
+
+    revalidateTag('products', 'max');
 
     return NextResponse.json({
       success: true,

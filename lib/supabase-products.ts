@@ -4,8 +4,37 @@ import { unstable_cache } from 'next/cache';
 const PRODUCTS_TABLE = 'products';
 const MIGRATION_REDIRECTS_TABLE = 'migration_redirects';
 const SITE_URL = 'https://www.orbit-surplus.com';
+const PRODUCT_LIST_COLUMNS = `
+  id,
+  sku,
+  ebay_item_id,
+  slug,
+  brand,
+  part_number,
+  name,
+  category,
+  condition,
+  is_active,
+  description,
+  image_url,
+  r2_image_url,
+  r2_gallery_urls,
+  ebay_image_url,
+  ebay_gallery_urls
+`;
 
 type ProductSortOption = 'relevance' | 'name' | 'brand' | 'condition';
+
+type ProductsPageOptions = {
+  search?: string;
+  brand?: string;
+  category?: string;
+  condition?: string;
+  inStockOnly?: boolean;
+  sort?: ProductSortOption;
+  page?: number;
+  perPage?: number;
+};
 
 function cleanProductName(name: string): string {
   return name
@@ -194,7 +223,7 @@ async function findVisibleProductFromRedirect(
   return null;
 }
 
-export async function getSupabaseProductsPage({
+async function loadSupabaseProductsPage({
   search = '',
   brand = '',
   category = '',
@@ -203,16 +232,7 @@ export async function getSupabaseProductsPage({
   sort = 'relevance',
   page = 1,
   perPage = 24,
-}: {
-  search?: string;
-  brand?: string;
-  category?: string;
-  condition?: string;
-  inStockOnly?: boolean;
-  sort?: ProductSortOption;
-  page?: number;
-  perPage?: number;
-}) {
+}: ProductsPageOptions) {
   const safePage = normalizePage(page);
   const safePerPage = normalizePerPage(perPage);
 
@@ -226,7 +246,7 @@ export async function getSupabaseProductsPage({
 
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
-    .select('*', { count: 'exact' })
+    .select(PRODUCT_LIST_COLUMNS, { count: 'exact' })
     .eq('is_active', true)
     .neq('catalog_visible', false);
 
@@ -453,7 +473,56 @@ export async function getSupabaseProductsPage({
   };
 }
 
-export async function getSupabaseProductsByCategoryTerms({
+const getCachedSupabaseProductsPage = unstable_cache(
+  async (
+    brand: string,
+    category: string,
+    condition: string,
+    inStockOnly: boolean,
+    sort: ProductSortOption,
+    page: number,
+    perPage: number,
+  ) =>
+    loadSupabaseProductsPage({
+      brand,
+      category,
+      condition,
+      inStockOnly,
+      sort,
+      page,
+      perPage,
+    }),
+  ['visible-products-page-v2'],
+  {
+    revalidate: 300,
+    tags: ['products'],
+  },
+);
+
+export async function getSupabaseProductsPage(
+  options: ProductsPageOptions,
+) {
+  const search = cleanFilterValue(options.search || '');
+
+  if (search) {
+    return loadSupabaseProductsPage({
+      ...options,
+      search,
+    });
+  }
+
+  return getCachedSupabaseProductsPage(
+    cleanFilterValue(options.brand || ''),
+    cleanFilterValue(options.category || ''),
+    cleanFilterValue(options.condition || ''),
+    options.inStockOnly === true,
+    options.sort || 'relevance',
+    normalizePage(options.page ?? 1),
+    normalizePerPage(options.perPage ?? 24),
+  );
+}
+
+async function loadSupabaseProductsByCategoryTerms({
   terms,
   excludeTerms = [],
   page = 1,
@@ -493,7 +562,7 @@ export async function getSupabaseProductsByCategoryTerms({
 
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
-    .select('*', { count: 'exact' })
+    .select(PRODUCT_LIST_COLUMNS, { count: 'exact' })
     .eq('is_active', true)
     .neq('catalog_visible', false)
     .or(filters);
@@ -536,7 +605,53 @@ export async function getSupabaseProductsByCategoryTerms({
   };
 }
 
-export async function getSupabaseProductBySlug(
+const getCachedSupabaseProductsByCategoryTerms = unstable_cache(
+  async (
+    termsJson: string,
+    excludeTermsJson: string,
+    page: number,
+    perPage: number,
+  ) =>
+    loadSupabaseProductsByCategoryTerms({
+      terms: JSON.parse(termsJson) as string[],
+      excludeTerms: JSON.parse(excludeTermsJson) as string[],
+      page,
+      perPage,
+    }),
+  ['visible-category-products-v2'],
+  {
+    revalidate: 300,
+    tags: ['products'],
+  },
+);
+
+export async function getSupabaseProductsByCategoryTerms({
+  terms,
+  excludeTerms = [],
+  page = 1,
+  perPage = 24,
+}: {
+  terms: string[];
+  excludeTerms?: string[];
+  page?: number;
+  perPage?: number;
+}) {
+  const normalizedTerms = terms
+    .map(cleanFilterValue)
+    .filter(Boolean);
+  const normalizedExcludeTerms = excludeTerms
+    .map(cleanFilterValue)
+    .filter(Boolean);
+
+  return getCachedSupabaseProductsByCategoryTerms(
+    JSON.stringify(normalizedTerms),
+    JSON.stringify(normalizedExcludeTerms),
+    normalizePage(page),
+    normalizePerPage(perPage),
+  );
+}
+
+async function loadSupabaseProductBySlug(
   slug: string,
 ): Promise<Product | null> {
   let decodedSlug: string;
@@ -614,8 +729,23 @@ export async function getSupabaseProductBySlug(
   return mapSupabaseProduct(data);
 }
 
-export async function getSupabaseRelatedProducts(
-  product: Product,
+const getCachedSupabaseProductBySlug = unstable_cache(
+  loadSupabaseProductBySlug,
+  ['visible-product-by-slug-v2'],
+  {
+    revalidate: 300,
+    tags: ['products'],
+  },
+);
+
+export async function getSupabaseProductBySlug(
+  slug: string,
+): Promise<Product | null> {
+  return getCachedSupabaseProductBySlug(slug);
+}
+
+async function loadSupabaseRelatedProducts(
+  product: Pick<Product, 'id' | 'sku' | 'brand' | 'category'>,
 ): Promise<Product[]> {
   const brand = cleanFilterValue(product.brand);
   const category = cleanFilterValue(product.category);
@@ -633,7 +763,7 @@ export async function getSupabaseRelatedProducts(
 
   let query = supabaseAdmin
     .from(PRODUCTS_TABLE)
-    .select('*')
+    .select(PRODUCT_LIST_COLUMNS)
     .eq('is_active', true)
     .neq('catalog_visible', false)
     .or(relatedFilters)
@@ -749,6 +879,37 @@ export async function getSupabaseRelatedProducts(
     .sort((a, b) => b.score - a.score)
     .map(({ item }) => item)
     .slice(0, 4);
+}
+
+const getCachedSupabaseRelatedProducts = unstable_cache(
+  async (
+    id: string,
+    sku: string,
+    brand: string,
+    category: string,
+  ) =>
+    loadSupabaseRelatedProducts({
+      id,
+      sku,
+      brand,
+      category,
+    }),
+  ['visible-related-products-v2'],
+  {
+    revalidate: 300,
+    tags: ['products'],
+  },
+);
+
+export async function getSupabaseRelatedProducts(
+  product: Product,
+): Promise<Product[]> {
+  return getCachedSupabaseRelatedProducts(
+    product.id,
+    product.sku,
+    product.brand,
+    product.category,
+  );
 }
 export const getVisibleProductsCount = unstable_cache(
   async (): Promise<number | null> => {

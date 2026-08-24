@@ -17,9 +17,12 @@ import {
 import { CATEGORIES } from '@/lib/data';
 
 export const metadata: Metadata = {
-  title: 'Industrial Automation Parts Categories | Orbit Control Automation UAE',
+  title: 'Industrial Automation Parts Categories',
   description:
     'Browse PLCs, HMIs, VFDs, circuit breakers, relays, sensors, power supplies and obsolete industrial automation spare parts.',
+  alternates: {
+    canonical: 'https://www.orbit-surplus.com/categories',
+  },
 };
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -67,7 +70,7 @@ export default function CategoriesPage() {
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
             />
             <input
-              name="search"
+              name="q"
               type="text"
               placeholder="Search by part number, brand, or category..."
               className="w-full rounded-xl border border-navy-600 bg-navy-900 py-4 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-gold-500"

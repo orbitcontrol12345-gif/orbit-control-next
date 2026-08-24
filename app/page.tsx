@@ -34,6 +34,9 @@ export const metadata: Metadata = {
   title: 'Orbit Control Automation — Industrial Automation & Surplus Parts',
   description:
     'Worldwide supplier of PLCs, HMIs, VFDs, sensors, relays, circuit breakers, surplus and obsolete industrial automation spare parts.',
+  alternates: {
+    canonical: 'https://www.orbit-surplus.com',
+  },
 };
 
 const CATEGORY_ICONS: Record<string, any> = {

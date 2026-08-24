@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,7 +8,10 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || 'https://orbit-control-next.vercel.app';
 
 async function runStep(path: string) {
-  const res = await fetch(`${SITE_URL}${path}`, { cache: 'no-store' });
+  const res = await fetch(`${SITE_URL}${path}`, {
+    cache: 'no-store',
+    headers: getInternalApiHeaders(),
+  });
   const data = await res.json().catch(() => null);
 
   return {

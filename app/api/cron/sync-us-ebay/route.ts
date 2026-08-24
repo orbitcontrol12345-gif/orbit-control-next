@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -10,7 +11,10 @@ export async function GET(request: Request) {
     // اقرأ آخر Offset
     const stateRes = await fetch(
       `${origin}/api/sync-state`,
-      { cache: 'no-store' }
+      {
+        cache: 'no-store',
+        headers: getInternalApiHeaders(),
+      }
     );
 
     if (!stateRes.ok) {
@@ -24,7 +28,10 @@ export async function GET(request: Request) {
     // شغّل Sync
     const syncRes = await fetch(
       `${origin}/api/ebay/sync-us?offset=${offset}`,
-      { cache: 'no-store' }
+      {
+        cache: 'no-store',
+        headers: getInternalApiHeaders(),
+      }
     );
 
     if (!syncRes.ok) {
@@ -40,7 +47,11 @@ export async function GET(request: Request) {
     await fetch(`${origin}/api/sync-state`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        ...Object.fromEntries(
+          getInternalApiHeaders({
+            'Content-Type': 'application/json',
+          }),
+        ),
       },
       body: JSON.stringify({
         current_offset: nextOffset,

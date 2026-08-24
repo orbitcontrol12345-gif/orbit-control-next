@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -237,7 +238,11 @@ const matcherResponse = await fetch(matcherUrl, {
   method: 'GET',
   cache: 'no-store',
   headers: {
-    Accept: 'application/json',
+    ...Object.fromEntries(
+      getInternalApiHeaders({
+        Accept: 'application/json',
+      }),
+    ),
   },
 });
 

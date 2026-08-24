@@ -1,8 +1,32 @@
 import nodemailer from 'nodemailer';
+import {
+  checkPublicFormRateLimit,
+  cleanFormText,
+  escapeHtml,
+  isValidEmail,
+  validateAttachments,
+} from '@/lib/public-form-security';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
+  const rateLimit = checkPublicFormRateLimit(req, 'rfq');
+
+  if (!rateLimit.allowed) {
+    return Response.json(
+      {
+        success: false,
+        error: 'Too many requests. Please try again later.',
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
+        },
+      },
+    );
+  }
+
   const smtpHost = process.env.MXROUTE_SMTP_HOST;
   const smtpUser = process.env.MXROUTE_SMTP_USER;
   const smtpPass = process.env.MXROUTE_SMTP_PASS;
@@ -20,16 +44,61 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
+    if (cleanFormText(formData.get('website'), 200)) {
+      return Response.json({ success: true });
+    }
+
     const data = {
-      name: String(formData.get('name') || ''),
-      company: String(formData.get('company') || ''),
-      email: String(formData.get('email') || ''),
-      phone: String(formData.get('phone') || ''),
-      country: String(formData.get('country') || ''),
-      part_number: String(formData.get('part_number') || ''),
-      quantity: String(formData.get('quantity') || '1'),
-      message: String(formData.get('message') || ''),
+      name: cleanFormText(formData.get('name'), 120),
+      company: cleanFormText(formData.get('company'), 160),
+      email: cleanFormText(formData.get('email'), 254),
+      phone: cleanFormText(formData.get('phone'), 80),
+      country: cleanFormText(formData.get('country'), 100),
+      part_number: cleanFormText(formData.get('part_number'), 1000),
+      quantity: cleanFormText(formData.get('quantity') || '1', 20),
+      message: cleanFormText(formData.get('message'), 5000),
     };
+    const quantity = Number(data.quantity);
+    const files = formData
+      .getAll('files')
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    const attachmentError = validateAttachments(files);
+
+    if (
+      !data.name ||
+      !data.company ||
+      !isValidEmail(data.email) ||
+      !data.country ||
+      !data.part_number ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100000
+    ) {
+      return Response.json(
+        {
+          success: false,
+          error: 'Please check the required RFQ fields.',
+        },
+        { status: 400 },
+      );
+    }
+
+    if (attachmentError) {
+      return Response.json(
+        {
+          success: false,
+          error: attachmentError,
+        },
+        { status: 400 },
+      );
+    }
+
+    const attachments = await Promise.all(
+      files.map(async (file) => ({
+        filename: file.name,
+        content: Buffer.from(await file.arrayBuffer()),
+      })),
+    );
 
     const transporter = nodemailer.createTransport({
       host: smtpHost,
@@ -46,26 +115,28 @@ export async function POST(req: Request) {
       to: 'rfq@orbit-surplus.com',
       replyTo: data.email || undefined,
       subject: `New Orbit Control RFQ - ${
-        data.part_number || 'General Inquiry'
+        data.part_number.replace(/[\r\n]+/g, ' ') ||
+        'General Inquiry'
       }`,
+      attachments,
       html: `
         <h2>New Orbit Control RFQ Request</h2>
 
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Company:</strong> ${data.company}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Country:</strong> ${data.country}</p>
+        <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
+        <p><strong>Company:</strong> ${escapeHtml(data.company)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(data.phone)}</p>
+        <p><strong>Country:</strong> ${escapeHtml(data.country)}</p>
 
         <hr />
 
-        <p><strong>Part Number:</strong> ${data.part_number}</p>
-        <p><strong>Quantity:</strong> ${data.quantity}</p>
+        <p><strong>Part Number:</strong> ${escapeHtml(data.part_number)}</p>
+        <p><strong>Quantity:</strong> ${quantity}</p>
 
         <hr />
 
         <p><strong>Message:</strong></p>
-        <p>${data.message || 'No message provided'}</p>
+        <p>${escapeHtml(data.message || 'No message provided')}</p>
       `,
     });
 

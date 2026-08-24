@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,12 @@ export async function GET(request: NextRequest) {
         method: 'GET',
         cache: 'no-store',
         headers: {
-          'User-Agent': 'Orbit-Control-Bridge-Health-Cron/1.0',
+          ...Object.fromEntries(
+            getInternalApiHeaders({
+              'User-Agent':
+                'Orbit-Control-Bridge-Health-Cron/1.0',
+            }),
+          ),
         },
       }
     );

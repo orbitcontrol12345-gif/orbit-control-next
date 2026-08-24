@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 const SITE_URL = 'https://www.orbit-surplus.com';
 
 export const metadata: Metadata = {
-  title: 'Contact Orbit Control Automation',
+  title: 'Contact Us',
   description:
     'Contact Orbit Control Automation for industrial automation parts, RFQ support, worldwide shipping, order assistance, and technical inquiries.',
   alternates: {

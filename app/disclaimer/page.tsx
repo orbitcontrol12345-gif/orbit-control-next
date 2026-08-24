@@ -1,3 +1,14 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Legal Disclaimer & Trademark Notice',
+  description:
+    'Legal disclaimer, trademark notice, product condition information, and independent supplier statement for Orbit Control Automation.',
+  alternates: {
+    canonical: 'https://www.orbit-surplus.com/disclaimer',
+  },
+};
+
 export default function DisclaimerPage() {
   return (
     <div className="min-h-screen bg-navy-900 pt-40 pb-20">

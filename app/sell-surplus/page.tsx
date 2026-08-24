@@ -26,6 +26,7 @@ export default function SellSurplusPage() {
     quantity: '',
     condition: '',
     message: '',
+    website: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -59,24 +60,20 @@ const response = await fetch('/api/sell-surplus', {
   body: formData,
 });
 
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || 'Failed to send your inventory offer.');
+    }
+
     setSuccess(true);
-
-    setForm({
-      company: '',
-      contact_person: '',
-      email: '',
-      phone: '',
-      country: '',
-      brand: '',
-      part_numbers: '',
-      quantity: '',
-      condition: '',
-      message: '',
-    });
-
     setSelectedFiles([]);
-  } catch {
-    setError('Failed to send your inventory offer.');
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Failed to send your inventory offer.',
+    );
   } finally {
     setLoading(false);
   }
@@ -151,6 +148,16 @@ const response = await fetch('/api/sell-surplus', {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                <input
+                  type="text"
+                  name="website"
+                  value={form.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute -left-[10000px] h-px w-px opacity-0"
+                />
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">

@@ -23,8 +23,7 @@ import {
   getSupabaseRelatedProducts,
 } from "@/lib/supabase-products";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 const SITE_URL = "https://www.orbit-surplus.com";
 

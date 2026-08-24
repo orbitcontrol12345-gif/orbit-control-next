@@ -2,6 +2,7 @@ import {
   NextRequest,
   NextResponse,
 } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 import {
   BRAND_PROMOTER_VERSION,
@@ -206,8 +207,11 @@ export async function POST(
           method: 'GET',
           cache: 'no-store',
           headers: {
-            Accept:
-              'application/json',
+            ...Object.fromEntries(
+              getInternalApiHeaders({
+                Accept: 'application/json',
+              }),
+            ),
           },
         }
       );
