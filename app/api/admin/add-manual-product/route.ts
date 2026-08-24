@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import {
+  buildManualProductGallery,
   formatValidationError,
   manualProductInputSchema,
   slugifyManualProduct,
@@ -34,6 +35,11 @@ export async function POST(request: Request) {
       .toUpperCase()}`;
     const description = input.description || input.name;
     const brand = input.brand || 'Unknown';
+    const galleryUrls = buildManualProductGallery(
+      input.image_urls,
+      input.image_url,
+    );
+    const mainImageUrl = galleryUrls[0] || '';
 
     const product = {
       ebay_item_id: manualSku,
@@ -41,10 +47,16 @@ export async function POST(request: Request) {
       part_number: input.model_number,
       model_number: input.model_number,
       brand,
-      category: input.category || 'Industrial Automation',
+      category: input.category,
       name: input.name,
       condition: input.condition,
-      image_url: input.image_url,
+      image_url: mainImageUrl,
+      r2_image_url: mainImageUrl || null,
+      r2_gallery_urls: galleryUrls,
+      image_count: galleryUrls.length,
+      image_status: galleryUrls.length
+        ? 'manual_gallery'
+        : 'manual_no_image',
       description,
       slug: slugifyManualProduct(
         `${manualSku}-${brand}-${input.model_number}-${input.name}`,
@@ -53,7 +65,7 @@ export async function POST(request: Request) {
       seller: 'orbitcontrol',
       source: 'manual',
       source_type: 'manual',
-      quantity: input.quantity,
+      quantity: 1,
       price: null,
       currency: 'USD',
       is_active: true,

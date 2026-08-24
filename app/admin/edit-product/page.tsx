@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import AdminNavigation from '@/components/admin/AdminNavigation';
+import ManualProductImages from '@/components/admin/ManualProductImages';
+import { CATEGORIES } from '@/lib/catalog-categories';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,6 +29,20 @@ export default async function EditProductPage({
     );
   }
 
+  const initialImageUrls = Array.from(
+    new Set(
+      [
+        ...(Array.isArray(product.r2_gallery_urls)
+          ? product.r2_gallery_urls
+          : []),
+        product.r2_image_url,
+        product.image_url,
+      ]
+        .map((url) => String(url || '').trim())
+        .filter(Boolean),
+    ),
+  );
+
   return (
     <div className="min-h-screen bg-[#06111d] px-6 py-24 text-white">
       <div className="mx-auto max-w-3xl">
@@ -41,10 +57,41 @@ export default async function EditProductPage({
           <input name="name" required maxLength={300} defaultValue={product.name || ''} className="w-full rounded-lg p-3 text-black" />
           <input name="brand" maxLength={120} defaultValue={product.brand || ''} className="w-full rounded-lg p-3 text-black" />
           <input name="model_number" required maxLength={160} defaultValue={product.model_number || product.part_number || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="category" maxLength={160} defaultValue={product.category || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="condition" defaultValue={product.condition || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="quantity" type="number" min="0" max="1000000" defaultValue={product.quantity ?? 1} className="w-full rounded-lg p-3 text-black" />
-          <input name="image_url" type="url" maxLength={2048} defaultValue={product.image_url || ''} className="w-full rounded-lg p-3 text-black" />
+          <select
+            name="category"
+            required
+            defaultValue={
+              CATEGORIES.some(
+                (category) => category.name === product.category,
+              )
+                ? product.category
+                : ''
+            }
+            className="w-full rounded-lg p-3 text-black"
+          >
+            <option value="" disabled>
+              Select Category
+            </option>
+            {CATEGORIES.map((category) => (
+              <option key={category.slug} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="condition"
+            defaultValue={product.condition || 'Used'}
+            className="w-full rounded-lg p-3 text-black"
+          >
+            <option>Used</option>
+            <option>New</option>
+            <option>New – Open box</option>
+            <option>Refurbished</option>
+            <option>For parts</option>
+          </select>
+
+          <ManualProductImages initialUrls={initialImageUrls} />
 
           <textarea
             name="description"
