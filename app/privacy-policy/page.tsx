@@ -4,6 +4,9 @@ import { Shield } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'Orbit Control Automation privacy policy. How we collect, use, and protect your personal information.',
+  alternates: {
+    canonical: 'https://www.orbit-surplus.com/privacy-policy',
+  },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

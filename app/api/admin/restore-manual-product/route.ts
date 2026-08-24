@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
     .eq('sku', sku)
     .eq('source_type', 'manual')
     .select();
+
+  if (!error && data?.length) {
+    revalidateTag('products', 'max');
+  }
 
   if (!isJson && !error && data?.length) {
     return NextResponse.redirect(

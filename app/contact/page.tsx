@@ -16,7 +16,7 @@ import Link from 'next/link';
 
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', subject: '', message: '' });
+  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', subject: '', message: '', website: '' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -39,22 +39,19 @@ export default function ContactPage() {
       body: JSON.stringify(form),
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to send');
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || 'Failed to send your message.');
     }
 
     setSuccess(true);
-
-    setForm({
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
-    });
   } catch (err) {
-    setError('Failed to send your message.');
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Failed to send your message.',
+    );
   } finally {
     setLoading(false);
   }
@@ -166,13 +163,23 @@ export default function ContactPage() {
                   <p className="text-slate-400 text-sm">
                     Thank you, <strong className="text-slate-200">{form.name}</strong>. We&apos;ll reply to {form.email} within 24 hours.
                   </p>
-                  <button onClick={() => { setSuccess(false); setForm({ name: '', company: '', email: '', phone: '', subject: '', message: '' }); }}
+                  <button onClick={() => { setSuccess(false); setForm({ name: '', company: '', email: '', phone: '', subject: '', message: '', website: '' }); }}
                     className="mt-5 btn-outline-slate text-sm py-2">
                     Send Another Message
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  <input
+                    type="text"
+                    name="website"
+                    value={form.website}
+                    onChange={handleChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute -left-[10000px] h-px w-px opacity-0"
+                  />
                   {error && (
                     <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />

@@ -9,6 +9,15 @@ const LOGIN_PAGE = '/admin/login';
 const LOGIN_API = '/api/admin/login';
 const LOGOUT_API = '/api/admin/logout';
 
+const PUBLIC_API_PATHS = new Set([
+  LOGIN_API,
+  LOGOUT_API,
+  '/api/contact',
+  '/api/rfq',
+  '/api/search-products',
+  '/api/sell-surplus',
+]);
+
 function withSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
@@ -21,6 +30,7 @@ function withSecurityHeaders(response: NextResponse): NextResponse {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const isApiRoute = pathname.startsWith('/api/');
   const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(
     request.method,
   );
@@ -38,11 +48,18 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  if (pathname === LOGIN_API || pathname === LOGOUT_API) {
+  if (PUBLIC_API_PATHS.has(pathname)) {
     return withSecurityHeaders(NextResponse.next());
   }
 
   const session = await verifyAdminSessionToken(token);
+  const cronSecret = process.env.CRON_SECRET?.trim() || '';
+  const cronAuthorized = Boolean(
+    isApiRoute &&
+      cronSecret &&
+      request.headers.get('authorization') ===
+        `Bearer ${cronSecret}`,
+  );
 
   if (pathname === LOGIN_PAGE) {
     if (session) {
@@ -54,8 +71,8 @@ export async function proxy(request: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   }
 
-  if (!session) {
-    if (pathname.startsWith('/api/admin/')) {
+  if (!session && !cronAuthorized) {
+    if (isApiRoute) {
       return withSecurityHeaders(
         NextResponse.json(
           {
@@ -77,5 +94,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*'],
 };

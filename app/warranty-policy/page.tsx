@@ -3,9 +3,12 @@ import Link from 'next/link';
 import { ShieldCheck, Package } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Warranty & Return Policy | Orbit Control Automation',
+  title: 'Warranty & Return Policy',
   description:
     'Warranty and return policy for industrial automation, electrical, surplus and obsolete spare parts supplied by Orbit Control Automation.',
+  alternates: {
+    canonical: 'https://www.orbit-surplus.com/warranty-policy',
+  },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

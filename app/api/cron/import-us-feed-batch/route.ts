@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,6 +21,7 @@ export async function GET() {
 
   const res = await fetch(`${SITE_URL}/api/ebay/import-us-feed?offset=${offset}`, {
     cache: 'no-store',
+    headers: getInternalApiHeaders(),
   });
 
    const result = await res.json();

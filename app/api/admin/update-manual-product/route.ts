@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 import {
   buildManualProductGallery,
@@ -99,6 +100,8 @@ export async function POST(request: Request) {
       { status: 404 },
     );
   }
+
+  revalidateTag('products', 'max');
 
   return NextResponse.redirect(
     new URL('/admin/products?updated=1', request.url),

@@ -28,6 +28,7 @@ export default function RFQForm() {
     part_number: '',
     quantity: 1,
     message: '',
+    website: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -59,6 +60,7 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     formData.append('part_number', form.part_number);
     formData.append('quantity', String(form.quantity));
     formData.append('message', form.message);
+    formData.append('website', form.website);
 
     selectedFiles.forEach((file) => {
       formData.append('files', file);
@@ -69,24 +71,20 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to send RFQ');
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.error || 'Failed to send RFQ');
     }
 
     setSuccess(true);
-    setForm({
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      country: '',
-      part_number: '',
-      quantity: 1,
-      message: '',
-    });
     setSelectedFiles([]);
   } catch (err) {
-    setError('Failed to submit your request. Please try again or email us directly.');
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Failed to submit your request. Please try again or email us directly.',
+    );
   } finally {
     setLoading(false);
   }
@@ -109,7 +107,7 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
-            onClick={() => { setSuccess(false); setForm({ name: '', company: '', email: '', phone: '', country: '', part_number: '', quantity: 1, message: '' }); }}
+            onClick={() => { setSuccess(false); setForm({ name: '', company: '', email: '', phone: '', country: '', part_number: '', quantity: 1, message: '', website: '' }); }}
             className="btn-outline-gold"
           >
             Submit Another RFQ
@@ -124,6 +122,16 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <input
+        type="text"
+        name="website"
+        value={form.website}
+        onChange={handleChange}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[10000px] h-px w-px opacity-0"
+      />
       {error && (
         <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
           <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />

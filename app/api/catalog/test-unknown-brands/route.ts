@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 
 import {
   BRAND_SCORING_ENGINE_VERSION,
@@ -109,9 +110,13 @@ export async function GET(request: Request) {
       {
         method: 'GET',
         cache: 'no-store',
-        headers: {
-          Accept: 'application/json',
-        },
+      headers: {
+        ...Object.fromEntries(
+          getInternalApiHeaders({
+            Accept: 'application/json',
+          }),
+        ),
+      },
       }
     );
 

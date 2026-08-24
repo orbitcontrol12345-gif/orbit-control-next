@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getInternalApiHeaders } from '@/lib/internal-api-auth';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const maxDuration = 60;
@@ -16,7 +17,10 @@ export async function GET() {
   for (const offset of offsets) {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/api/ebay-products?save=true&offset=${offset}`
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/ebay-products?save=true&offset=${offset}`,
+        {
+          headers: getInternalApiHeaders(),
+        },
       );
 
       const data = await response.json();
