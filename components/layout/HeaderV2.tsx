@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import {
   ArrowRight,
   Box,
@@ -127,7 +128,9 @@ export default function HeroV2() {
               <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-cyan-400/20 via-transparent to-amber-400/20 blur-lg" />
 
               <div className="relative overflow-hidden rounded-xl border border-white/15 bg-[#06111d]/90 shadow-[0_20px_70px_rgba(0,0,0,0.46)] backdrop-blur-xl">
-                <HeroSearchBar />
+                <Suspense fallback={null}>
+                  <HeroSearchBar />
+                </Suspense>
               </div>
             </div>
 

@@ -4,10 +4,16 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function GET(request: Request) {
-  const sku = new URL(request.url).searchParams.get('sku') || '';
+export async function POST(request: Request) {
+  const isJson = request.headers
+    .get('content-type')
+    ?.includes('application/json');
+  const input = isJson
+    ? await request.json()
+    : Object.fromEntries(await request.formData());
+  const sku = String(input.sku || '').trim();
 
-  if (!sku) {
+  if (!sku || !sku.startsWith('MANUAL-')) {
     return NextResponse.json({ success: false, error: 'Missing sku' }, { status: 400 });
   }
 
@@ -15,10 +21,19 @@ export async function GET(request: Request) {
     .from('products')
     .update({
       is_active: true,
+      catalog_visible: true,
       updated_at: new Date().toISOString(),
     })
     .eq('sku', sku)
+    .eq('source_type', 'manual')
     .select();
+
+  if (!isJson && !error && data?.length) {
+    return NextResponse.redirect(
+      new URL('/admin/products?restored=1', request.url),
+      303,
+    );
+  }
 
   return NextResponse.json({
     success: !error,

@@ -31,7 +31,7 @@ type ProductsSearchParams = {
 };
 
 type ProductsPageProps = {
-  searchParams?: ProductsSearchParams;
+  searchParams?: Promise<ProductsSearchParams>;
 };
 
 function parsePage(value?: string): number {
@@ -59,8 +59,9 @@ function hasFilteredView(
 export async function generateMetadata({
   searchParams,
 }: ProductsPageProps): Promise<Metadata> {
-  const filteredView = hasFilteredView(searchParams);
-  const currentPage = parsePage(searchParams?.page);
+  const resolvedSearchParams = await searchParams;
+  const filteredView = hasFilteredView(resolvedSearchParams);
+  const currentPage = parsePage(resolvedSearchParams?.page);
 
   const canonicalUrl =
     !filteredView && currentPage > 1
@@ -90,14 +91,15 @@ export async function generateMetadata({
 export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
-  const search = searchParams?.q?.trim() || '';
-  const brand = searchParams?.brand?.trim() || '';
-  const category = searchParams?.category?.trim() || '';
-  const condition = searchParams?.condition?.trim() || '';
-  const inStockOnly = searchParams?.stock === 'in-stock';
-  const sort = searchParams?.sort || 'relevance';
-  const currentPage = parsePage(searchParams?.page);
-  const filteredView = hasFilteredView(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const search = resolvedSearchParams?.q?.trim() || '';
+  const brand = resolvedSearchParams?.brand?.trim() || '';
+  const category = resolvedSearchParams?.category?.trim() || '';
+  const condition = resolvedSearchParams?.condition?.trim() || '';
+  const inStockOnly = resolvedSearchParams?.stock === 'in-stock';
+  const sort = resolvedSearchParams?.sort || 'relevance';
+  const currentPage = parsePage(resolvedSearchParams?.page);
+  const filteredView = hasFilteredView(resolvedSearchParams);
   const perPage = 24;
 
   const {

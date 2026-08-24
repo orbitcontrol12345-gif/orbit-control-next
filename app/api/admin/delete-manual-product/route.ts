@@ -12,35 +12,31 @@ async function hideProduct(sku: string) {
       updated_at: new Date().toISOString(),
     })
     .eq('sku', sku)
+    .eq('source_type', 'manual')
     .select('sku,is_active');
 }
 
-export async function GET(request: Request) {
-  const sku = new URL(request.url).searchParams.get('sku') || '';
-
-  if (!sku) {
-    return NextResponse.json({ success: false, error: 'Missing sku' }, { status: 400 });
-  }
-
-  const { data, error } = await hideProduct(sku);
-
-  return NextResponse.json({
-    success: !error,
-    hidden: data?.length || 0,
-    data,
-    error,
-  });
-}
-
 export async function POST(request: Request) {
-  const body = await request.json();
-  const sku = String(body.sku || '').trim();
+  const isJson = request.headers
+    .get('content-type')
+    ?.includes('application/json');
+  const input = isJson
+    ? await request.json()
+    : Object.fromEntries(await request.formData());
+  const sku = String(input.sku || '').trim();
 
-  if (!sku) {
+  if (!sku || !sku.startsWith('MANUAL-')) {
     return NextResponse.json({ success: false, error: 'Missing sku' }, { status: 400 });
   }
 
   const { data, error } = await hideProduct(sku);
+
+  if (!isJson && !error && data?.length) {
+    return NextResponse.redirect(
+      new URL('/admin/products?hidden=1', request.url),
+      303,
+    );
+  }
 
   return NextResponse.json({
     success: !error,

@@ -92,7 +92,7 @@ export default function DisclaimerPage() {
             </h2>
             <p>
               Unless otherwise stated in writing, products are sold
-              "AS IS" and "AS AVAILABLE". Any manufacturer warranty remains
+              &quot;AS IS&quot; and &quot;AS AVAILABLE&quot;. Any manufacturer warranty remains
               solely the responsibility of the original manufacturer.
             </p>
           </section>

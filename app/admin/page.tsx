@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   LayoutDashboard, FileText, Package, TrendingUp,
   RefreshCw, Eye, CheckCircle, Clock, XCircle,
@@ -10,6 +11,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { PRODUCTS, BRANDS, CATEGORIES } from '@/lib/data';
 import type { RFQRequest, SellSurplusRequest } from '@/lib/types';
+import AdminNavigation from '@/components/admin/AdminNavigation';
 
 type TabType = 'overview' | 'rfqs' | 'surplus' | 'products';
 
@@ -97,6 +99,8 @@ export default function AdminPage() {
       </div>
 
       <div className="page-container py-6">
+        <AdminNavigation />
+
         {/* Tabs */}
         <div className="flex gap-1 bg-navy-900 border border-navy-700 rounded-lg p-1 mb-6 overflow-x-auto">
           {tabs.map(({ id, label, icon: Icon, badge }) => (
@@ -334,8 +338,16 @@ export default function AdminPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-white">Product Catalog ({PRODUCTS.length})</h2>
-              <div className="text-xs text-slate-400">
-                {PRODUCTS.filter(p => p.inStock).length} in stock · {PRODUCTS.filter(p => !p.inStock).length} out of stock
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-slate-400">
+                  {PRODUCTS.filter(p => p.inStock).length} in stock · {PRODUCTS.filter(p => !p.inStock).length} out of stock
+                </div>
+                <Link
+                  href="/admin/products"
+                  className="rounded-lg bg-cyan-400 px-4 py-2 text-xs font-bold text-[#06111d]"
+                >
+                  Manage Manual Products
+                </Link>
               </div>
             </div>
             <div className="bg-navy-800 border border-navy-700 rounded-xl overflow-hidden">

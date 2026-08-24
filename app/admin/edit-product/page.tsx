@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import AdminNavigation from '@/components/admin/AdminNavigation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -6,14 +7,16 @@ export const revalidate = 0;
 export default async function EditProductPage({
   searchParams,
 }: {
-  searchParams: { sku?: string };
+  searchParams: Promise<{ sku?: string }>;
 }) {
-  const sku = searchParams.sku || '';
+  const resolvedSearchParams = await searchParams;
+  const sku = resolvedSearchParams.sku || '';
 
   const { data: product } = await supabaseAdmin
     .from('products')
     .select('*')
     .eq('sku', sku)
+    .eq('source_type', 'manual')
     .maybeSingle();
 
   if (!product) {
@@ -26,24 +29,28 @@ export default async function EditProductPage({
 
   return (
     <div className="min-h-screen bg-[#06111d] px-6 py-24 text-white">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-cyan-400/10 bg-[#0b1f2f] p-8">
+      <div className="mx-auto max-w-3xl">
+        <AdminNavigation />
+
+        <div className="rounded-2xl border border-cyan-400/10 bg-[#0b1f2f] p-8">
         <h1 className="mb-6 text-3xl font-bold">Edit Product</h1>
 
         <form action="/api/admin/update-manual-product" method="POST" className="space-y-4">
           <input type="hidden" name="sku" defaultValue={product.sku} />
 
-          <input name="name" defaultValue={product.name || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="brand" defaultValue={product.brand || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="model_number" defaultValue={product.model_number || product.part_number || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="category" defaultValue={product.category || ''} className="w-full rounded-lg p-3 text-black" />
+          <input name="name" required maxLength={300} defaultValue={product.name || ''} className="w-full rounded-lg p-3 text-black" />
+          <input name="brand" maxLength={120} defaultValue={product.brand || ''} className="w-full rounded-lg p-3 text-black" />
+          <input name="model_number" required maxLength={160} defaultValue={product.model_number || product.part_number || ''} className="w-full rounded-lg p-3 text-black" />
+          <input name="category" maxLength={160} defaultValue={product.category || ''} className="w-full rounded-lg p-3 text-black" />
           <input name="condition" defaultValue={product.condition || ''} className="w-full rounded-lg p-3 text-black" />
-          <input name="quantity" type="number" defaultValue={product.quantity || 1} className="w-full rounded-lg p-3 text-black" />
-          <input name="image_url" defaultValue={product.image_url || ''} className="w-full rounded-lg p-3 text-black" />
+          <input name="quantity" type="number" min="0" max="1000000" defaultValue={product.quantity ?? 1} className="w-full rounded-lg p-3 text-black" />
+          <input name="image_url" type="url" maxLength={2048} defaultValue={product.image_url || ''} className="w-full rounded-lg p-3 text-black" />
 
           <textarea
             name="description"
             defaultValue={product.description || ''}
             rows={6}
+            maxLength={20000}
             className="w-full rounded-lg p-3 text-black"
           />
 
@@ -51,6 +58,7 @@ export default async function EditProductPage({
             Save Changes
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

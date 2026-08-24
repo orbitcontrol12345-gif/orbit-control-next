@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Upload, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 
@@ -91,7 +92,7 @@ const response = await fetch('/api/sell-surplus', {
           <p className="text-slate-300 mb-6">
             Thank you, <strong className="text-gold-500">{form.contact_person}</strong>. Our sourcing team will review your inventory offer and contact you within 48 hours.
           </p>
-          <a href="/" className="btn-outline-gold inline-flex">Back to Home</a>
+          <Link href="/" className="btn-outline-gold inline-flex">Back to Home</Link>
         </div>
       </div>
     );

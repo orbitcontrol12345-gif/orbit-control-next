@@ -29,9 +29,9 @@ export const revalidate = 0;
 const SITE_URL = "https://www.orbit-surplus.com";
 
 interface Props {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 function cleanText(value?: string | null): string {
@@ -113,7 +113,8 @@ function uniqueImages(values: Array<string | null | undefined>): string[] {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await getSupabaseProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getSupabaseProductBySlug(slug);
 
   if (!product) {
     return {
@@ -143,7 +144,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { partNumber, title, metaDescription, description, imageAlt } = seo;
 
-  const canonicalSlug = product.slug || params.slug;
+  const canonicalSlug = product.slug || slug;
   const productPath = `/products/${encodeURIComponent(canonicalSlug)}`;
   const productUrl = `${SITE_URL}${productPath}`;
 
@@ -224,12 +225,13 @@ function ConditionBadge({ condition }: { condition: string }) {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  const product = await getSupabaseProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await getSupabaseProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
-  const requestedSlug = decodeURIComponent(params.slug);
+  const requestedSlug = decodeURIComponent(slug);
 
   if (product.slug && requestedSlug !== product.slug) {
     permanentRedirect(`/products/${encodeURIComponent(product.slug)}`);
@@ -251,7 +253,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const related = await getSupabaseRelatedProducts(product);
 
-  const productUrl = `${SITE_URL}/products/${encodeURIComponent(params.slug)}`;
+  const productUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
 
   const productImages = uniqueImages([
     product.r2ImageUrl,

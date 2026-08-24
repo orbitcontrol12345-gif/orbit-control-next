@@ -17,12 +17,12 @@ const SITE_URL = 'https://www.orbit-surplus.com';
 const PRODUCTS_PER_PAGE = 24;
 
 interface Props {
-  params: {
+  params: Promise<{
     brand: string;
-  };
-  searchParams?: {
+  }>;
+  searchParams?: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 type BrandRecord = {
@@ -84,8 +84,10 @@ export async function generateMetadata({
   params,
   searchParams,
 }: Props): Promise<Metadata> {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const brand = await getBrandBySlug(
-    params.brand,
+    resolvedParams.brand,
   );
 
   if (!brand) {
@@ -99,7 +101,7 @@ export async function generateMetadata({
   }
 
   const currentPage = getCurrentPage(
-    searchParams?.page,
+    resolvedSearchParams?.page,
   );
 
   const pageSuffix =
@@ -174,8 +176,10 @@ export default async function BrandPage({
   params,
   searchParams,
 }: Props) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const brand = await getBrandBySlug(
-    params.brand,
+    resolvedParams.brand,
   );
 
   if (!brand) {
@@ -183,7 +187,7 @@ export default async function BrandPage({
   }
 
   const currentPage = getCurrentPage(
-    searchParams?.page,
+    resolvedSearchParams?.page,
   );
 
   const {

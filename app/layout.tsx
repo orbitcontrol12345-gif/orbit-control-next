@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 
 import './globals.css';
 
@@ -229,7 +230,9 @@ export default function RootLayout({
 
         <div className="fixed inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
 
-        <Header />
+        <Suspense fallback={null}>
+          <Header />
+        </Suspense>
 
         <main className="relative">{children}</main>
 

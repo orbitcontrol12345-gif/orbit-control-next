@@ -13,12 +13,12 @@ const SITE_URL = 'https://www.orbit-surplus.com';
 const PRODUCTS_PER_PAGE = 24;
 
 interface Props {
-  params: {
+  params: Promise<{
     category: string;
-  };
-  searchParams?: {
+  }>;
+  searchParams?: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 const categorySearchMap: Record<string, string[]> = {
@@ -106,8 +106,10 @@ export async function generateMetadata({
   params,
   searchParams,
 }: Props): Promise<Metadata> {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const category = CATEGORIES.find(
-    (item) => item.slug === params.category,
+    (item) => item.slug === resolvedParams.category,
   );
 
   if (!category) {
@@ -120,7 +122,7 @@ export async function generateMetadata({
     };
   }
 
-  const currentPage = getCurrentPage(searchParams?.page);
+  const currentPage = getCurrentPage(resolvedSearchParams?.page);
 
   const pageSuffix =
     currentPage > 1 ? ` – Page ${currentPage}` : '';
@@ -190,15 +192,17 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: Props) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const category = CATEGORIES.find(
-    (item) => item.slug === params.category,
+    (item) => item.slug === resolvedParams.category,
   );
 
   if (!category) {
     notFound();
   }
 
-  const currentPage = getCurrentPage(searchParams?.page);
+  const currentPage = getCurrentPage(resolvedSearchParams?.page);
 
   const terms =
     categorySearchMap[category.slug] || [category.name];

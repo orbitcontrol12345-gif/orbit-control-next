@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AdminNavigation from '@/components/admin/AdminNavigation';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -7,9 +8,17 @@ export const revalidate = 0;
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{
+    q?: string;
+    updated?: string;
+    hidden?: string;
+    restored?: string;
+  }>;
 }) {
-  const q = searchParams.q?.trim() || '';
+  const resolvedSearchParams = await searchParams;
+  const q = (resolvedSearchParams.q?.trim() || '')
+    .slice(0, 100)
+    .replace(/[,%()]/g, ' ');
 
   let query = supabaseAdmin
     .from('products')
@@ -36,6 +45,8 @@ export default async function AdminProductsPage({
   return (
     <div className="min-h-screen bg-[#06111d] px-6 pt-40 pb-24 text-white">
       <div className="mx-auto max-w-7xl">
+        <AdminNavigation />
+
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-3xl font-bold">Manual Products</h1>
 
@@ -46,6 +57,14 @@ export default async function AdminProductsPage({
             Add Product
           </Link>
         </div>
+
+        {(resolvedSearchParams.updated === '1' ||
+          resolvedSearchParams.hidden === '1' ||
+          resolvedSearchParams.restored === '1') && (
+          <p className="mb-6 rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            Product updated successfully.
+          </p>
+        )}
 
         <form method="GET" className="mb-6">
           <div className="flex gap-3">
@@ -133,19 +152,31 @@ export default async function AdminProductsPage({
                       </Link>
 
                       {p.is_active ? (
-                        <a
-                          href={`/api/admin/delete-manual-product?sku=${encodeURIComponent(p.sku)}`}
-                          className="rounded bg-red-500 px-3 py-2 text-xs font-bold text-white"
+                        <form
+                          action="/api/admin/delete-manual-product"
+                          method="POST"
                         >
-                          Hide
-                        </a>
+                          <input type="hidden" name="sku" value={p.sku} />
+                          <button
+                            type="submit"
+                            className="rounded bg-red-500 px-3 py-2 text-xs font-bold text-white"
+                          >
+                            Hide
+                          </button>
+                        </form>
                       ) : (
-                        <a
-                          href={`/api/admin/restore-manual-product?sku=${encodeURIComponent(p.sku)}`}
-                          className="rounded bg-emerald-500 px-3 py-2 text-xs font-bold text-white"
+                        <form
+                          action="/api/admin/restore-manual-product"
+                          method="POST"
                         >
-                          Restore
-                        </a>
+                          <input type="hidden" name="sku" value={p.sku} />
+                          <button
+                            type="submit"
+                            className="rounded bg-emerald-500 px-3 py-2 text-xs font-bold text-white"
+                          >
+                            Restore
+                          </button>
+                        </form>
                       )}
                     </div>
                   </td>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+
+import AdminNavigation from '@/components/admin/AdminNavigation';
 
 export default function AddProductPage() {
   const [status, setStatus] = useState('');
@@ -12,32 +13,39 @@ export default function AddProductPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-    setStatus('Uploading image...');
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-
-const { error } = await supabase.storage
-  .from('manual-products')
-  .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      setStatus(`Image upload error: ${error.message}`);
-      setUploading(false);
+    if (file.size > 8 * 1024 * 1024) {
+      setStatus('Image upload error: image must be smaller than 8 MB');
       return;
     }
 
-    const { data } = supabase.storage
-      .from('manual-products')
-      .getPublicUrl(fileName);
+    setUploading(true);
+    setStatus('Uploading image...');
 
-    setImageUrl(data.publicUrl);
-    setStatus('Image uploaded successfully ✅');
-    setUploading(false);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+
+      const response = await fetch(
+        '/api/admin/upload-manual-product-image',
+        {
+          method: 'POST',
+          body: form,
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setStatus(`Image upload error: ${data.error || 'Upload failed'}`);
+        return;
+      }
+
+      setImageUrl(data.imageUrl);
+      setStatus('Image uploaded successfully ✅');
+    } catch {
+      setStatus('Image upload error: unable to reach the server');
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -63,14 +71,18 @@ const { error } = await supabase.storage
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    try {
+      const data = await res.json();
 
-    if (data.success) {
-      setStatus(`Product added successfully ✅ SKU: ${data.product?.sku}`);
-      setImageUrl('');
-      e.currentTarget.reset();
-    } else {
-      setStatus(`Error: ${data.error?.message || data.error}`);
+      if (res.ok && data.success) {
+        setStatus(`Product added successfully ✅ SKU: ${data.product?.sku}`);
+        setImageUrl('');
+        e.currentTarget.reset();
+      } else {
+        setStatus(`Error: ${data.error?.message || data.error}`);
+      }
+    } catch {
+      setStatus('Error: unable to read the server response');
     }
   }
 
@@ -98,14 +110,17 @@ const { error } = await supabase.storage
 
   return (
     <div className="min-h-screen bg-[#06111d] px-6 py-24 text-white">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-cyan-400/10 bg-[#0b1f2f] p-8">
+      <div className="mx-auto max-w-3xl">
+        <AdminNavigation />
+
+        <div className="rounded-2xl border border-cyan-400/10 bg-[#0b1f2f] p-8">
         <h1 className="mb-6 text-3xl font-bold">Add Manual Product</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input name="name" required placeholder="Product Name" className="w-full rounded-lg p-3 text-black" />
-          <input name="brand" placeholder="Brand" className="w-full rounded-lg p-3 text-black" />
-          <input name="model_number" required placeholder="Model Number" className="w-full rounded-lg p-3 text-black" />
-          <input name="category" placeholder="Category" className="w-full rounded-lg p-3 text-black" />
+          <input name="name" required maxLength={300} placeholder="Product Name" className="w-full rounded-lg p-3 text-black" />
+          <input name="brand" maxLength={120} placeholder="Brand" className="w-full rounded-lg p-3 text-black" />
+          <input name="model_number" required maxLength={160} placeholder="Model Number" className="w-full rounded-lg p-3 text-black" />
+          <input name="category" maxLength={160} placeholder="Category" className="w-full rounded-lg p-3 text-black" />
 
           <select name="condition" className="w-full rounded-lg p-3 text-black">
             <option>Used</option>
@@ -115,13 +130,13 @@ const { error } = await supabase.storage
             <option>For parts</option>
           </select>
 
-          <input name="quantity" type="number" defaultValue="1" className="w-full rounded-lg p-3 text-black" />
+          <input name="quantity" type="number" min="0" max="1000000" defaultValue="1" className="w-full rounded-lg p-3 text-black" />
 
           <div className="rounded-lg border border-cyan-400/20 bg-[#071827] p-4">
             <label className="mb-2 block font-bold text-cyan-200">Upload Product Image</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleImageUpload}
               className="w-full rounded-lg bg-white p-3 text-black"
             />
@@ -142,13 +157,14 @@ const { error } = await supabase.storage
           </div>
 
           {!imageUrl && (
-            <input name="image_url" placeholder="Or paste Image URL" className="w-full rounded-lg p-3 text-black" />
+            <input name="image_url" type="url" maxLength={2048} placeholder="Or paste HTTPS Image URL" className="w-full rounded-lg p-3 text-black" />
           )}
 
           <textarea
             name="description"
             placeholder="Description"
             rows={5}
+            maxLength={20000}
             className="w-full rounded-lg p-3 text-black"
           />
 
@@ -171,6 +187,7 @@ const { error } = await supabase.storage
         </form>
 
         {status && <p className="mt-5 text-sm text-cyan-200">{status}</p>}
+        </div>
       </div>
     </div>
   );

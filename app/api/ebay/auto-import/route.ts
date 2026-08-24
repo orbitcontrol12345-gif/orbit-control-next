@@ -128,7 +128,7 @@ function cleanTitle(title: string) {
 
     // Quantity and lot phrases.
     .replace(/\bLOT\s+OF\s+\d+\b/gi, ' ')
-    .replace(/\bLOT\s*[-:#]?\s*\d+\b/gi, ' ')
+    .replace(/\bLOT\s*(?:-|:|#)?\s*\d+\b/gi, ' ')
     .replace(/\b\d+\s+LOT\b/gi, ' ')
     .replace(/\b\d+\s*(?:PCS?|PIECES?|UNITS?|EA)\b/gi, ' ')
 
