@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import AdminNavigation from '@/components/admin/AdminNavigation';
+import { canOptimizeImage } from '@/lib/optimized-image';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -113,9 +115,13 @@ export default async function AdminProductsPage({
                 <tr key={p.id} className="border-t border-cyan-400/10">
                   <td className="p-4">
                     {p.image_url ? (
-                      <img
+                      <Image
                         src={p.image_url}
                         alt={p.name}
+                        width={56}
+                        height={56}
+                        quality={60}
+                        unoptimized={!canOptimizeImage(p.image_url)}
                         className="h-14 w-14 rounded bg-white object-contain"
                       />
                     ) : (

@@ -9,10 +9,13 @@ import {
   X,
 } from 'lucide-react';
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+
+import { canOptimizeImage } from '@/lib/optimized-image';
 
 type ProductGalleryProps = {
   r2GalleryUrls?: string[] | null;
@@ -178,7 +181,7 @@ export default function ProductGallery({
     });
   }
 
-  function goPrev() {
+  const goPrev = useCallback(() => {
     if (images.length < 2) return;
 
     setActiveIndex((current) =>
@@ -186,15 +189,15 @@ export default function ProductGallery({
         ? images.length - 1
         : current - 1
     );
-  }
+  }, [images.length]);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     if (images.length < 2) return;
 
     setActiveIndex(
       (current) => (current + 1) % images.length
     );
-  }
+  }, [images.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -230,7 +233,7 @@ export default function ProductGallery({
         handleKeyDown
       );
     };
-  }, [isOpen, images.length]);
+  }, [isOpen, goPrev, goNext]);
 
   const activeImage =
     images[activeIndex]?.src;
@@ -267,8 +270,9 @@ export default function ProductGallery({
                   alt={alt}
                   fill
                   sizes="94vw"
+                  quality={85}
                   className="object-contain"
-                  unoptimized
+                  unoptimized={!canOptimizeImage(activeImage)}
                   onError={() =>
                     handleImageError(activeIndex)
                   }
@@ -326,8 +330,9 @@ export default function ProductGallery({
                           }`}
                           fill
                           sizes="80px"
+                          quality={60}
                           className="object-cover"
-                          unoptimized
+                          unoptimized={!canOptimizeImage(image.src)}
                           onError={() =>
                             handleImageError(index)
                           }
@@ -366,8 +371,9 @@ export default function ProductGallery({
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 520px"
+                    quality={85}
                     className="object-cover object-center"
-                    unoptimized
+                    unoptimized={!canOptimizeImage(activeImage)}
                     onError={() =>
                       handleImageError(activeIndex)
                     }
@@ -437,8 +443,9 @@ export default function ProductGallery({
                       alt={`${alt} ${index + 1}`}
                       fill
                       sizes="96px"
+                      quality={60}
                       className="object-cover"
-                      unoptimized
+                      unoptimized={!canOptimizeImage(image.src)}
                       onError={() =>
                         handleImageError(index)
                       }

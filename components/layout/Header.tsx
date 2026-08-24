@@ -13,6 +13,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Menu, Search, X } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
+import { canOptimizeImage } from '@/lib/optimized-image';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -71,8 +72,8 @@ export default function Header() {
   useEffect(() => {
     const query = searchQuery.trim();
 
-    if (submittedRef.current || query.length < 1) {
-      if (query.length < 1) {
+    if (submittedRef.current || query.length < 2) {
+      if (query.length < 2) {
         setSuggestions([]);
         setSearchOpen(false);
         setSelectedIndex(-1);
@@ -131,7 +132,7 @@ export default function Header() {
           setLoading(false);
         }
       }
-    }, 250);
+    }, 300);
 
     return () => window.clearTimeout(timer);
   }, [searchQuery]);
@@ -342,6 +343,13 @@ export default function Header() {
                               alt={product.name}
                               fill
                               sizes="48px"
+                              quality={60}
+                              unoptimized={
+                                !canOptimizeImage(
+                                  product.imageUrl ||
+                                    '/placeholder-product.jpg',
+                                )
+                              }
                               className="object-cover"
                             />
                           </div>
