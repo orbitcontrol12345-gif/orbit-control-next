@@ -20,6 +20,7 @@ import type {
   ProductCategory,
   ProductCondition,
 } from '@/lib/types';
+import { canOptimizeImage } from '@/lib/optimized-image';
 
 const CONDITIONS: ProductCondition[] = [
   'New',
@@ -154,7 +155,7 @@ export default function ProductsClient({
           setSuggestions([]);
         }
       }
-    }, 250);
+    }, 300);
 
     return () => {
       window.clearTimeout(timer);
@@ -311,6 +312,13 @@ export default function ProductsClient({
                           }
                           fill
                           sizes="48px"
+                          quality={60}
+                          unoptimized={
+                            !canOptimizeImage(
+                              item.imageUrl ||
+                                '/placeholder-product.jpg',
+                            )
+                          }
                           className="object-contain p-1"
                         />
                       </div>

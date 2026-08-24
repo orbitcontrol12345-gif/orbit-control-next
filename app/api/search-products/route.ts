@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseProductsPage } from '@/lib/supabase-products';
+import { searchSupabaseProducts } from '@/lib/supabase-products';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,11 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 
-  const { products } = await getSupabaseProductsPage({
-    search: q,
-    page: 1,
-    perPage: 8,
-  });
+  const products = await searchSupabaseProducts(q, 8);
 
   const results = products.map((product) => ({
     id: product.id,
@@ -29,5 +25,9 @@ export async function GET(request: NextRequest) {
     inStock: product.inStock,
   }));
 
-  return NextResponse.json(results);
+  return NextResponse.json(results, {
+    headers: {
+      'Cache-Control': 'private, no-store, max-age=0',
+    },
+  });
 }

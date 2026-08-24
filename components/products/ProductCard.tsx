@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
+import { canOptimizeImage } from '@/lib/optimized-image';
 
 interface ProductCardProps {
   product: Product;
@@ -98,6 +99,7 @@ export default function ProductCard({
     <div className="group flex flex-col overflow-hidden rounded-lg border border-navy-700 bg-navy-800 transition-all duration-300 hover:border-gold-500/50 hover:shadow-lg hover:shadow-black/30">
       <Link
         href={productUrl}
+        prefetch={false}
         aria-label={`View details for ${product.name}`}
         className="relative block h-44 overflow-hidden bg-white"
       >
@@ -105,7 +107,8 @@ export default function ProductCard({
           src={imageSrc}
           alt={product.name}
           fill
-          unoptimized
+          quality={70}
+          unoptimized={!canOptimizeImage(imageSrc)}
           onError={handleImageError}
           sizes="(max-width:768px) 50vw, (max-width:1200px) 25vw, 300px"
           className="object-contain transition-transform duration-500 group-hover:scale-105"
@@ -134,6 +137,7 @@ export default function ProductCard({
 
         <Link
           href={productUrl}
+          prefetch={false}
           className="mb-3 block flex-1"
         >
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100 transition-colors group-hover:text-gold-400">
@@ -168,6 +172,7 @@ export default function ProductCard({
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={productUrl}
+            prefetch={false}
             className="flex items-center justify-center gap-1.5 rounded border border-navy-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
           >
             <ExternalLink size={12} />
@@ -178,6 +183,7 @@ export default function ProductCard({
             href={`/rfq?part=${encodeURIComponent(
               product.partNumber
             )}`}
+            prefetch={false}
             className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 hover:bg-gold-400"
           >
             <FileText size={12} />

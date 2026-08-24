@@ -13,6 +13,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Loader2, Search } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
+import { canOptimizeImage } from '@/lib/optimized-image';
 
 interface HeroSearchBarProps {
   initialQuery?: string;
@@ -65,7 +66,7 @@ export default function HeroSearchBar({
       return;
     }
 
-    if (cleanQuery.length < 1) {
+    if (cleanQuery.length < 2) {
       abortControllerRef.current?.abort();
       setSuggestions([]);
       setOpen(false);
@@ -121,7 +122,7 @@ export default function HeroSearchBar({
           setLoading(false);
         }
       }
-    }, 250);
+    }, 300);
 
     return () => window.clearTimeout(timer);
   }, [query, userInteracted]);
@@ -293,6 +294,13 @@ export default function HeroSearchBar({
                       fill
                       className="object-cover"
                       sizes="56px"
+                      quality={60}
+                      unoptimized={
+                        !canOptimizeImage(
+                          product.imageUrl ||
+                            '/placeholder-product.jpg',
+                        )
+                      }
                     />
                   </div>
 

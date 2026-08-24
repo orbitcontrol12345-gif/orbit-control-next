@@ -15,12 +15,9 @@ const PRODUCT_LIST_COLUMNS = `
   category,
   condition,
   is_active,
-  description,
   image_url,
   r2_image_url,
-  r2_gallery_urls,
-  ebay_image_url,
-  ebay_gallery_urls
+  ebay_image_url
 `;
 
 type ProductSortOption = 'relevance' | 'name' | 'brand' | 'condition';
@@ -88,6 +85,37 @@ function mapSupabaseProduct(item: any): Product {
       item.category,
       item.name,
     ].filter(Boolean),
+    slug:
+      item.slug ||
+      item.sku ||
+      item.ebay_item_id ||
+      String(item.id),
+  };
+}
+
+function mapSupabaseProductListItem(item: any): Product {
+  const bestImage =
+    item.r2_image_url ||
+    item.ebay_image_url ||
+    item.image_url ||
+    '/placeholder-product.jpg';
+
+  return {
+    id: String(item.id),
+    sku: item.sku || '',
+    brand: item.brand || 'Unknown',
+    partNumber: item.part_number || 'UNKNOWN',
+    name: cleanProductName(item.name || ''),
+    category: item.category || 'Industrial Parts',
+    condition: item.condition || 'Used',
+    inStock: item.is_active !== false,
+    description: '',
+    technicalSpecs: {},
+    imageUrl: bestImage,
+    r2ImageUrl: null,
+    r2GalleryUrls: [],
+    ebayGalleryUrls: [],
+    tags: [],
     slug:
       item.slug ||
       item.sku ||
@@ -464,7 +492,7 @@ async function loadSupabaseProductsPage({
   const totalProducts = count || 0;
 
   return {
-    products: (data || []).map(mapSupabaseProduct),
+    products: (data || []).map(mapSupabaseProductListItem),
     totalProducts,
     totalPages: Math.max(
       1,
@@ -520,6 +548,45 @@ export async function getSupabaseProductsPage(
     normalizePage(options.page ?? 1),
     normalizePerPage(options.perPage ?? 24),
   );
+}
+
+export async function searchSupabaseProducts(
+  rawSearch: string,
+  limit = 8,
+): Promise<Product[]> {
+  const search = cleanFilterValue(rawSearch);
+
+  if (search.length < 2) {
+    return [];
+  }
+
+  const safeLimit = Math.min(
+    12,
+    Math.max(1, Math.floor(limit)),
+  );
+  const { data, error } = await supabaseAdmin
+    .from(PRODUCTS_TABLE)
+    .select(PRODUCT_LIST_COLUMNS)
+    .eq('is_active', true)
+    .neq('catalog_visible', false)
+    .or(
+      [
+        `name.ilike.%${search}%`,
+        `sku.ilike.%${search}%`,
+        `part_number.ilike.%${search}%`,
+        `brand.ilike.%${search}%`,
+        `category.ilike.%${search}%`,
+      ].join(','),
+    )
+    .order('id', { ascending: false })
+    .limit(safeLimit);
+
+  if (error) {
+    console.error('Product suggestions query failed:', error);
+    return [];
+  }
+
+  return (data || []).map(mapSupabaseProductListItem);
 }
 
 async function loadSupabaseProductsByCategoryTerms({
@@ -596,7 +663,7 @@ async function loadSupabaseProductsByCategoryTerms({
   const totalProducts = count || 0;
 
   return {
-    products: (data || []).map(mapSupabaseProduct),
+    products: (data || []).map(mapSupabaseProductListItem),
     totalProducts,
     totalPages: Math.max(
       1,
@@ -806,7 +873,7 @@ async function loadSupabaseRelatedProducts(
   >();
 
   for (const row of data || []) {
-    const item = mapSupabaseProduct(row);
+    const item = mapSupabaseProductListItem(row);
 
     if (
       !item.imageUrl ||
