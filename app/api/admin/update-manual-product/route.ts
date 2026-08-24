@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import {
+  buildManualProductGallery,
   formatValidationError,
   manualProductInputSchema,
   slugifyManualProduct,
@@ -19,8 +20,8 @@ export async function POST(request: Request) {
     model_number: form.get('model_number'),
     category: form.get('category'),
     condition: form.get('condition'),
-    quantity: form.get('quantity'),
-    image_url: form.get('image_url'),
+    image_url: form.get('image_url') || '',
+    image_urls: form.get('image_urls'),
     description: form.get('description'),
   });
 
@@ -46,15 +47,25 @@ export async function POST(request: Request) {
 
   const input = parsed.data;
   const brand = input.brand || 'Unknown';
+  const galleryUrls = buildManualProductGallery(
+    input.image_urls,
+    input.image_url,
+  );
+  const mainImageUrl = galleryUrls[0] || '';
   const updateData = {
     name: input.name,
     brand,
     part_number: input.model_number,
     model_number: input.model_number,
-    category: input.category || 'Industrial Automation',
+    category: input.category,
     condition: input.condition,
-    quantity: input.quantity,
-    image_url: input.image_url,
+    image_url: mainImageUrl,
+    r2_image_url: mainImageUrl || null,
+    r2_gallery_urls: galleryUrls,
+    image_count: galleryUrls.length,
+    image_status: galleryUrls.length
+      ? 'manual_gallery'
+      : 'manual_no_image',
     description: input.description || input.name,
     slug: slugifyManualProduct(
       `${sku}-${brand}-${input.model_number}-${input.name}`,
@@ -94,4 +105,3 @@ export async function POST(request: Request) {
     303,
   );
 }
-
