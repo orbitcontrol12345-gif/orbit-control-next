@@ -41,7 +41,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json();
+    let body: Record<string, unknown>;
+
+    try {
+      const parsedBody: unknown = await req.json();
+
+      if (!parsedBody || typeof parsedBody !== 'object') {
+        throw new Error('Invalid JSON body');
+      }
+
+      body = parsedBody as Record<string, unknown>;
+    } catch {
+      return Response.json(
+        {
+          success: false,
+          error: 'A valid JSON request body is required.',
+        },
+        { status: 400 },
+      );
+    }
 
     if (cleanFormText(body.website, 200)) {
       return Response.json({ success: true });

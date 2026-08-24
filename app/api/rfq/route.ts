@@ -42,7 +42,19 @@ export async function POST(req: Request) {
   }
 
   try {
-    const formData = await req.formData();
+    let formData: FormData;
+
+    try {
+      formData = await req.formData();
+    } catch {
+      return Response.json(
+        {
+          success: false,
+          error: 'A valid form-data request body is required.',
+        },
+        { status: 400 },
+      );
+    }
 
     if (cleanFormText(formData.get('website'), 200)) {
       return Response.json({ success: true });
