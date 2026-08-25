@@ -333,13 +333,22 @@ const formattedProductsCount =
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {['PLC', 'HMI', 'VFD', 'Breakers', 'Sensors'].map((tab) => (
+                {[
+                  { label: 'PLC', href: '/categories/plcs' },
+                  { label: 'HMI', href: '/categories/hmis' },
+                  { label: 'VFD', href: '/categories/drives-vfds' },
+                  {
+                    label: 'Breakers',
+                    href: '/categories/circuit-breakers',
+                  },
+                  { label: 'Sensors', href: '/categories/sensors' },
+                ].map((tab) => (
                   <Link
-                    key={tab}
-                    href={`/products?search=${encodeURIComponent(tab)}`}
+                    key={tab.label}
+                    href={tab.href}
                     className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:border-cyan-300/30 hover:text-cyan-200"
                   >
-                    {tab}
+                    {tab.label}
                   </Link>
                 ))}
               </div>
