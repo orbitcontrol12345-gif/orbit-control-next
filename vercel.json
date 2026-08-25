@@ -3,27 +3,27 @@
   "crons": [
     {
       "path": "/api/migration/save-bridge",
-      "schedule": "*/2 * * * *"
+      "schedule": "0 1 * * *"
     },
     {
       "path": "/api/catalog/fix-part-numbers-auto",
-      "schedule": "3,13,23,33,43,53 * * * *"
+      "schedule": "15 1 * * *"
     },
     {
       "path": "/api/catalog/sync-r2-images-v6",
-      "schedule": "15 */2 * * *"
+      "schedule": "30 */6 * * *"
     },
     {
       "path": "/api/catalog/fix-brands-auto",
-      "schedule": "9,29,49 * * * *"
+      "schedule": "30 1 * * *"
     },
     {
       "path": "/api/ebay/auto-import?limit=50",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/cron/bridge-health",
-      "schedule": "* * * * *"
+      "schedule": "45 */6 * * *"
     },
     {
       "path": "/api/catalog/repair-old-images",
