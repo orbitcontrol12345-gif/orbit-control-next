@@ -373,12 +373,10 @@ export default async function CategoryPage({
           </div>
 
           <Link
-            href={`/products?q=${encodeURIComponent(
-              category.name,
-            )}`}
+            href="/products"
             className="text-sm font-semibold text-gold-500 hover:text-gold-400"
           >
-            Search all {category.name} →
+            Browse full inventory →
           </Link>
         </div>
 

@@ -21,6 +21,7 @@ type ProductSortOption =
 
 type ProductsSearchParams = {
   q?: string;
+  search?: string;
   brand?: string;
   category?: string;
   condition?: string;
@@ -46,6 +47,7 @@ function hasFilteredView(
 ): boolean {
   return Boolean(
     searchParams?.q?.trim() ||
+      searchParams?.search?.trim() ||
       searchParams?.brand?.trim() ||
       searchParams?.category?.trim() ||
       searchParams?.condition?.trim() ||
@@ -91,7 +93,10 @@ export default async function ProductsPage({
   searchParams,
 }: ProductsPageProps) {
   const resolvedSearchParams = await searchParams;
-  const search = resolvedSearchParams?.q?.trim() || '';
+  const search =
+    resolvedSearchParams?.q?.trim() ||
+    resolvedSearchParams?.search?.trim() ||
+    '';
   const brand = resolvedSearchParams?.brand?.trim() || '';
   const category = resolvedSearchParams?.category?.trim() || '';
   const condition = resolvedSearchParams?.condition?.trim() || '';

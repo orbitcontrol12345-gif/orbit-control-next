@@ -627,14 +627,12 @@ export default async function ProductDetailPage({ params }: Props) {
 
             <div className="flex flex-wrap gap-2">
               {product.tags.map((tag) => (
-                <Link
+                <span
                   key={tag}
-                  href={`/products?q=${encodeURIComponent(tag)}`}
-                  rel="nofollow"
-                  className="rounded border border-navy-700 bg-navy-800 px-3 py-1 text-xs text-slate-400 hover:border-gold-500/40 hover:text-gold-400"
+                  className="rounded border border-navy-700 bg-navy-800 px-3 py-1 text-xs text-slate-400"
                 >
                   {tag}
-                </Link>
+                </span>
               ))}
             </div>
           </div>
