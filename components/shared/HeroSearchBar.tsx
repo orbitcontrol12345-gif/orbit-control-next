@@ -13,7 +13,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Loader2, Search } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
-import { canOptimizeImage } from '@/lib/optimized-image';
 
 interface HeroSearchBarProps {
   initialQuery?: string;
@@ -295,12 +294,7 @@ export default function HeroSearchBar({
                       className="object-cover"
                       sizes="56px"
                       quality={60}
-                      unoptimized={
-                        !canOptimizeImage(
-                          product.imageUrl ||
-                            '/placeholder-product.jpg',
-                        )
-                      }
+                      unoptimized
                     />
                   </div>
 
