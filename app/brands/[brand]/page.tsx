@@ -354,12 +354,10 @@ export default async function BrandPage({
           </h2>
 
           <Link
-            href={`/products?brand=${encodeURIComponent(
-              brand.name,
-            )}`}
+            href="/products"
             className="text-sm font-semibold text-gold-500 hover:text-gold-400"
           >
-            Search all {brand.name} →
+            Browse full inventory →
           </Link>
         </div>
 
