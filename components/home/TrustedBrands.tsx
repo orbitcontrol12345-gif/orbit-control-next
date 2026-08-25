@@ -1,16 +1,16 @@
 import Link from 'next/link';
 
 const BRANDS = [
-  'SIEMENS',
-  'ALLEN-BRADLEY',
-  'SCHNEIDER ELECTRIC',
-  'ABB',
-  'GE',
-  'HONEYWELL',
-  'FANUC',
-  'OMRON',
-  'MITSUBISHI',
-  'YASKAWA',
+  { name: 'SIEMENS', slug: 'siemens' },
+  { name: 'ALLEN-BRADLEY', slug: 'allen-bradley' },
+  { name: 'SCHNEIDER ELECTRIC', slug: 'schneider-electric' },
+  { name: 'ABB', slug: 'abb' },
+  { name: 'GE', slug: 'ge' },
+  { name: 'HONEYWELL', slug: 'honeywell' },
+  { name: 'FANUC', slug: 'fanuc' },
+  { name: 'OMRON', slug: 'omron' },
+  { name: 'MITSUBISHI', slug: 'mitsubishi' },
+  { name: 'YASKAWA', slug: 'yaskawa' },
 ];
 
 function BrandRow({ rowKey }: { rowKey: string }) {
@@ -18,13 +18,13 @@ function BrandRow({ rowKey }: { rowKey: string }) {
     <>
       {BRANDS.map((brand) => (
         <Link
-          key={`${rowKey}-${brand}`}
-          href={`/products?q=${encodeURIComponent(brand)}&page=1`}
-          aria-label={`View all ${brand} products`}
+          key={`${rowKey}-${brand.slug}`}
+          href={`/brands/${brand.slug}`}
+          aria-label={`View all ${brand.name} products`}
           className="group flex h-24 min-w-[260px] items-center justify-center border-r border-white/[0.06] px-8 transition duration-300 hover:bg-white/[0.035] focus-visible:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/60"
         >
           <span className="text-center text-2xl font-black tracking-[-0.02em] text-slate-400 transition duration-300 group-hover:text-cyan-200 group-focus-visible:text-cyan-200">
-            {brand}
+            {brand.name}
           </span>
         </Link>
       ))}
