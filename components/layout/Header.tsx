@@ -13,7 +13,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Menu, Search, X } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
-import { canOptimizeImage } from '@/lib/optimized-image';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -344,12 +343,7 @@ export default function Header() {
                               fill
                               sizes="48px"
                               quality={60}
-                              unoptimized={
-                                !canOptimizeImage(
-                                  product.imageUrl ||
-                                    '/placeholder-product.jpg',
-                                )
-                              }
+                              unoptimized
                               className="object-cover"
                             />
                           </div>
