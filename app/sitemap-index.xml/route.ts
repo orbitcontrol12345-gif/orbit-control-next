@@ -1,18 +1,26 @@
+import { getVisibleProductsCount } from '@/lib/supabase-products';
+import {
+  getProductSitemapCount,
+  getProductSitemapUrls,
+} from '@/lib/product-sitemaps';
+
 const SITE_URL = 'https://www.orbit-surplus.com';
 
 export const dynamic = 'force-static';
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export async function GET() {
   const lastModified = new Date().toISOString();
+  const productCount = await getVisibleProductsCount();
+  const productSitemapCount =
+    getProductSitemapCount(productCount);
 
   const sitemaps = [
     `${SITE_URL}/sitemap-static.xml`,
-    `${SITE_URL}/sitemap-products/1.xml`,
-    `${SITE_URL}/sitemap-products/2.xml`,
-    `${SITE_URL}/sitemap-products/3.xml`,
-    `${SITE_URL}/sitemap-products/4.xml`,
-    `${SITE_URL}/sitemap-products/5.xml`,
+    ...getProductSitemapUrls(
+      SITE_URL,
+      productSitemapCount,
+    ),
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -32,7 +40,7 @@ ${sitemaps
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
       'Cache-Control':
-        'public, s-maxage=86400, stale-while-revalidate=3600',
+        'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }
