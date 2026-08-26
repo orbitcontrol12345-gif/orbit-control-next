@@ -81,25 +81,6 @@ function getValidBrand(value?: string | null): string | null {
   return cleaned;
 }
 
-function getSchemaCondition(condition?: string): string {
-  switch (condition?.trim().toLowerCase()) {
-    case "new":
-      return "https://schema.org/NewCondition";
-
-    case "refurbished":
-      return "https://schema.org/RefurbishedCondition";
-
-    case "not working":
-    case "for parts":
-    case "damaged":
-      return "https://schema.org/DamagedCondition";
-
-    case "used":
-    default:
-      return "https://schema.org/UsedCondition";
-  }
-}
-
 function uniqueImages(values: Array<string | null | undefined>): string[] {
   return [
     ...new Set(
@@ -254,96 +235,41 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const productUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
 
-  const productImages = uniqueImages([
+  const primaryImage = uniqueImages([
     product.r2ImageUrl,
     product.imageUrl,
     ...(product.r2GalleryUrls || []),
     ...(product.ebayGalleryUrls || []),
-  ]);
+  ])[0] || `${SITE_URL}/logo.png`;
 
   const schemaDescription = seo.description;
 
-  const productSchema = {
+  const itemPageSchema = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    "@id": `${productUrl}#product`,
+    "@type": "ItemPage",
+    "@id": `${productUrl}#webpage`,
 
     url: productUrl,
-
     name: product.name,
-
     description: schemaDescription,
+    inLanguage: "en",
 
-    image: productImages.length > 0 ? productImages : [`${SITE_URL}/logo.png`],
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "Orbit Control Automation",
+    },
 
-    sku: product.sku || validPartNumber || undefined,
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: primaryImage,
+      contentUrl: primaryImage,
+      caption: product.name,
+    },
 
-    ...(validPartNumber ? { mpn: validPartNumber } : {}),
-
-    ...(validBrand
-      ? {
-          brand: {
-            "@type": "Brand",
-            name: validBrand,
-          },
-          manufacturer: {
-            "@type": "Organization",
-            name: validBrand,
-          },
-        }
-      : {}),
-
-    category:
-      product.category || product.tags?.[0] || "Industrial Automation Parts",
-
-    itemCondition: getSchemaCondition(product.condition),
-
-    additionalProperty: [
-      ...(validPartNumber
-        ? [
-            {
-              "@type": "PropertyValue",
-              name: "Part Number",
-              value: validPartNumber,
-            },
-          ]
-        : []),
-      ...(validBrand
-        ? [
-            {
-              "@type": "PropertyValue",
-              name: "Manufacturer",
-              value: validBrand,
-            },
-          ]
-        : []),
-      {
-        "@type": "PropertyValue",
-        name: "Condition",
-        value: product.condition,
-      },
-      {
-        "@type": "PropertyValue",
-        name: "Availability",
-        value: product.inStock ? "In Stock" : "Request for Quote",
-      },
-    ],
-
-    offers: {
-      "@type": "Offer",
-
-      url: productUrl,
-
-      availability: product.inStock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/PreOrder",
-
-      itemCondition: getSchemaCondition(product.condition),
-
-      seller: {
-        "@type": "Organization",
-        name: "Orbit Control Automation",
-      },
+    breadcrumb: {
+      "@id": `${productUrl}#breadcrumb`,
     },
   };
 
@@ -376,7 +302,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-navy-900 pt-20">
-      <JsonLd id={`product-schema-${product.id}`} data={productSchema} />
+      <JsonLd id={`item-page-schema-${product.id}`} data={itemPageSchema} />
 
       <JsonLd id={`breadcrumb-schema-${product.id}`} data={breadcrumbSchema} />
 
