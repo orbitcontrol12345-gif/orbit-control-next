@@ -129,7 +129,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const productUrl = `${SITE_URL}${productPath}`;
 
   const image =
-    product.r2ImageUrl || product.imageUrl || `${SITE_URL}/logo.png`;
+    product.r2ImageUrl || product.imageUrl || `${SITE_URL}/og-image.jpg`;
 
   return {
     title,
@@ -240,7 +240,7 @@ export default async function ProductDetailPage({ params }: Props) {
     product.imageUrl,
     ...(product.r2GalleryUrls || []),
     ...(product.ebayGalleryUrls || []),
-  ])[0] || `${SITE_URL}/logo.png`;
+  ])[0] || `${SITE_URL}/placeholder-product.jpg`;
 
   const schemaDescription = seo.description;
 

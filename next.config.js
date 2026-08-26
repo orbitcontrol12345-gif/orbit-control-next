@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
+
   images: {
     formats: ['image/avif', 'image/webp'],
     qualities: [60, 70, 75, 85],
@@ -29,7 +31,37 @@ const nextConfig = {
     ],
   },
 
- async redirects() {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+        ],
+      },
+    ];
+  },
+
+  async redirects() {
   return [
     {
       source: '/product-category/:path*',
@@ -40,7 +72,7 @@ const nextConfig = {
   source: '/home',
   destination: '/',
   permanent: true,
-},
+  },
 {
   source: '/home/:path*',
   destination: '/:path*',

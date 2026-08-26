@@ -79,11 +79,11 @@ export default function FooterV2() {
               </a>
 
               <a
-                href="tel:+971554835519"
+                href="tel:+971554835199"
                 className="flex w-fit items-center gap-3 text-slate-300 transition hover:text-cyan-300"
               >
                 <Phone size={17} className="text-cyan-300" />
-                +971 55 483 5519
+                +971 55 483 5199
               </a>
 
               <div className="flex items-start gap-3 text-slate-300">
@@ -163,8 +163,8 @@ export default function FooterV2() {
 
             <div>
               <p className="text-sm font-bold text-white">Worldwide Supply</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Serving customers in 65+ countries
+              <p className="mt-1 text-xs text-slate-400">
+                Serving customers worldwide
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ export default function FooterV2() {
 
             <div>
               <p className="text-sm font-bold text-white">Express Shipping</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-400">
                 DHL and FedEx international delivery
               </p>
             </div>
@@ -189,14 +189,14 @@ export default function FooterV2() {
 
             <div>
               <p className="text-sm font-bold text-white">Trusted Supplier</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-400">
                 Genuine industrial automation parts
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 pt-7 text-center text-xs text-slate-500 md:flex-row md:items-center md:justify-between md:text-left">
+        <div className="flex flex-col gap-4 pt-7 text-center text-xs text-slate-400 md:flex-row md:items-center md:justify-between md:text-left">
           <p>
             © {new Date().getFullYear()} Orbit Control Automation. All rights
             reserved.

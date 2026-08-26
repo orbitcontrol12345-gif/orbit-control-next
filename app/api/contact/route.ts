@@ -31,10 +31,12 @@ export async function POST(req: Request) {
   const smtpPass = process.env.MXROUTE_SMTP_PASS;
 
   if (!smtpHost || !smtpUser || !smtpPass) {
+    console.error('ORBIT CONTROL CONTACT SMTP CONFIGURATION IS MISSING');
+
     return Response.json(
       {
         success: false,
-        error: 'MXroute SMTP environment variables are missing',
+        error: 'The contact service is temporarily unavailable. Please try again later.',
       },
       { status: 500 }
     );
@@ -133,7 +135,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         success: false,
-        error: String(error),
+        error: 'Unable to send your message right now. Please try again later.',
       },
       { status: 500 }
     );

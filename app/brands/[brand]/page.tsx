@@ -109,12 +109,12 @@ export async function generateMetadata({
       ? ` – Page ${currentPage}`
       : '';
 
-  const title = `${brand.name} Industrial Automation Parts${pageSuffix}`;
+  const title = `${brand.name} Industrial Parts${pageSuffix}`;
 
-  const description = (
-    cleanText(brand.description) ||
-    `Browse ${brand.name} industrial automation parts, PLCs, HMIs, drives, modules and surplus equipment. Request a quote with worldwide shipping from Orbit Control Automation.`
-  ).slice(0, 160);
+  const description = `Browse ${brand.name} industrial automation parts, including PLCs, HMIs, drives, modules and obsolete spares. Request an RFQ with worldwide DHL/FedEx shipping.`.slice(
+    0,
+    160,
+  );
 
   const brandPath = `/brands/${encodeURIComponent(
     brand.slug,
@@ -157,7 +157,7 @@ export async function generateMetadata({
 
       images: [
         {
-          url: `${SITE_URL}/logo.png`,
+          url: `${SITE_URL}/og-image.jpg`,
           alt: `${brand.name} industrial automation parts`,
         },
       ],
@@ -167,7 +167,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [`${SITE_URL}/logo.png`],
+      images: [`${SITE_URL}/og-image.jpg`],
     },
   };
 }

@@ -106,7 +106,7 @@ export default function RFQPage() {
               <ul className="space-y-3">
                 {[
                   { icon: Clock, text: '24-hour quote response' },
-                  { icon: Globe, text: 'Ships to 200+ countries' },
+                  { icon: Globe, text: 'Worldwide DHL/FedEx shipping' },
                   { icon: ShieldCheck, text: 'Genuine & tested parts' },
                   { icon: Zap, text: 'Obsolete parts specialist' },
                 ].map(({ icon: Icon, text }) => (
@@ -128,7 +128,7 @@ export default function RFQPage() {
       info@orbit-surplus.com
     </a>
 
-    <a href="tel:+971554835199" className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-gold-500 transition-colors">
+    <a href="https://wa.me/971554835199" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 text-sm text-slate-300 hover:text-gold-500 transition-colors">
       <Phone size={15} className="text-gold-500" />
       WhatsApp: +971 55 483 5199
     </a>

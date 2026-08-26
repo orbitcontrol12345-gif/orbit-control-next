@@ -181,34 +181,34 @@ export default function ContactPage() {
                     className="absolute -left-[10000px] h-px w-px opacity-0"
                   />
                   {error && (
-                    <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <div role="alert" className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
                       <p className="text-sm text-red-300">{error}</p>
                     </div>
                   )}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Name <span className="text-red-400">*</span></label>
-                      <input name="name" type="text" required value={form.name} onChange={handleChange} placeholder="Your name" className="input-field" />
+                      <label htmlFor="contact-name" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Name <span className="text-red-400">*</span></label>
+                      <input id="contact-name" name="name" type="text" required value={form.name} onChange={handleChange} placeholder="Your name" className="input-field" />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Company</label>
-                      <input name="company" type="text" value={form.company} onChange={handleChange} placeholder="Your company" className="input-field" />
+                      <label htmlFor="contact-company" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Company</label>
+                      <input id="contact-company" name="company" type="text" value={form.company} onChange={handleChange} placeholder="Your company" className="input-field" />
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Email <span className="text-red-400">*</span></label>
-                      <input name="email" type="email" required value={form.email} onChange={handleChange} placeholder="email@company.com" className="input-field" />
+                      <label htmlFor="contact-email" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Email <span className="text-red-400">*</span></label>
+                      <input id="contact-email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="email@company.com" className="input-field" />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Phone</label>
-                      <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="Enter your phone number" className="input-field" />
+                      <label htmlFor="contact-phone" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Phone</label>
+                      <input id="contact-phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="Enter your phone number" className="input-field" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Subject</label>
-                    <select name="subject" value={form.subject} onChange={handleChange} className="input-field">
+                    <label htmlFor="contact-subject" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Subject</label>
+                    <select id="contact-subject" name="subject" value={form.subject} onChange={handleChange} className="input-field">
                       <option value="">Select a subject...</option>
                       <option>Part Number Inquiry</option>
                       <option>Quote Request</option>
@@ -220,8 +220,8 @@ export default function ContactPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Message <span className="text-red-400">*</span></label>
-                    <textarea name="message" required rows={5} value={form.message} onChange={handleChange}
+                    <label htmlFor="contact-message" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Message <span className="text-red-400">*</span></label>
+                    <textarea id="contact-message" name="message" required rows={5} value={form.message} onChange={handleChange}
                       placeholder="Describe your inquiry in detail..." className="input-field resize-none" />
                   </div>
                   <button type="submit" disabled={loading} className="btn-gold w-full justify-center text-base py-3">

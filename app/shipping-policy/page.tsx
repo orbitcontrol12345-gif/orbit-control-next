@@ -14,7 +14,7 @@ const SITE_URL = 'https://www.orbit-surplus.com';
 export const metadata: Metadata = {
   title: 'Shipping Policy',
   description:
-    'Orbit Control Automation shipping policy. Learn about worldwide delivery through DHL and FedEx, dispatch times, customs duties, insurance, and international shipping procedures.',
+    'Learn about Orbit Control worldwide delivery through DHL and FedEx, dispatch times, customs duties, insurance and international shipping procedures.',
   alternates: {
     canonical: `${SITE_URL}/shipping-policy`,
   },

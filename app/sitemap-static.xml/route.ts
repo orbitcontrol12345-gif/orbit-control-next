@@ -1,6 +1,12 @@
 import { BRANDS, CATEGORIES } from '@/lib/data';
 
 const SITE_URL = 'https://www.orbit-surplus.com';
+const FEATURED_BRAND_SLUGS = [
+  'ge',
+  'fanuc',
+  'mitsubishi',
+  'yaskawa',
+];
 
 export const dynamic = 'force-static';
 export const revalidate = 86400;
@@ -97,8 +103,15 @@ export async function GET() {
     }),
   );
 
-  const brandPages: SitemapPage[] = BRANDS.map((brand) => ({
-    path: `/brands/${encodeURIComponent(brand.slug)}`,
+  const brandSlugs = Array.from(
+    new Set([
+      ...BRANDS.map((brand) => brand.slug),
+      ...FEATURED_BRAND_SLUGS,
+    ]),
+  );
+
+  const brandPages: SitemapPage[] = brandSlugs.map((slug) => ({
+    path: `/brands/${encodeURIComponent(slug)}`,
     priority: '0.8',
     changefreq: 'weekly',
   }));

@@ -136,13 +136,13 @@
 
 .badge-condition-new,
 .badge-condition-used {
-  @apply bg-transparent text-gold-400 border border-gold-500/40 text-xs font-medium px-2 py-0.5 rounded;
+  @apply bg-navy-950 text-gold-300 border border-gold-400/60 text-xs font-medium px-2 py-0.5 rounded;
 }
   .badge-condition-refurbished {
-    @apply bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-medium px-2 py-0.5 rounded;
+    @apply bg-sky-950 text-sky-200 border border-sky-700 text-xs font-medium px-2 py-0.5 rounded;
   }
   .badge-condition-not-working {
-    @apply bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-medium px-2 py-0.5 rounded;
+    @apply bg-red-950 text-red-200 border border-red-700 text-xs font-medium px-2 py-0.5 rounded;
   }
   .stock-in {
     @apply text-emerald-400 text-sm flex items-center gap-1;

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
 
@@ -121,6 +122,14 @@ export default async function ProductsPage({
     perPage,
   });
 
+  if (
+    currentPage > 1 &&
+    (products.length === 0 ||
+      (totalPages > 0 && currentPage > totalPages))
+  ) {
+    notFound();
+  }
+
   const buildPageUrl = (page: number) => {
     const params = new URLSearchParams();
 
@@ -228,6 +237,7 @@ export default async function ProductsPage({
                   min="1"
                   max={totalPages}
                   defaultValue={currentPage}
+                  aria-label="Product catalog page number"
                   className="w-20 rounded-lg border border-navy-600 bg-navy-900 px-2 py-2 text-center text-sm font-bold text-white"
                 />
 

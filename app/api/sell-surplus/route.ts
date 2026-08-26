@@ -5,6 +5,7 @@ import {
   cleanFormText,
   escapeHtml,
   isValidEmail,
+  sanitizeAttachmentFilename,
   validateAttachments,
 } from '@/lib/public-form-security';
 
@@ -33,10 +34,12 @@ export async function POST(req: Request) {
   const smtpPass = process.env.MXROUTE_SMTP_PASS;
 
   if (!smtpHost || !smtpUser || !smtpPass) {
+    console.error('ORBIT CONTROL SELL SURPLUS SMTP CONFIGURATION IS MISSING');
+
     return NextResponse.json(
       {
         success: false,
-        error: 'MXroute SMTP environment variables are missing',
+        error: 'The inventory service is temporarily unavailable. Please try again later.',
       },
       { status: 500 }
     );
@@ -116,7 +119,7 @@ export async function POST(req: Request) {
           const arrayBuffer = await file.arrayBuffer();
 
           return {
-            filename: file.name,
+            filename: sanitizeAttachmentFilename(file.name),
             content: Buffer.from(arrayBuffer),
           };
         })
@@ -183,7 +186,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: String(error),
+        error: 'Unable to send your inventory offer right now. Please try again later.',
       },
       { status: 500 }
     );

@@ -24,6 +24,7 @@ export default function BrandSearch() {
       <input
         type="text"
         value={search}
+        aria-label="Search industrial automation brands"
         onFocus={() => setOpen(true)}
         onChange={(e) => {
           setSearch(e.target.value);

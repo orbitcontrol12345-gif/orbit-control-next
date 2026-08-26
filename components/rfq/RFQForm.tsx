@@ -133,7 +133,7 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
         className="absolute -left-[10000px] h-px w-px opacity-0"
       />
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <div role="alert" className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
           <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
           <p className="text-sm text-red-300">{error}</p>
         </div>
@@ -141,43 +141,43 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <label htmlFor="rfq-name" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Full Name <span className="text-red-400">*</span>
           </label>
-          <input name="name" type="text" required value={form.name} onChange={handleChange}
+          <input id="rfq-name" name="name" type="text" required value={form.name} onChange={handleChange}
             placeholder="John Smith" className="input-field" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <label htmlFor="rfq-company" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Company Name <span className="text-red-400">*</span>
           </label>
-          <input name="company" type="text" required value={form.company} onChange={handleChange}
+          <input id="rfq-company" name="company" type="text" required value={form.company} onChange={handleChange}
             placeholder="ACME Industries Ltd." className="input-field" />
         </div>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-5">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <label htmlFor="rfq-email" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Email Address <span className="text-red-400">*</span>
           </label>
-          <input name="email" type="email" required value={form.email} onChange={handleChange}
+          <input id="rfq-email" name="email" type="email" required value={form.email} onChange={handleChange}
             placeholder="john@company.com" className="input-field" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+          <label htmlFor="rfq-phone" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Phone / WhatsApp
           </label>
-          <input name="phone" type="tel" value={form.phone} onChange={handleChange}
+          <input id="rfq-phone" name="phone" type="tel" value={form.phone} onChange={handleChange}
             placeholder="+1 234 567 8900" className="input-field" />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+        <label htmlFor="rfq-country" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
           Country <span className="text-red-400">*</span>
         </label>
-        <select name="country" required value={form.country} onChange={handleChange} className="input-field">
+        <select id="rfq-country" name="country" required value={form.country} onChange={handleChange} className="input-field">
           <option value="">Select your country...</option>
           {COUNTRIES.map((c) => (
             <option key={c} value={c}>{c}</option>
@@ -189,28 +189,28 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
         <p className="text-xs font-semibold text-gold-500 uppercase tracking-wider mb-4">Part Details</p>
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label htmlFor="rfq-part-number" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
               Part Number <span className="text-red-400">*</span>
             </label>
-            <input name="part_number" type="text" required value={form.part_number} onChange={handleChange}
+            <input id="rfq-part-number" name="part_number" type="text" required value={form.part_number} onChange={handleChange}
               placeholder="e.g. 6ES7315-2EH14-0AB0" className="input-field font-mono" />
             <p className="text-xs text-slate-500 mt-1">You can enter multiple part numbers separated by commas</p>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label htmlFor="rfq-quantity" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
               Quantity <span className="text-red-400">*</span>
             </label>
-            <input name="quantity" type="number" min={1} required value={form.quantity} onChange={handleChange}
+            <input id="rfq-quantity" name="quantity" type="number" min={1} required value={form.quantity} onChange={handleChange}
               className="input-field" />
           </div>
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+        <label htmlFor="rfq-message" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
           Additional Message
         </label>
-        <textarea name="message" rows={4} value={form.message} onChange={handleChange}
+        <textarea id="rfq-message" name="message" rows={4} value={form.message} onChange={handleChange}
           placeholder="Any additional information: urgency, technical requirements, condition preference, application..."
           className="input-field resize-none" />
       </div>

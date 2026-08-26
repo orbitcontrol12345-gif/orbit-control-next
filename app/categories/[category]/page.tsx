@@ -127,12 +127,11 @@ export async function generateMetadata({
   const pageSuffix =
     currentPage > 1 ? ` – Page ${currentPage}` : '';
 
-  const title = `${category.name} Industrial Automation Parts${pageSuffix}`;
+  const title = `${category.name} Parts${pageSuffix}`;
 
-  const description = (
-    cleanText(category.description) ||
-    getCategoryDescription(category.name)
-  ).slice(0, 160);
+  const description = `Browse ${category.name}, including ${cleanText(
+    category.description,
+  )}. Request an RFQ for new, used, surplus and obsolete parts with worldwide DHL/FedEx shipping.`.slice(0, 160);
 
   const categoryPath = `/categories/${encodeURIComponent(
     category.slug,
@@ -173,7 +172,7 @@ export async function generateMetadata({
       url: canonicalUrl,
       images: [
         {
-          url: `${SITE_URL}/logo.png`,
+          url: `${SITE_URL}/og-image.jpg`,
           alt: `${category.name} industrial automation parts`,
         },
       ],
@@ -183,7 +182,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [`${SITE_URL}/logo.png`],
+      images: [`${SITE_URL}/og-image.jpg`],
     },
   };
 }

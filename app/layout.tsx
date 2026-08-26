@@ -82,7 +82,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: '/logo.png',
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Orbit Control Automation',
@@ -95,7 +95,7 @@ export const metadata: Metadata = {
     title: 'Orbit Control Automation',
     description:
       'Global supplier of industrial automation, obsolete and surplus spare parts.',
-    images: ['/logo.png'],
+    images: ['/og-image.jpg'],
   },
 
   icons: {
