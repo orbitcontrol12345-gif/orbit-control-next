@@ -320,7 +320,10 @@ const formattedProductsCount =
 
       {/* FEATURED PRODUCTS */}
       {featuredProducts.length > 0 && (
-        <section className="bg-[#04101b] py-20">
+        <section
+          className="bg-[#04101b] py-20"
+          data-nosnippet=""
+        >
           <div className="page-container">
             <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
