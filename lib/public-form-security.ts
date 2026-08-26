@@ -79,6 +79,16 @@ export function cleanFormText(
     .slice(0, maxLength);
 }
 
+export function sanitizeAttachmentFilename(value: unknown): string {
+  const cleaned = String(value || 'attachment')
+    .replace(/[\0\r\n]/g, '')
+    .replace(/[\\/]/g, '_')
+    .trim()
+    .slice(0, 180);
+
+  return cleaned || 'attachment';
+}
+
 export function escapeHtml(value: unknown): string {
   return String(value || '')
     .replaceAll('&', '&amp;')

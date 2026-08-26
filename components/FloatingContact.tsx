@@ -15,10 +15,14 @@ export default function FloatingContact() {
       {/* Desktop Floating Widget */}
       <div className="fixed bottom-6 right-6 z-50 hidden md:block">
         {open && (
-          <div className="mb-3 w-56 rounded-2xl bg-white p-3 shadow-2xl border border-gray-200">
+          <div
+            id="floating-contact-menu"
+            className="mb-3 w-56 rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl"
+          >
             <a
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-xl p-3 text-gray-800 hover:bg-green-50"
             >
               <MessageCircle className="h-5 w-5 text-green-600" />
@@ -44,17 +48,24 @@ export default function FloatingContact() {
         )}
 
         <button
-  onClick={() => setOpen(!open)}
-  className="relative flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500 text-navy-900 shadow-2xl hover:bg-yellow-400 transition"
->
-  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-20"></span>
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? 'Close contact options' : 'Open contact options'}
+          aria-expanded={open}
+          aria-controls="floating-contact-menu"
+          className="relative flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500 text-navy-900 shadow-2xl transition hover:bg-yellow-400"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-20"
+          />
 
   {open ? (
     <X className="h-7 w-7 relative z-10" />
   ) : (
     <MessageCircle className="h-8 w-8 relative z-10" />
   )}
-</button>
+        </button>
       </div>
 
       {/* Mobile Bottom Bar */}
@@ -62,7 +73,8 @@ export default function FloatingContact() {
         <a
           href={`https://wa.me/${whatsappNumber}`}
           target="_blank"
-          className="flex flex-col items-center justify-center py-2 text-xs font-semibold text-green-600"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center justify-center py-2 text-xs font-semibold text-green-700"
         >
           <MessageCircle className="mb-1 h-5 w-5" />
           WhatsApp
@@ -78,7 +90,7 @@ export default function FloatingContact() {
 
         <Link
           href="/rfq"
-          className="flex flex-col items-center justify-center py-2 text-xs font-semibold text-yellow-600"
+          className="flex flex-col items-center justify-center py-2 text-xs font-semibold text-amber-700"
         >
           <Mail className="mb-1 h-5 w-5" />
           RFQ

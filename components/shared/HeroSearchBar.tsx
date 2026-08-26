@@ -235,6 +235,7 @@ export default function HeroSearchBar({
             type="text"
             value={query}
             autoComplete="off"
+            aria-label="Search products by part number"
             onFocus={() => {
               submittedRef.current = false;
               setUserInteracted(true);

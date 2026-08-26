@@ -79,7 +79,7 @@ export default function Footer() {
               <div className="flex items-center gap-3 text-sm text-slate-400">
                 <Phone size={16} className="shrink-0 text-amber-400" />
                 <a
-                  href="tel:+971676777094"
+                  href="tel:+97167677094"
                   className="transition-colors hover:text-amber-300"
                 >
                   +971 6 767 7094
@@ -106,9 +106,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
               Company
-            </h4>
+            </h2>
             <ul className="space-y-2.5">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
@@ -124,9 +124,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
               Categories
-            </h4>
+            </h2>
             <ul className="space-y-2.5">
               {footerLinks.categories.map((link) => (
                 <li key={link.href}>
@@ -142,9 +142,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+            <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
               Policies
-            </h4>
+            </h2>
             <ul className="space-y-2.5">
               {footerLinks.policies.map((link) => (
                 <li key={link.href}>
@@ -162,7 +162,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="page-container flex flex-col items-center justify-between gap-3 py-4 text-xs text-slate-500 sm:flex-row">
+        <div className="page-container flex flex-col items-center justify-between gap-3 py-4 text-xs text-slate-400 sm:flex-row">
           <p>
             © {new Date().getFullYear()} Orbit Control Automation. All rights
             reserved.

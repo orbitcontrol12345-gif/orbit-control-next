@@ -72,6 +72,7 @@ export default function CategoriesPage() {
             <input
               name="q"
               type="text"
+              aria-label="Search products by part number, brand, or category"
               placeholder="Search by part number, brand, or category..."
               className="w-full rounded-xl border border-navy-600 bg-navy-900 py-4 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-gold-500"
             />

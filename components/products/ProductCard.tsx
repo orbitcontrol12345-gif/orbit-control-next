@@ -138,6 +138,7 @@ export default function ProductCard({
         <Link
           href={productUrl}
           prefetch={false}
+          aria-label={`View details for ${product.name}`}
           className="mb-3 block flex-1"
         >
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100 transition-colors group-hover:text-gold-400">
@@ -173,6 +174,7 @@ export default function ProductCard({
           <Link
             href={productUrl}
             prefetch={false}
+            aria-label={`View details for ${product.name}`}
             className="flex items-center justify-center gap-1.5 rounded border border-navy-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
           >
             <ExternalLink size={12} />
@@ -184,6 +186,7 @@ export default function ProductCard({
               product.partNumber
             )}`}
             prefetch={false}
+            aria-label={`Request a quote for ${product.partNumber || product.name}`}
             className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 hover:bg-gold-400"
           >
             <FileText size={12} />

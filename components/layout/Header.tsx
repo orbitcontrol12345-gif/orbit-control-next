@@ -298,6 +298,7 @@ export default function Header() {
                   name="q"
                   type="text"
                   autoComplete="off"
+                  aria-label="Search products by part number"
                   placeholder="Search part number..."
                   value={searchQuery}
                   onFocus={() => {
@@ -421,9 +422,12 @@ export default function Header() {
           </div>
 
           <button
+            type="button"
             onClick={() => setMobileOpen((value) => !value)}
             className="p-2 text-slate-300 transition-colors hover:text-white lg:hidden"
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -431,7 +435,7 @@ export default function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="animate-fade-in border-t border-navy-700 bg-navy-800 lg:hidden">
+        <div id="mobile-navigation" className="animate-fade-in border-t border-navy-700 bg-navy-800 lg:hidden">
           <div className="page-container space-y-1 py-4">
             {navLinks.map((link) => (
               <Link

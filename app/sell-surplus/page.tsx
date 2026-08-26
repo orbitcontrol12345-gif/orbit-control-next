@@ -141,7 +141,7 @@ const response = await fetch('/api/sell-surplus', {
               <h2 className="text-lg font-bold text-white mb-6">Surplus Inventory Details</h2>
 
               {error && (
-                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-5">
+                <div role="alert" className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg mb-5">
                   <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
                   <p className="text-sm text-red-300">{error}</p>
                 </div>
@@ -160,43 +160,43 @@ const response = await fetch('/api/sell-surplus', {
                 />
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    <label htmlFor="surplus-company" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Company Name
                     </label>
-                    <input name="company" type="text" value={form.company} onChange={handleChange}
+                    <input id="surplus-company" name="company" type="text" value={form.company} onChange={handleChange}
                       placeholder="Your company name" className="input-field" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    <label htmlFor="surplus-contact-person" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Contact Person <span className="text-red-400">*</span>
                     </label>
-                    <input name="contact_person" type="text" required value={form.contact_person} onChange={handleChange}
+                    <input id="surplus-contact-person" name="contact_person" type="text" required value={form.contact_person} onChange={handleChange}
                       placeholder="Your full name" className="input-field" />
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    <label htmlFor="surplus-email" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Email <span className="text-red-400">*</span>
                     </label>
-                    <input name="email" type="email" required value={form.email} onChange={handleChange}
+                    <input id="surplus-email" name="email" type="email" required value={form.email} onChange={handleChange}
                       placeholder="email@company.com" className="input-field" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                    <label htmlFor="surplus-phone" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Phone / WhatsApp
                     </label>
-                    <input name="phone" type="tel" value={form.phone} onChange={handleChange}
+                    <input id="surplus-phone" name="phone" type="tel" value={form.phone} onChange={handleChange}
                       placeholder="Phone / WhatsApp number" className="input-field" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <label htmlFor="surplus-country" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Country <span className="text-red-400">*</span>
                   </label>
-                  <select name="country" required value={form.country} onChange={handleChange} className="input-field">
+                  <select id="surplus-country" name="country" required value={form.country} onChange={handleChange} className="input-field">
                     <option value="">Select your country...</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -207,35 +207,35 @@ const response = await fetch('/api/sell-surplus', {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                      <label htmlFor="surplus-brand" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                         Brand / Manufacturer
                       </label>
-                      <input name="brand" type="text" value={form.brand} onChange={handleChange}
+                      <input id="surplus-brand" name="brand" type="text" value={form.brand} onChange={handleChange}
                         placeholder="e.g. Siemens, ABB, Allen-Bradley" className="input-field" />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                      <label htmlFor="surplus-part-numbers" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                         Part Numbers <span className="text-red-400">*</span>
                       </label>
-                      <textarea name="part_numbers" required rows={3} value={form.part_numbers} onChange={handleChange}
+                      <textarea id="surplus-part-numbers" name="part_numbers" required rows={3} value={form.part_numbers} onChange={handleChange}
                         placeholder="List the part numbers you want to sell, one per line or comma-separated"
                         className="input-field resize-none font-mono text-sm" />
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        <label htmlFor="surplus-quantity" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                           Quantity
                         </label>
-                        <input name="quantity" type="text" value={form.quantity} onChange={handleChange}
+                        <input id="surplus-quantity" name="quantity" type="text" value={form.quantity} onChange={handleChange}
                           placeholder="e.g. 50 units" className="input-field" />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        <label htmlFor="surplus-condition" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                           Condition
                         </label>
-                        <select name="condition" value={form.condition} onChange={handleChange} className="input-field">
+                        <select id="surplus-condition" name="condition" value={form.condition} onChange={handleChange} className="input-field">
                           <option value="">Select condition...</option>
                           {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -245,10 +245,10 @@ const response = await fetch('/api/sell-surplus', {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <label htmlFor="surplus-message" className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Additional Details
                   </label>
-                  <textarea name="message" rows={3} value={form.message} onChange={handleChange}
+                  <textarea id="surplus-message" name="message" rows={3} value={form.message} onChange={handleChange}
                     placeholder="Storage condition, history, reason for selling, expected price range..."
                     className="input-field resize-none" />
                 </div>
@@ -259,13 +259,6 @@ const response = await fetch('/api/sell-surplus', {
 
   <p className="text-sm font-semibold text-white">
     Upload Inventory List
-    {selectedFiles.length > 0 && (
-  <div className="mt-3 text-xs text-emerald-400 space-y-1">
-    {selectedFiles.map((file, index) => (
-      <div key={index}>✓ {file.name}</div>
-    ))}
-  </div>
-)}
   </p>
 
   <p className="mt-1 text-xs text-slate-400">

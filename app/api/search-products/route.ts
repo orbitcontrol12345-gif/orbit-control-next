@@ -12,6 +12,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 
+  if (q.length > 120) {
+    return NextResponse.json(
+      { error: 'Search query is too long.' },
+      { status: 400 },
+    );
+  }
+
   const products = await searchSupabaseProducts(q, 8);
 
   const results = products.map((product) => ({

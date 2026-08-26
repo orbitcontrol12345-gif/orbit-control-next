@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: 'About Us',
   description:
-    'Orbit Control Automation is a UAE-based global supplier of industrial automation, electrical, surplus and obsolete spare parts including PLCs, HMIs, VFDs, sensors, relays and circuit breakers.',
+    'UAE-based global supplier of industrial automation, electrical, surplus and obsolete spare parts, including PLCs, HMIs, VFDs, sensors and relays.',
   alternates: {
     canonical: 'https://www.orbit-surplus.com/about',
   },

@@ -262,6 +262,7 @@ export default function ProductsClient({
 
               <input
                 type="text"
+                aria-label="Search industrial automation products"
                 placeholder="Search by part number, SKU, brand, model, or category..."
                 value={query}
                 autoComplete="off"
@@ -338,6 +339,8 @@ export default function ProductsClient({
 
             <button
               type="button"
+              aria-expanded={filtersOpen}
+              aria-controls="product-filters"
               onClick={() =>
                 setFiltersOpen((current) => !current)
               }
@@ -363,6 +366,7 @@ export default function ProductsClient({
               />
 
               <select
+                aria-label="Sort products"
                 value={sortBy}
                 onChange={(event) => {
                   const nextSort =
@@ -399,13 +403,20 @@ export default function ProductsClient({
           </div>
 
           {filtersOpen && (
-            <div className="mt-5 grid gap-4 border-t border-navy-700 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div
+              id="product-filters"
+              className="mt-5 grid gap-4 border-t border-navy-700 pt-5 sm:grid-cols-2 lg:grid-cols-4"
+            >
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label
+                  htmlFor="product-brand-filter"
+                  className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >
                   Brand
                 </label>
 
                 <select
+                  id="product-brand-filter"
                   value={selectedBrand}
                   onChange={(event) => {
                     const nextBrand = event.target.value;
@@ -430,11 +441,15 @@ export default function ProductsClient({
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label
+                  htmlFor="product-category-filter"
+                  className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >
                   Category
                 </label>
 
                 <select
+                  id="product-category-filter"
                   value={selectedCategory}
                   onChange={(event) => {
                     const nextCategory =
@@ -461,11 +476,15 @@ export default function ProductsClient({
               </div>
 
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label
+                  htmlFor="product-condition-filter"
+                  className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400"
+                >
                   Condition
                 </label>
 
                 <select
+                  id="product-condition-filter"
                   value={selectedCondition}
                   onChange={(event) => {
                     const nextCondition =
