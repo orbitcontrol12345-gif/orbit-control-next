@@ -3,6 +3,12 @@ import ProductGallery from "@/components/product/ProductGallery";
 import JsonLd from "@/components/seo/JsonLd";
 import ProductCard from "@/components/products/ProductCard";
 import { buildProductSeo } from "@/lib/seo/productSeo";
+import {
+  cleanProductDisplayText,
+  getDisplayBrand,
+  getDisplayCategory,
+  getDisplayPartNumber,
+} from "@/lib/product-display";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
@@ -33,54 +39,6 @@ interface Props {
   }>;
 }
 
-function cleanText(value?: string | null): string {
-  return (value || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-const INVALID_PART_NUMBERS = new Set([
-  "UNKNOWN",
-  "NULL",
-  "N/A",
-  "NA",
-  "NONE",
-  "NOT AVAILABLE",
-]);
-
-function getValidPartNumber(value?: string | null): string | null {
-  const cleaned = cleanText(value);
-
-  if (!cleaned || INVALID_PART_NUMBERS.has(cleaned.toUpperCase())) {
-    return null;
-  }
-
-  return cleaned;
-}
-
-const INVALID_BRANDS = new Set([
-  "UNKNOWN",
-  "UNBRANDED",
-  "NULL",
-  "N/A",
-  "NA",
-  "NONE",
-  "NOT AVAILABLE",
-  "NOT SPECIFIED",
-  "DOES NOT APPLY",
-]);
-
-function getValidBrand(value?: string | null): string | null {
-  const cleaned = cleanText(value);
-
-  if (!cleaned || INVALID_BRANDS.has(cleaned.toUpperCase())) {
-    return null;
-  }
-
-  return cleaned;
-}
-
 function uniqueImages(values: Array<string | null | undefined>): string[] {
   return [
     ...new Set(
@@ -106,9 +64,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const validBrand = getValidBrand(product.brand);
+  const validBrand = getDisplayBrand(product.brand);
   const seoBrand = validBrand || "Industrial Automation";
-  const validPartNumber = getValidPartNumber(product.partNumber);
+  const validPartNumber = getDisplayPartNumber(product.partNumber);
   const seoPartNumber = validPartNumber || product.sku || String(product.id);
 
   const seo = buildProductSeo({
@@ -132,7 +90,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     product.r2ImageUrl || product.imageUrl || `${SITE_URL}/og-image.jpg`;
 
   return {
-    title,
+    title: {
+      absolute: `${title} | Orbit Control`,
+    },
     description: metaDescription,
 
     alternates: {
@@ -217,9 +177,9 @@ export default async function ProductDetailPage({ params }: Props) {
     permanentRedirect(`/products/${encodeURIComponent(product.slug)}`);
   }
 
-  const validBrand = getValidBrand(product.brand);
+  const validBrand = getDisplayBrand(product.brand);
   const seoBrand = validBrand || "Industrial Automation";
-  const validPartNumber = getValidPartNumber(product.partNumber);
+  const validPartNumber = getDisplayPartNumber(product.partNumber);
   const seoPartNumber = validPartNumber || product.sku || String(product.id);
 
   const seo = buildProductSeo({
@@ -232,6 +192,19 @@ export default async function ProductDetailPage({ params }: Props) {
   });
 
   const related = await getSupabaseRelatedProducts(product);
+
+  const relatedTags = Array.from(
+    new Set(
+      [
+        product.sku,
+        validPartNumber,
+        validBrand,
+        getDisplayCategory(product.category),
+      ]
+        .map((value) => cleanProductDisplayText(value))
+        .filter(Boolean),
+    ),
+  );
 
   const productUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
 
@@ -545,14 +518,14 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {product.tags?.length > 0 && (
+        {relatedTags.length > 0 && (
           <div className="mb-10">
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
               Related Tags
             </h2>
 
             <div className="flex flex-wrap gap-2">
-              {product.tags.map((tag) => (
+              {relatedTags.map((tag) => (
                 <span
                   key={tag}
                   className="rounded border border-navy-700 bg-navy-800 px-3 py-1 text-xs text-slate-400"

@@ -13,6 +13,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, Loader2, Search } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
+import {
+  getDisplayBrand,
+  getDisplayPartNumber,
+} from '@/lib/product-display';
 
 interface HeroSearchBarProps {
   initialQuery?: string;
@@ -301,12 +305,16 @@ export default function HeroSearchBar({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-sm font-bold text-gold-500">
-                        {product.partNumber}
-                      </span>
-                      <span className="text-xs font-medium text-slate-500">
-                        {product.brand}
-                      </span>
+                      {getDisplayPartNumber(product.partNumber) && (
+                        <span className="font-mono text-sm font-bold text-gold-500">
+                          {getDisplayPartNumber(product.partNumber)}
+                        </span>
+                      )}
+                      {getDisplayBrand(product.brand) && (
+                        <span className="text-xs font-medium text-slate-500">
+                          {getDisplayBrand(product.brand)}
+                        </span>
+                      )}
                       <span
                         className={`rounded px-1.5 py-0.5 text-xs ${
                           product.condition === 'New'
