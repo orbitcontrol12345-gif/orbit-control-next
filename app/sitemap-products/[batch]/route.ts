@@ -1,10 +1,14 @@
-import { getSupabaseProductsPage } from '@/lib/supabase-products';
+import {
+  getSupabaseProductsPage,
+  getVisibleProductsCount,
+} from '@/lib/supabase-products';
+import {
+  getProductSitemapCount,
+  PRODUCT_SITEMAP_PAGES_PER_BATCH,
+  PRODUCT_SITEMAP_PAGE_SIZE,
+} from '@/lib/product-sitemaps';
 
 const SITE_URL = 'https://www.orbit-surplus.com';
-
-const PRODUCTS_PER_PAGE = 100;
-const PAGES_PER_BATCH = 35;
-const MAX_BATCHES = 5;
 
 export const dynamic = 'force-static';
 export const revalidate = 3600;
@@ -32,14 +36,17 @@ function formatLastModified(
     : timestamp.toISOString();
 }
 
-function parseBatchNumber(value: string): number | null {
+function parseBatchNumber(
+  value: string,
+  sitemapCount: number,
+): number | null {
   const normalizedValue = value.replace(/\.xml$/i, '');
   const batchNumber = Number(normalizedValue);
 
   if (
     !Number.isInteger(batchNumber) ||
     batchNumber < 1 ||
-    batchNumber > MAX_BATCHES
+    batchNumber > sitemapCount
   ) {
     return null;
   }
@@ -58,7 +65,13 @@ export async function GET(
   },
 ) {
   const { batch } = await params;
-  const batchNumber = parseBatchNumber(batch);
+  const productCount = await getVisibleProductsCount();
+  const productSitemapCount =
+    getProductSitemapCount(productCount);
+  const batchNumber = parseBatchNumber(
+    batch,
+    productSitemapCount,
+  );
 
   if (!batchNumber) {
     return new Response('Not Found', {
@@ -70,11 +83,13 @@ export async function GET(
   }
 
   const startPage =
-    (batchNumber - 1) * PAGES_PER_BATCH + 1;
+    (batchNumber - 1) *
+      PRODUCT_SITEMAP_PAGES_PER_BATCH +
+    1;
 
   const pageNumbers = Array.from(
     {
-      length: PAGES_PER_BATCH,
+      length: PRODUCT_SITEMAP_PAGES_PER_BATCH,
     },
     (_, index) => startPage + index,
   );
@@ -83,7 +98,7 @@ export async function GET(
     pageNumbers.map((page) =>
       getSupabaseProductsPage({
         page,
-        perPage: PRODUCTS_PER_PAGE,
+        perPage: PRODUCT_SITEMAP_PAGE_SIZE,
       }),
     ),
   );
