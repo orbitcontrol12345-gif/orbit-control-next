@@ -158,6 +158,10 @@ function trimToLength(
   )}`.replace(/[,\s:;.-]+$/, '');
 }
 
+function getIndefiniteArticle(value: string): 'a' | 'an' {
+  return /^[aeiou]/i.test(value.trim()) ? 'an' : 'a';
+}
+
 export function buildProductSeo(input: ProductSeoInput) {
   const brand =
     cleanSeoText(input.brand) || 'Industrial Automation';
@@ -230,7 +234,7 @@ const productTypeContent =
   ]
     .filter(Boolean)
     .join(' '),
-  65,
+  44,
 );
   const conditionSentence = getConditionSentence(
     fullProductName,
@@ -258,7 +262,7 @@ const shippingSection =
 const smartDescription = [
   originalDescription,
 
-  `${manufacturer} ${partNumber} ${normalizedName} is a ${productTypeContent.label} designed for ${productTypeContent.applications}.`,
+  `${manufacturer} ${partNumber} ${normalizedName} is ${getIndefiniteArticle(productTypeContent.label)} ${productTypeContent.label} designed for ${productTypeContent.applications}.`,
 
   conditionSentence,
 

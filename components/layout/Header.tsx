@@ -13,6 +13,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Menu, Search, X } from 'lucide-react';
 
 import type { Product } from '@/lib/types';
+import {
+  getDisplayBrand,
+  getDisplayPartNumber,
+} from '@/lib/product-display';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -351,12 +355,16 @@ export default function Header() {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs font-semibold text-gold-500">
-                                {product.partNumber}
-                              </span>
-                              <span className="text-xs text-slate-500">
-                                {product.brand}
-                              </span>
+                              {getDisplayPartNumber(product.partNumber) && (
+                                <span className="font-mono text-xs font-semibold text-gold-500">
+                                  {getDisplayPartNumber(product.partNumber)}
+                                </span>
+                              )}
+                              {getDisplayBrand(product.brand) && (
+                                <span className="text-xs text-slate-500">
+                                  {getDisplayBrand(product.brand)}
+                                </span>
+                              )}
                             </div>
 
                             <p className="truncate text-sm text-slate-200">

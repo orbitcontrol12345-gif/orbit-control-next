@@ -12,6 +12,10 @@ import {
 
 import type { Product } from '@/lib/types';
 import { canOptimizeImage } from '@/lib/optimized-image';
+import {
+  getDisplayBrand,
+  getDisplayPartNumber,
+} from '@/lib/product-display';
 
 interface ProductCardProps {
   product: Product;
@@ -47,6 +51,10 @@ export default function ProductCard({
   product,
 }: ProductCardProps) {
   const productUrl = `/products/${product.slug}`;
+  const displayBrand = getDisplayBrand(product.brand);
+  const displayPartNumber = getDisplayPartNumber(
+    product.partNumber,
+  );
 
   const imageCandidates = useMemo(() => {
     const candidates = [
@@ -122,18 +130,22 @@ export default function ProductCard({
       </Link>
 
       <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
-            {product.brand}
-          </span>
-        </div>
+        {displayBrand && (
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="truncate text-xs font-semibold uppercase tracking-wide text-gold-500">
+              {displayBrand}
+            </span>
+          </div>
+        )}
 
-        <p className="mb-1 text-xs font-mono text-slate-400">
-          PN:{' '}
-          <span className="font-semibold text-slate-300">
-            {product.partNumber}
-          </span>
-        </p>
+        {displayPartNumber && (
+          <p className="mb-1 text-xs font-mono text-slate-400">
+            PN:{' '}
+            <span className="font-semibold text-slate-300">
+              {displayPartNumber}
+            </span>
+          </p>
+        )}
 
         <Link
           href={productUrl}
@@ -183,10 +195,10 @@ export default function ProductCard({
 
           <Link
             href={`/rfq?part=${encodeURIComponent(
-              product.partNumber
+              displayPartNumber || product.name
             )}`}
             prefetch={false}
-            aria-label={`Request a quote for ${product.partNumber || product.name}`}
+            aria-label={`Request a quote for ${displayPartNumber || product.name}`}
             className="flex items-center justify-center gap-1.5 rounded bg-gold-500 px-3 py-2 text-xs font-semibold text-navy-900 hover:bg-gold-400"
           >
             <FileText size={12} />

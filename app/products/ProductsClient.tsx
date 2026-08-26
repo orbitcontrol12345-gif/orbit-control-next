@@ -15,6 +15,10 @@ import {
 
 import ProductCard from '@/components/products/ProductCard';
 import { BRANDS, CATEGORIES } from '@/lib/data';
+import {
+  getDisplayBrand,
+  getDisplayPartNumber,
+} from '@/lib/product-display';
 import type {
   Product,
   ProductCategory,
@@ -319,17 +323,21 @@ export default function ProductsClient({
                       </div>
 
                       <div className="min-w-0">
-                        <div className="line-clamp-1 text-sm font-medium text-white">
-                          {item.partNumber}
-                        </div>
+                        {getDisplayPartNumber(item.partNumber) && (
+                          <div className="line-clamp-1 text-sm font-medium text-white">
+                            {getDisplayPartNumber(item.partNumber)}
+                          </div>
+                        )}
 
                         <div className="line-clamp-1 text-xs text-slate-400">
                           {item.name}
                         </div>
 
-                        <div className="text-xs text-slate-500">
-                          {item.brand}
-                        </div>
+                        {getDisplayBrand(item.brand) && (
+                          <div className="text-xs text-slate-500">
+                            {getDisplayBrand(item.brand)}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   ))}

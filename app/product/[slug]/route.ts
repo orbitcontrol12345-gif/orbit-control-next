@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseProductBySlug } from '@/lib/supabase-products';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V5-UNICODE';
+const ROUTE_VERSION = 'LEGACY-PRODUCT-REDIRECT-V6-CANONICAL';
+const SITE_URL = 'https://www.orbit-surplus.com';
 
 type RouteContext = {
   params: Promise<{
@@ -37,6 +39,28 @@ function encodePathForLookup(pathname: string): string {
     /%[0-9A-F]{2}/g,
     (value) => value.toLowerCase()
   );
+}
+
+function getRedirectTargetSlug(
+  value: string,
+): string | null {
+  try {
+    const target = new URL(value, SITE_URL);
+
+    if (target.origin !== new URL(SITE_URL).origin) {
+      return null;
+    }
+
+    const match = target.pathname.match(
+      /^\/products\/([^/]+)\/?$/,
+    );
+
+    return match
+      ? decodeURIComponent(match[1]).trim()
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function createNotFoundResponse(oldPath: string) {
@@ -177,7 +201,7 @@ function createNotFoundResponse(oldPath: string) {
 }
 
 export async function GET(
-  req: Request,
+  _req: Request,
   context: RouteContext
 ) {
   try {
@@ -292,9 +316,25 @@ export async function GET(
       return createNotFoundResponse(oldPath);
     }
 
-    const destination = new URL(
+    const targetSlug = getRedirectTargetSlug(
       redirectRow.new_url,
-      req.url
+    );
+
+    if (!targetSlug) {
+      return createNotFoundResponse(oldPath);
+    }
+
+    const targetProduct = await getSupabaseProductBySlug(
+      targetSlug,
+    );
+
+    if (!targetProduct?.slug) {
+      return createNotFoundResponse(oldPath);
+    }
+
+    const destination = new URL(
+      `/products/${encodeURIComponent(targetProduct.slug)}`,
+      SITE_URL,
     );
 
     const response = NextResponse.redirect(
