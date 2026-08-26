@@ -7,7 +7,7 @@ const PAGES_PER_BATCH = 35;
 const MAX_BATCHES = 5;
 
 export const dynamic = 'force-static';
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 function escapeXml(value: string): string {
   return value
@@ -16,6 +16,20 @@ function escapeXml(value: string): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;');
+}
+
+function formatLastModified(
+  value?: string,
+): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const timestamp = new Date(value);
+
+  return Number.isNaN(timestamp.getTime())
+    ? null
+    : timestamp.toISOString();
 }
 
 function parseBatchNumber(value: string): number | null {
@@ -127,10 +141,13 @@ export async function GET(
       const productUrl =
         `${SITE_URL}/products/` +
         encodeURIComponent(product.slug.trim());
+      const lastModified = formatLastModified(
+        product.updatedAt || product.createdAt,
+      );
 
       return `  <url>
     <loc>${escapeXml(productUrl)}</loc>
-    <priority>0.8</priority>
+${lastModified ? `    <lastmod>${lastModified}</lastmod>\n` : ''}    <priority>0.8</priority>
   </url>`;
     })
     .join('\n');
@@ -146,7 +163,7 @@ ${urls}
       'Content-Type':
         'application/xml; charset=utf-8',
       'Cache-Control':
-        'public, s-maxage=86400, stale-while-revalidate=3600',
+        'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }

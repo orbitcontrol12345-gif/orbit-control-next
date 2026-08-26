@@ -17,7 +17,9 @@ const PRODUCT_LIST_COLUMNS = `
   is_active,
   image_url,
   r2_image_url,
-  ebay_image_url
+  ebay_image_url,
+  created_at,
+  updated_at
 `;
 
 type ProductSortOption = 'relevance' | 'name' | 'brand' | 'condition';
@@ -90,6 +92,8 @@ function mapSupabaseProduct(item: any): Product {
       item.sku ||
       item.ebay_item_id ||
       String(item.id),
+    createdAt: item.created_at || undefined,
+    updatedAt: item.updated_at || undefined,
   };
 }
 
@@ -121,6 +125,8 @@ function mapSupabaseProductListItem(item: any): Product {
       item.sku ||
       item.ebay_item_id ||
       String(item.id),
+    createdAt: item.created_at || undefined,
+    updatedAt: item.updated_at || undefined,
   };
 }
 
