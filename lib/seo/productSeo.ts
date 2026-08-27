@@ -141,6 +141,31 @@ function isUsefulEnglishDescription(value: string): boolean {
   );
 }
 
+function normalizeComparableText(value: string): string {
+  return cleanSeoText(value)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '');
+}
+
+function isNearDuplicateTitle(
+  description: string,
+  productName: string,
+): boolean {
+  const comparableDescription =
+    normalizeComparableText(description);
+  const comparableName = normalizeComparableText(productName);
+
+  if (!comparableDescription || !comparableName) {
+    return false;
+  }
+
+  return (
+    (comparableDescription.includes(comparableName) ||
+      comparableName.includes(comparableDescription)) &&
+    description.length <= productName.length + 120
+  );
+}
+
 function trimToLength(
   value: string,
   maxLength: number,
@@ -163,21 +188,22 @@ function getIndefiniteArticle(value: string): 'a' | 'an' {
 }
 
 export function buildProductSeo(input: ProductSeoInput) {
-  const brand =
-    cleanSeoText(input.brand) || 'Industrial Automation';
-
-  const partNumber =
-    cleanSeoText(input.partNumber) || 'Unknown Part Number';
-
+  const brand = cleanSeoText(input.brand);
+  const partNumber = cleanSeoText(input.partNumber);
+  const manufacturer =
+    cleanSeoText(input.manufacturer) || brand;
+  const fallbackProductName = [
+    manufacturer,
+    partNumber,
+    'Industrial Spare Part',
+  ]
+    .filter(Boolean)
+    .join(' ');
   const productName =
-    cleanSeoText(input.name) ||
-    `${brand} ${partNumber} Industrial Spare Part`;
+    cleanSeoText(input.name) || fallbackProductName;
 
   const rawDescription = cleanSeoText(input.description);
 const category = cleanSeoText(input.category);
-
-const manufacturer =
-  cleanSeoText(input.manufacturer) || brand;
   const normalizedCondition = normalizeCondition(
     cleanSeoText(input.condition),
   );
@@ -211,22 +237,20 @@ const productType = (
 const productTypeContent =
   PRODUCT_TYPES[productType];
   const fullProductName = [
-    brand,
-    partNumber !== 'Unknown Part Number'
-      ? partNumber
-      : '',
+    manufacturer,
+    partNumber,
     normalizedName,
   ]
     .filter(Boolean)
     .join(' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim() || productName;
 
   const seoTitle = trimToLength(
   [
     manufacturer,
     partNumber,
-    normalizedName,
+    normalizedName || productName,
     productTypeContent.label,
     normalizedCondition !== 'surplus'
       ? `(${normalizedCondition})`
@@ -241,11 +265,11 @@ const productTypeContent =
     normalizedCondition,
   );
 
-  const originalDescription = isUsefulEnglishDescription(
-    rawDescription,
-  )
-    ? rawDescription
-    : '';
+  const originalDescription =
+    isUsefulEnglishDescription(rawDescription) &&
+    !isNearDuplicateTitle(rawDescription, productName)
+      ? rawDescription
+      : '';
 
 const systemsSection =
   `The unit is intended for use with ${productTypeContent.systems}.`;
@@ -259,10 +283,18 @@ const supportSection =
 const shippingSection =
   'Worldwide DHL and FedEx shipping is available from the United Arab Emirates with secure packaging and international tracking.';
 
+const manufacturerSection = manufacturer
+  ? `${manufacturer} industrial products are commonly selected for automation upgrades, equipment maintenance, production support and OEM replacement projects.`
+  : 'Industrial automation products are commonly selected for automation upgrades, equipment maintenance, production support and OEM replacement projects.';
+
+const quotationSection = partNumber
+  ? `Request a quotation for part number ${partNumber} to confirm current pricing, stock availability, compatibility, additional photos and estimated delivery time.`
+  : 'Request a quotation for this item to confirm current pricing, stock availability, compatibility, additional photos and estimated delivery time.';
+
 const smartDescription = [
   originalDescription,
 
-  `${manufacturer} ${partNumber} ${normalizedName} is ${getIndefiniteArticle(productTypeContent.label)} ${productTypeContent.label} designed for ${productTypeContent.applications}.`,
+  `${fullProductName} is ${getIndefiniteArticle(productTypeContent.label)} ${productTypeContent.label} designed for ${productTypeContent.applications}.`,
 
   conditionSentence,
 
@@ -270,7 +302,7 @@ const smartDescription = [
 
   industriesSection,
 
-  `${manufacturer} industrial products are commonly selected for automation upgrades, equipment maintenance, production support and OEM replacement projects.`,
+  manufacturerSection,
 
   'Orbit Control Automation supplies new, used, refurbished, surplus and obsolete industrial automation spare parts to customers worldwide.',
 
@@ -278,7 +310,7 @@ const smartDescription = [
 
   supportSection,
 
-  `Request a quotation for part number ${partNumber} to confirm current pricing, stock availability, compatibility, additional photos and estimated delivery time.`,
+  quotationSection,
 ]
 .filter(Boolean)
 .join('\n\n');
@@ -288,7 +320,7 @@ const smartDescription = [
 );
 
   const imageAlt = trimToLength(
-    `${brand} ${partNumber} ${normalizedName} ${normalizedCondition} industrial spare part`,
+    `${fullProductName} ${normalizedCondition} industrial spare part`,
     160,
   );
 

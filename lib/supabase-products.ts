@@ -1,5 +1,9 @@
 import type { Product } from '@/lib/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import {
+  findProductOverrideItemIds,
+  getProductDataOverride,
+} from '@/lib/product-data-overrides';
 import { unstable_cache } from 'next/cache';
 const PRODUCTS_TABLE = 'products';
 const MIGRATION_REDIRECTS_TABLE = 'migration_redirects';
@@ -52,6 +56,17 @@ function cleanProductName(name: string): string {
 }
 
 function mapSupabaseProduct(item: any): Product {
+  const dataOverride = getProductDataOverride(item);
+  const partNumber =
+    dataOverride?.partNumber ||
+    item.part_number ||
+    'UNKNOWN';
+  const productName =
+    dataOverride?.name || item.name || '';
+  const category =
+    dataOverride?.category ||
+    item.category ||
+    'Industrial Parts';
   const bestImage =
     (Array.isArray(item.r2_gallery_urls) && item.r2_gallery_urls.length > 0
       ? item.r2_gallery_urls[0]
@@ -69,12 +84,16 @@ function mapSupabaseProduct(item: any): Product {
     id: String(item.id),
     sku: item.sku || '',
     brand: item.brand || 'Unknown',
-    partNumber: item.part_number || 'UNKNOWN',
-    name: cleanProductName(item.name || ''),
-    category: item.category || 'Industrial Parts',
+    partNumber,
+    name: cleanProductName(productName),
+    category,
     condition: item.condition || 'Used',
     inStock: item.is_active !== false,
-    description: item.description || item.name || '',
+    description:
+      dataOverride?.name ||
+      item.description ||
+      item.name ||
+      '',
     technicalSpecs: {},
     imageUrl: bestImage,
     r2ImageUrl: item.r2_image_url || null,
@@ -82,10 +101,10 @@ function mapSupabaseProduct(item: any): Product {
     ebayGalleryUrls: item.ebay_gallery_urls || [],
     tags: [
       item.sku,
-      item.part_number,
+      partNumber,
       item.brand,
-      item.category,
-      item.name,
+      category,
+      productName,
     ].filter(Boolean),
     slug:
       item.slug ||
@@ -98,6 +117,7 @@ function mapSupabaseProduct(item: any): Product {
 }
 
 function mapSupabaseProductListItem(item: any): Product {
+  const dataOverride = getProductDataOverride(item);
   const bestImage =
     item.r2_image_url ||
     item.ebay_image_url ||
@@ -108,9 +128,17 @@ function mapSupabaseProductListItem(item: any): Product {
     id: String(item.id),
     sku: item.sku || '',
     brand: item.brand || 'Unknown',
-    partNumber: item.part_number || 'UNKNOWN',
-    name: cleanProductName(item.name || ''),
-    category: item.category || 'Industrial Parts',
+    partNumber:
+      dataOverride?.partNumber ||
+      item.part_number ||
+      'UNKNOWN',
+    name: cleanProductName(
+      dataOverride?.name || item.name || '',
+    ),
+    category:
+      dataOverride?.category ||
+      item.category ||
+      'Industrial Parts',
     condition: item.condition || 'Used',
     inStock: item.is_active !== false,
     description: '',
@@ -285,6 +313,9 @@ async function loadSupabaseProductsPage({
     .neq('catalog_visible', false);
 
   if (cleanSearch) {
+    const overrideItemIds =
+      findProductOverrideItemIds(cleanSearch);
+
     query = query.or(
       [
         `name.ilike.%${cleanSearch}%`,
@@ -292,6 +323,11 @@ async function loadSupabaseProductsPage({
         `part_number.ilike.%${cleanSearch}%`,
         `brand.ilike.%${cleanSearch}%`,
         `category.ilike.%${cleanSearch}%`,
+        ...(overrideItemIds.length > 0
+          ? [
+              `ebay_item_id.in.(${overrideItemIds.join(',')})`,
+            ]
+          : []),
       ].join(','),
     );
   }
@@ -570,6 +606,8 @@ export async function searchSupabaseProducts(
     12,
     Math.max(1, Math.floor(limit)),
   );
+  const overrideItemIds =
+    findProductOverrideItemIds(search);
   const { data, error } = await supabaseAdmin
     .from(PRODUCTS_TABLE)
     .select(PRODUCT_LIST_COLUMNS)
@@ -582,6 +620,11 @@ export async function searchSupabaseProducts(
         `part_number.ilike.%${search}%`,
         `brand.ilike.%${search}%`,
         `category.ilike.%${search}%`,
+        ...(overrideItemIds.length > 0
+          ? [
+              `ebay_item_id.in.(${overrideItemIds.join(',')})`,
+            ]
+          : []),
       ].join(','),
     )
     .order('id', { ascending: false })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { getEbayToken } from '@/lib/ebay';
+import { getProductDataOverride } from '@/lib/product-data-overrides';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -325,7 +326,9 @@ function normalizeEbayItem(item: any, row: FeedRow, now: string) {
 
   if (!realItemId || !rawTitle) return null;
 
-  const cleanedName = cleanTitle(rawTitle) || rawTitle;
+  const dataOverride = getProductDataOverride(realItemId);
+  const cleanedName =
+    dataOverride?.name || cleanTitle(rawTitle) || rawTitle;
   const galleryUrls = getOfficialGalleryUrls(item);
   const imageUrl = galleryUrls[0] || null;
 
@@ -334,23 +337,27 @@ function normalizeEbayItem(item: any, row: FeedRow, now: string) {
 
   // If one official identifier is missing, use the other as a safe fallback.
   const partNumber =
-    officialPartNumber === 'UNKNOWN'
+    dataOverride?.partNumber ||
+    (officialPartNumber === 'UNKNOWN'
       ? officialModelNumber
-      : officialPartNumber;
+      : officialPartNumber);
 
   const modelNumber =
-    officialModelNumber === 'UNKNOWN'
+    dataOverride?.modelNumber ||
+    (officialModelNumber === 'UNKNOWN'
       ? officialPartNumber
-      : officialModelNumber;
+      : officialModelNumber);
 
   return {
     ebay_item_id: realItemId,
-    sku: normalizeOfficialValue(row?.sku) || realItemId,
+    sku: realItemId,
     part_number: partNumber || 'UNKNOWN',
     model_number: modelNumber || 'UNKNOWN',
     brand: getOfficialBrand(item),
     category:
-      normalizeOfficialValue(item?.categoryPath) || 'Industrial Automation',
+      dataOverride?.category ||
+      normalizeOfficialValue(item?.categoryPath) ||
+      'Industrial Automation',
     name: cleanedName,
     condition: cleanCondition(
       normalizeOfficialValue(item?.condition) || 'Used'
@@ -362,7 +369,7 @@ function normalizeEbayItem(item: any, row: FeedRow, now: string) {
     r2_gallery_urls: [],
     image_status: 'pending',
     image_count: galleryUrls.length,
-    description: rawTitle,
+    description: dataOverride?.name || rawTitle,
     slug: slugify(`${realItemId}-${cleanedName}`),
     marketplace: MARKETPLACE,
     seller: 'orbitcontrol',

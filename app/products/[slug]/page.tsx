@@ -8,6 +8,7 @@ import {
   getDisplayBrand,
   getDisplayCategory,
   getDisplayPartNumber,
+  getDisplaySku,
 } from "@/lib/product-display";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -50,6 +51,19 @@ function uniqueImages(values: Array<string | null | undefined>): string[] {
   ];
 }
 
+function getProductReference(product: {
+  sku?: string | null;
+  slug?: string | null;
+}): string | null {
+  const displaySku = getDisplaySku(product.sku);
+
+  if (displaySku) {
+    return displaySku;
+  }
+
+  return product.slug?.match(/^(\d{12})(?:-|$)/)?.[1] || null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await getSupabaseProductBySlug(slug);
@@ -65,14 +79,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const validBrand = getDisplayBrand(product.brand);
-  const seoBrand = validBrand || "Industrial Automation";
   const validPartNumber = getDisplayPartNumber(product.partNumber);
-  const seoPartNumber = validPartNumber || product.sku || String(product.id);
+  const productReference = getProductReference(product);
 
   const seo = buildProductSeo({
-    brand: seoBrand,
-    manufacturer: seoBrand,
-    partNumber: seoPartNumber,
+    brand: validBrand,
+    manufacturer: validBrand,
+    partNumber: validPartNumber,
     name: product.name,
     description: product.description,
     condition: product.condition,
@@ -136,7 +149,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     other: {
       ...(validBrand ? { "product:brand": validBrand } : {}),
-      "product:retailer_item_id": product.sku || partNumber,
+      ...(productReference || partNumber
+        ? {
+            "product:retailer_item_id":
+              productReference || partNumber,
+          }
+        : {}),
       "product:condition": product.condition || "Used",
       "product:availability": product.inStock
         ? "in stock"
@@ -178,14 +196,13 @@ export default async function ProductDetailPage({ params }: Props) {
   }
 
   const validBrand = getDisplayBrand(product.brand);
-  const seoBrand = validBrand || "Industrial Automation";
   const validPartNumber = getDisplayPartNumber(product.partNumber);
-  const seoPartNumber = validPartNumber || product.sku || String(product.id);
+  const productReference = getProductReference(product);
 
   const seo = buildProductSeo({
-    brand: seoBrand,
-    manufacturer: seoBrand,
-    partNumber: seoPartNumber,
+    brand: validBrand,
+    manufacturer: validBrand,
+    partNumber: validPartNumber,
     name: product.name,
     description: product.description,
     condition: product.condition,
@@ -196,7 +213,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const relatedTags = Array.from(
     new Set(
       [
-        product.sku,
+        productReference,
         validPartNumber,
         validBrand,
         getDisplayCategory(product.category),
@@ -429,11 +446,11 @@ export default async function ProductDetailPage({ params }: Props) {
                   </span>
                 </div>
 
-                {(product.sku || validPartNumber) && (
+                {(productReference || validPartNumber) && (
                   <div className="flex justify-between border-b border-navy-700 px-5 py-3">
                     <span className="text-slate-400">SKU</span>
                     <span className="font-mono text-white">
-                      {product.sku || validPartNumber}
+                      {productReference || validPartNumber}
                     </span>
                   </div>
                 )}
@@ -469,7 +486,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className="mb-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/rfq?part=${encodeURIComponent(
-                  validPartNumber || product.sku || "",
+                  validPartNumber || productReference || product.name,
                 )}&name=${encodeURIComponent(product.name)}`}
                 rel="nofollow"
                 className="btn-gold flex-1 justify-center py-3 text-base"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { getEbayToken } from '@/lib/ebay';
+import { getProductDataOverride } from '@/lib/product-data-overrides';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -421,7 +422,9 @@ function normalizeEbayItem(
 
   if (!realItemId || !rawTitle) return null;
 
-  const cleanedName = cleanTitle(rawTitle) || rawTitle;
+  const dataOverride = getProductDataOverride(realItemId);
+  const cleanedName =
+    dataOverride?.name || cleanTitle(rawTitle) || rawTitle;
   const galleryUrls = getOfficialGalleryUrls(item);
   const imageUrl = galleryUrls[0] || null;
 
@@ -439,11 +442,13 @@ function normalizeEbayItem(
       : '';
 
   const partNumber =
+    dataOverride?.partNumber ||
     validPartNumber ||
     validModelNumber ||
     'UNKNOWN';
 
   const modelNumber =
+    dataOverride?.modelNumber ||
     validModelNumber ||
     validPartNumber ||
     'UNKNOWN';
@@ -458,12 +463,13 @@ console.log({
 });
   return {
     ebay_item_id: realItemId,
-    sku: feedRow.sku || realItemId,
+    sku: realItemId,
     part_number: partNumber,
     model_number: modelNumber,
     brand: getOfficialBrand(item),
 
     category:
+      dataOverride?.category ||
       normalizeOfficialValue(item?.categoryPath) ||
       'Industrial Automation',
 
@@ -476,7 +482,7 @@ console.log({
     image_url: imageUrl,
     ebay_image_url: imageUrl,
     ebay_gallery_urls: galleryUrls,
-    description: rawTitle,
+    description: dataOverride?.name || rawTitle,
     slug: slugify(`${realItemId}-${cleanedName}`),
 
     marketplace: String(

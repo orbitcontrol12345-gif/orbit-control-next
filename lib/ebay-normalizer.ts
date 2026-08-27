@@ -1,3 +1,5 @@
+import { getProductDataOverride } from './product-data-overrides';
+
 export type EbayFeedRow = {
   ebay_item_id: string;
   sku?: string | null;
@@ -238,7 +240,9 @@ export function normalizeEbayItem(
   const rawTitle = normalizeOfficialValue(item?.title);
   if (!realItemId || !rawTitle) return null;
 
-  const cleanedName = cleanTitle(rawTitle) || rawTitle;
+  const dataOverride = getProductDataOverride(realItemId);
+  const cleanedName =
+    dataOverride?.name || cleanTitle(rawTitle) || rawTitle;
   const galleryUrls = getOfficialGalleryUrls(item);
   const imageUrl = galleryUrls[0] || null;
   let partNumber = getOfficialPartNumber(item);
@@ -247,22 +251,28 @@ export function normalizeEbayItem(
   if (partNumber === 'UNKNOWN' && modelNumber !== 'UNKNOWN') partNumber = modelNumber;
   if (modelNumber === 'UNKNOWN' && partNumber !== 'UNKNOWN') modelNumber = partNumber;
 
+  partNumber = dataOverride?.partNumber || partNumber;
+  modelNumber = dataOverride?.modelNumber || modelNumber;
+
   const quantity = Number(feedRow.quantity ?? 0);
   const price = feedRow.price == null ? null : Number(feedRow.price);
 
   return {
     ebay_item_id: realItemId,
-    sku: String(feedRow.sku || realItemId),
+    sku: realItemId,
     part_number: partNumber,
     model_number: modelNumber,
     brand: getOfficialBrand(item, rawTitle),
-    category: normalizeOfficialValue(item?.categoryPath) || 'Industrial Automation',
+    category:
+      dataOverride?.category ||
+      normalizeOfficialValue(item?.categoryPath) ||
+      'Industrial Automation',
     name: cleanedName,
     condition: cleanCondition(normalizeOfficialValue(item?.condition) || 'Used'),
     image_url: imageUrl,
     ebay_image_url: imageUrl,
     ebay_gallery_urls: galleryUrls,
-    description: rawTitle,
+    description: dataOverride?.name || rawTitle,
     slug: slugify(`${realItemId}-${cleanedName}`),
     marketplace: 'EBAY_US',
     seller: options.seller || 'orbitcontrol',

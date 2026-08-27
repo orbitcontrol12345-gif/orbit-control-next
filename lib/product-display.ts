@@ -48,6 +48,22 @@ export function getDisplayPartNumber(
   return getUsefulProductValue(value);
 }
 
+export function getDisplaySku(
+  value?: string | null,
+): string | null {
+  const sku = getUsefulProductValue(value);
+
+  if (
+    !sku ||
+    /[<>]/.test(String(value || '')) ||
+    /^SKU\s*>/i.test(sku)
+  ) {
+    return null;
+  }
+
+  return sku;
+}
+
 export function getDisplayCategory(
   value?: string | null,
 ): string | null {
