@@ -458,7 +458,7 @@ console.log({
 });
   return {
     ebay_item_id: realItemId,
-    sku: feedRow.sku || realItemId,
+    sku: realItemId,
     part_number: partNumber,
     model_number: modelNumber,
     brand: getOfficialBrand(item),

@@ -252,7 +252,7 @@ export function normalizeEbayItem(
 
   return {
     ebay_item_id: realItemId,
-    sku: String(feedRow.sku || realItemId),
+    sku: realItemId,
     part_number: partNumber,
     model_number: modelNumber,
     brand: getOfficialBrand(item, rawTitle),

@@ -345,7 +345,7 @@ function normalizeEbayItem(item: any, row: FeedRow, now: string) {
 
   return {
     ebay_item_id: realItemId,
-    sku: normalizeOfficialValue(row?.sku) || realItemId,
+    sku: realItemId,
     part_number: partNumber || 'UNKNOWN',
     model_number: modelNumber || 'UNKNOWN',
     brand: getOfficialBrand(item),
