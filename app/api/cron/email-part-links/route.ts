@@ -44,8 +44,9 @@ function getMailboxConfig(): MailboxConfig | null {
   const smtpPass = process.env.MXROUTE_SMTP_PASS || '';
   const imapHost =
     process.env.MXROUTE_IMAP_HOST?.trim() || smtpHost;
-  const imapUser =
-    process.env.MXROUTE_IMAP_USER?.trim() || smtpUser;
+  const explicitImapUser =
+    process.env.MXROUTE_IMAP_USER?.trim() || '';
+  const imapUser = explicitImapUser || smtpUser;
   const imapPass = process.env.MXROUTE_IMAP_PASS || smtpPass;
   const recipient =
     process.env.ORBIT_PART_LINKS_RECIPIENT?.trim() ||
@@ -62,7 +63,9 @@ function getMailboxConfig(): MailboxConfig | null {
     !imapUser ||
     !imapPass ||
     !rawStartAt ||
-    Number.isNaN(startAt.getTime())
+    Number.isNaN(startAt.getTime()) ||
+    (!explicitImapUser &&
+      imapUser.toLowerCase() !== recipient.toLowerCase())
   ) {
     return null;
   }
