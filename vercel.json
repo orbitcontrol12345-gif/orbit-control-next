@@ -28,6 +28,10 @@
     {
       "path": "/api/catalog/repair-old-images",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/email-part-links",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
