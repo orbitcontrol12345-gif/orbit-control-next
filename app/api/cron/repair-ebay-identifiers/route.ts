@@ -231,11 +231,10 @@ async function getJob() {
 function isAuthorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET || '';
   const authorization = request.headers.get('authorization') || '';
-  const querySecret = request.nextUrl.searchParams.get('secret') || '';
 
   return (
     Boolean(cronSecret) &&
-    (authorization === `Bearer ${cronSecret}` || querySecret === cronSecret)
+    authorization === `Bearer ${cronSecret}`
   );
 }
 

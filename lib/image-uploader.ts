@@ -5,6 +5,118 @@ import {
 
 import { r2 } from '@/lib/r2';
 
+const TRUSTED_IMAGE_HOSTS = new Set([
+  'i.ebayimg.com',
+  'images.pexels.com',
+  'orbit-surplus.com',
+  'pub-e11286a0a91241bfbfe0d74a29552eed.r2.dev',
+  'www.orbit-surplus.com',
+  'xofucnqpqmxztazhtqix.supabase.co',
+]);
+
+const SUPPORTED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
+
+const MAX_REMOTE_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_IMAGE_REDIRECTS = 3;
+const IMAGE_FETCH_TIMEOUT_MS = 15_000;
+
+export function parseTrustedImageUrl(value: string): URL {
+  let url: URL;
+
+  try {
+    url = new URL(String(value || '').trim());
+  } catch {
+    throw new Error('Invalid remote image URL');
+  }
+
+  if (
+    url.protocol !== 'https:' ||
+    url.username ||
+    url.password ||
+    (url.port && url.port !== '443') ||
+    !TRUSTED_IMAGE_HOSTS.has(url.hostname.toLowerCase())
+  ) {
+    throw new Error('Remote image host is not allowed');
+  }
+
+  return url;
+}
+
+function hasValidImageSignature(
+  buffer: Buffer,
+  contentType: string,
+): boolean {
+  if (contentType === 'image/jpeg') {
+    return (
+      buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff
+    );
+  }
+
+  if (contentType === 'image/png') {
+    return (
+      buffer.length >= 8 &&
+      buffer.subarray(0, 8).equals(
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      )
+    );
+  }
+
+  if (contentType === 'image/webp') {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    );
+  }
+
+  return false;
+}
+
+async function readResponseWithLimit(response: Response): Promise<Buffer> {
+  const declaredLength = Number(
+    response.headers.get('content-length') || 0,
+  );
+
+  if (
+    Number.isFinite(declaredLength) &&
+    declaredLength > MAX_REMOTE_IMAGE_BYTES
+  ) {
+    throw new Error('Remote image exceeds the size limit');
+  }
+
+  if (!response.body) {
+    throw new Error('Remote image response has no body');
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Buffer[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) break;
+
+    totalBytes += value.byteLength;
+
+    if (totalBytes > MAX_REMOTE_IMAGE_BYTES) {
+      await reader.cancel();
+      throw new Error('Remote image exceeds the size limit');
+    }
+
+    chunks.push(Buffer.from(value));
+  }
+
+  return Buffer.concat(chunks, totalBytes);
+}
+
 export function makeR2ProductImageKey(params: {
   ebayItemId: string;
   index: number;
@@ -20,40 +132,69 @@ export function makeR2ProductImageKey(params: {
 }
 
 export async function downloadImageToBuffer(imageUrl: string) {
-  const response = await fetch(imageUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 Orbit-Control-Image-Sync',
-    },
-    cache: 'no-store',
-  });
+  let currentUrl = parseTrustedImageUrl(imageUrl);
+  let response: Response | null = null;
 
-  if (!response.ok) {
+  for (
+    let redirectCount = 0;
+    redirectCount <= MAX_IMAGE_REDIRECTS;
+    redirectCount += 1
+  ) {
+    response = await fetch(currentUrl, {
+      headers: {
+        Accept: 'image/webp,image/png,image/jpeg',
+        'User-Agent': 'Mozilla/5.0 Orbit-Control-Image-Sync',
+      },
+      cache: 'no-store',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(IMAGE_FETCH_TIMEOUT_MS),
+    });
+
+    if (![301, 302, 303, 307, 308].includes(response.status)) {
+      break;
+    }
+
+    const location = response.headers.get('location');
+
+    if (!location || redirectCount === MAX_IMAGE_REDIRECTS) {
+      throw new Error('Remote image redirected too many times');
+    }
+
+    currentUrl = parseTrustedImageUrl(
+      new URL(location, currentUrl).toString(),
+    );
+  }
+
+  if (!response?.ok) {
     throw new Error(
-      `Failed to download image: ${response.status}`
+      `Failed to download image: ${response?.status || 0}`
     );
   }
 
   const contentType =
-    response.headers.get('content-type') || 'image/jpeg';
+    response.headers
+      .get('content-type')
+      ?.split(';')[0]
+      ?.trim()
+      .toLowerCase() || '';
 
-  if (!contentType.startsWith('image/')) {
+  if (!SUPPORTED_IMAGE_TYPES.has(contentType)) {
     throw new Error(
       `Invalid content type: ${contentType}`
     );
   }
 
-  const buffer = Buffer.from(
-    await response.arrayBuffer()
-  );
+  const buffer = await readResponseWithLimit(response);
 
-  if (buffer.length === 0) {
-    throw new Error('Downloaded image is empty');
+  if (!hasValidImageSignature(buffer, contentType)) {
+    throw new Error('Downloaded file is not a valid supported image');
   }
 
   return {
     buffer,
     contentType,
     size: buffer.length,
+    sourceUrl: currentUrl.toString(),
   };
 }
 

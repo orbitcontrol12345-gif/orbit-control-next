@@ -3,31 +3,35 @@ name: Test Repair Part Numbers
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   preview:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install packages
-        run: npm install
+        run: npm ci
 
       - name: Run preview
         run: npm run repair:parts
         env:
-  DRY_RUN: "true"
-  MAX_PRODUCTS: "50"
+          DRY_RUN: "true"
+          MAX_PRODUCTS: "50"
 
-  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-  EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
-  EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
-  EBAY_REFRESH_TOKEN: ${{ secrets.EBAY_REFRESH_TOKEN }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_REFRESH_TOKEN: ${{ secrets.EBAY_REFRESH_TOKEN }}

@@ -4,13 +4,31 @@ import {
   cleanFormText,
   escapeHtml,
   isValidEmail,
+  MAX_PUBLIC_MULTIPART_BODY_BYTES,
   sanitizeAttachmentFilename,
+  validateAttachmentContents,
   validateAttachments,
+  validateRequestBodyHeaders,
 } from '@/lib/public-form-security';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
+  const bodyError = validateRequestBodyHeaders(req, {
+    allowedMediaTypes: ['multipart/form-data'],
+    maxBytes: MAX_PUBLIC_MULTIPART_BODY_BYTES,
+  });
+
+  if (bodyError) {
+    return Response.json(
+      {
+        success: false,
+        error: bodyError.error,
+      },
+      { status: bodyError.status },
+    );
+  }
+
   const rateLimit = checkPublicFormRateLimit(req, 'rfq');
 
   if (!rateLimit.allowed) {
@@ -103,6 +121,19 @@ export async function POST(req: Request) {
         {
           success: false,
           error: attachmentError,
+        },
+        { status: 400 },
+      );
+    }
+
+    const attachmentContentError =
+      await validateAttachmentContents(files);
+
+    if (attachmentContentError) {
+      return Response.json(
+        {
+          success: false,
+          error: attachmentContentError,
         },
         { status: 400 },
       );

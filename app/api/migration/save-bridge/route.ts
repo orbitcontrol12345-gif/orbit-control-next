@@ -227,8 +227,7 @@ const siteUrl = (
   'https://orbit-control-next.vercel.app'
 ).replace(/\/$/, '');
 
-const matcherBaseUrl =
-  'https://orbit-control-next.vercel.app';
+const matcherBaseUrl = siteUrl;
 
 const matcherUrl =
   `${matcherBaseUrl}${MATCHER_PATH}` +

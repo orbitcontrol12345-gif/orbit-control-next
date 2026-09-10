@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { downloadImageToBuffer } from '@/lib/image-uploader';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { r2 } from '@/lib/r2';
 
@@ -23,23 +24,8 @@ async function uploadToR2({
   imageUrl: string;
   ebayItemId: string;
 }) {
-  const res = await fetch(imageUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Image download failed: ${res.status}`);
-  }
-
-  const contentType = res.headers.get('content-type') || 'image/jpeg';
-
-  if (!contentType.startsWith('image/')) {
-    throw new Error(`Invalid image content type: ${contentType}`);
-  }
-
-  const buffer = Buffer.from(await res.arrayBuffer());
+  const { buffer, contentType } =
+    await downloadImageToBuffer(imageUrl);
 
   const ext = contentType.includes('webp')
     ? 'webp'
@@ -55,6 +41,8 @@ async function uploadToR2({
       Key: key,
       Body: buffer,
       ContentType: contentType,
+      ContentLength: buffer.length,
+      CacheControl: 'public, max-age=31536000, immutable',
     })
   );
 

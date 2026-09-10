@@ -96,7 +96,29 @@ function loginRedirect(
 }
 
 export async function POST(request: Request) {
-  const form = await request.formData();
+  const contentLength = Number(
+    request.headers.get('content-length') || 0,
+  );
+
+  if (Number.isFinite(contentLength) && contentLength > 8_192) {
+    return loginRedirect(
+      request,
+      'invalid',
+      '/admin/products',
+    );
+  }
+
+  let form: FormData;
+
+  try {
+    form = await request.formData();
+  } catch {
+    return loginRedirect(
+      request,
+      'invalid',
+      '/admin/products',
+    );
+  }
   const username = String(form.get('username') || '').trim();
   const password = String(form.get('password') || '');
   const nextPath = getSafeNextPath(form.get('next'));
@@ -148,6 +170,7 @@ export async function POST(request: Request) {
     sameSite: 'strict',
     path: '/',
     maxAge: ADMIN_SESSION_MAX_AGE,
+    priority: 'high',
   });
 
   return response;

@@ -8,7 +8,6 @@ import {
   Building2, Mail, Phone, Globe, Tag, Boxes,
   ArrowUpRight, Inbox, ShoppingBag, Users
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { PRODUCTS, BRANDS, CATEGORIES } from '@/lib/data';
 import type { RFQRequest, SellSurplusRequest } from '@/lib/types';
 import AdminNavigation from '@/components/admin/AdminNavigation';
@@ -32,41 +31,47 @@ export default function AdminPage() {
   const [selectedRfq, setSelectedRfq] = useState<RFQRequest | null>(null);
 
   const loadData = async () => {
-  setLoading(true);
+    setLoading(true);
 
-  const db = supabase;
+    try {
+      const response = await fetch('/api/admin/requests', {
+        cache: 'no-store',
+      });
 
-  if (!db) {
-    setLoading(false);
-    return;
-  }
+      if (!response.ok) return;
 
-  const [rfqRes, surplusRes] = await Promise.all([
-    db.from('rfq_requests').select('*').order('created_at', { ascending: false }),
-    db.from('sell_surplus_requests').select('*').order('created_at', { ascending: false }),
-  ]);
+      const result = await response.json();
 
-  if (rfqRes.data) setRfqs(rfqRes.data);
-  if (surplusRes.data) setSurplusRequests(surplusRes.data);
-
-  setLoading(false);
-};
+      setRfqs(Array.isArray(result.rfqs) ? result.rfqs : []);
+      setSurplusRequests(
+        Array.isArray(result.surplusRequests)
+          ? result.surplusRequests
+          : [],
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
   }, []);
 
   const updateRfqStatus = async (id: string, status: string) => {
-  const db = supabase;
+    const response = await fetch('/api/admin/requests', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, status }),
+    });
 
-  if (!db) return;
+    if (!response.ok) return;
 
-  await db.from('rfq_requests').update({ status }).eq('id', id);
-
-  setRfqs((prev) =>
-    prev.map((r) => (r.id === id ? { ...r, status } : r))
-  );
-};
+    setRfqs((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status } : r)),
+    );
+  };
 
   const pendingRfqs = rfqs.filter((r) => r.status === 'pending').length;
   const pendingSurplus = surplusRequests.filter((r) => r.status === 'pending').length;

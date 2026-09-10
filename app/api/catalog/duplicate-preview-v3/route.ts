@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'crypto';
+import { downloadImageToBuffer } from '@/lib/image-uploader';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export const runtime = 'nodejs';
@@ -277,39 +278,7 @@ async function fingerprintImage(
   url: string
 ): Promise<ImageFingerprintResult> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 Orbit-Control-Duplicate-Preview',
-      },
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      return {
-        url,
-        ok: false,
-        fingerprint: null,
-        size: null,
-        error: `HTTP_${response.status}`,
-      };
-    }
-
-    const contentType =
-      response.headers.get('content-type') || '';
-
-    if (!contentType.startsWith('image/')) {
-      return {
-        url,
-        ok: false,
-        fingerprint: null,
-        size: null,
-        error: `INVALID_CONTENT_TYPE_${contentType}`,
-      };
-    }
-
-    const buffer = Buffer.from(
-      await response.arrayBuffer()
-    );
+    const { buffer } = await downloadImageToBuffer(url);
 
     return {
       url,
