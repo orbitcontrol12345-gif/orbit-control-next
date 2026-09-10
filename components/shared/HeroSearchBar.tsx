@@ -298,7 +298,6 @@ export default function HeroSearchBar({
                       fill
                       className="object-cover"
                       sizes="56px"
-                      quality={60}
                       unoptimized
                     />
                   </div>

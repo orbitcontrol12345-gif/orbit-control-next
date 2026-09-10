@@ -3,9 +3,17 @@ const nextConfig = {
   poweredByHeader: false,
 
   images: {
-    formats: ['image/avif', 'image/webp'],
-    qualities: [60, 70, 75, 85],
-    minimumCacheTTL: 2592000,
+    // Keep one broadly supported output format and one quality. Product pages
+    // retain responsive images, while crawlers cannot fan out every source
+    // image across dozens of format/quality/width combinations.
+    formats: ['image/webp'],
+    qualities: [75],
+    deviceSizes: [640, 828, 1080, 1200, 1600],
+    imageSizes: [48, 64, 96, 256, 384],
+
+    // R2 product URLs are immutable and receive a new ?v= value whenever an
+    // image is replaced, so a one-year optimizer cache cannot make them stale.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: 'https',

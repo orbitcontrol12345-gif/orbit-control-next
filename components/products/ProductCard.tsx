@@ -115,7 +115,6 @@ export default function ProductCard({
           src={imageSrc}
           alt={product.name}
           fill
-          quality={70}
           unoptimized={!canOptimizeImage(imageSrc)}
           onError={handleImageError}
           sizes="(max-width:768px) 50vw, (max-width:1200px) 25vw, 300px"
