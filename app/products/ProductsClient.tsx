@@ -316,7 +316,6 @@ export default function ProductsClient({
                           }
                           fill
                           sizes="48px"
-                          quality={60}
                           unoptimized
                           className="object-contain p-1"
                         />

@@ -270,9 +270,11 @@ export default function ProductGallery({
                   alt={alt}
                   fill
                   sizes="94vw"
-                  quality={85}
                   className="object-contain"
-                  unoptimized={!canOptimizeImage(activeImage)}
+                  // The lightbox is opened intentionally by a visitor. Serve
+                  // the original R2/eBay image for maximum label readability
+                  // without creating an unnecessary 3840px Vercel variant.
+                  unoptimized
                   onError={() =>
                     handleImageError(activeIndex)
                   }
@@ -330,9 +332,9 @@ export default function ProductGallery({
                           }`}
                           fill
                           sizes="80px"
-                          quality={60}
                           className="object-cover"
-                          unoptimized={!canOptimizeImage(image.src)}
+                          loading="lazy"
+                          unoptimized
                           onError={() =>
                             handleImageError(index)
                           }
@@ -371,7 +373,6 @@ export default function ProductGallery({
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 520px"
-                    quality={85}
                     className="object-cover object-center"
                     unoptimized={!canOptimizeImage(activeImage)}
                     onError={() =>
@@ -443,9 +444,9 @@ export default function ProductGallery({
                       alt={`${alt} ${index + 1}`}
                       fill
                       sizes="96px"
-                      quality={60}
                       className="object-cover"
-                      unoptimized={!canOptimizeImage(image.src)}
+                      loading="lazy"
+                      unoptimized
                       onError={() =>
                         handleImageError(index)
                       }

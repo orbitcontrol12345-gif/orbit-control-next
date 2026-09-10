@@ -119,7 +119,6 @@ export default async function AdminProductsPage({
                         alt={p.name}
                         width={56}
                         height={56}
-                        quality={60}
                         unoptimized
                         className="h-14 w-14 rounded bg-white object-contain"
                       />
