@@ -4,19 +4,13 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from '@/lib/admin-auth';
+import {
+  isCronApiPath,
+  isProductionDiagnosticPath,
+  isPublicApiPath,
+} from '@/lib/api-access-control';
 
 const LOGIN_PAGE = '/admin/login';
-const LOGIN_API = '/api/admin/login';
-const LOGOUT_API = '/api/admin/logout';
-
-const PUBLIC_API_PATHS = new Set([
-  LOGIN_API,
-  LOGOUT_API,
-  '/api/contact',
-  '/api/rfq',
-  '/api/search-products',
-  '/api/sell-surplus',
-]);
 
 function withSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('Cache-Control', 'private, no-store, max-age=0');
@@ -35,8 +29,16 @@ export async function proxy(request: NextRequest) {
     request.method,
   );
   const origin = request.headers.get('origin');
+  const fetchSite = request.headers.get('sec-fetch-site');
+  const isProduction =
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.NODE_ENV === 'production';
 
-  if (isMutation && origin && origin !== request.nextUrl.origin) {
+  if (
+    isMutation &&
+    (fetchSite === 'cross-site' ||
+      (origin && origin !== request.nextUrl.origin))
+  ) {
     return withSecurityHeaders(
       NextResponse.json(
         {
@@ -48,7 +50,23 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  if (PUBLIC_API_PATHS.has(pathname)) {
+  if (
+    isProduction &&
+    process.env.ENABLE_PRODUCTION_DIAGNOSTICS !== 'true' &&
+    isProductionDiagnosticPath(pathname)
+  ) {
+    return withSecurityHeaders(
+      NextResponse.json(
+        {
+          success: false,
+          error: 'Not found',
+        },
+        { status: 404 },
+      ),
+    );
+  }
+
+  if (isPublicApiPath(pathname)) {
     return withSecurityHeaders(NextResponse.next());
   }
 
@@ -56,6 +74,7 @@ export async function proxy(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET?.trim() || '';
   const cronAuthorized = Boolean(
     isApiRoute &&
+      isCronApiPath(pathname) &&
       cronSecret &&
       request.headers.get('authorization') ===
         `Bearer ${cronSecret}`,

@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     sameSite: 'strict',
     path: '/',
     maxAge: 0,
+    priority: 'high',
   });
 
   return response;
 }
-

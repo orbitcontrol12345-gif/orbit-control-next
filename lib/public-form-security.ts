@@ -7,9 +7,23 @@ type RateLimitResult =
   | { allowed: true }
   | { allowed: false; retryAfterSeconds: number };
 
+type RequestBodyValidationOptions = {
+  allowedMediaTypes: readonly string[];
+  maxBytes: number;
+};
+
+type RequestBodyValidationError = {
+  error: string;
+  status: 413 | 415;
+};
+
 const FORM_WINDOW_MS = 10 * 60 * 1000;
 const FORM_MAX_REQUESTS = 5;
 const MAX_STORED_CLIENTS = 5000;
+
+export const MAX_PUBLIC_JSON_BODY_BYTES = 64 * 1024;
+export const MAX_PUBLIC_MULTIPART_BODY_BYTES =
+  28 * 1024 * 1024;
 
 const globalFormState = globalThis as typeof globalThis & {
   orbitFormRateLimits?: Map<string, RateLimitRecord>;
@@ -67,6 +81,42 @@ export function checkPublicFormRateLimit(
   }
 
   return { allowed: true };
+}
+
+export function validateRequestBodyHeaders(
+  request: Request,
+  options: RequestBodyValidationOptions,
+): RequestBodyValidationError | null {
+  const mediaType = request.headers
+    .get('content-type')
+    ?.split(';', 1)[0]
+    ?.trim()
+    .toLowerCase();
+
+  if (!mediaType || !options.allowedMediaTypes.includes(mediaType)) {
+    return {
+      error: 'Unsupported request content type.',
+      status: 415,
+    };
+  }
+
+  const rawLength = request.headers.get('content-length');
+
+  if (rawLength) {
+    const contentLength = Number(rawLength);
+
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > options.maxBytes
+    ) {
+      return {
+        error: 'The request body is too large.',
+        status: 413,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function cleanFormText(
@@ -149,6 +199,89 @@ export function validateAttachments(files: File[]): string | null {
 
   if (totalSize > MAX_TOTAL_ATTACHMENT_SIZE) {
     return 'The total attachment size must be 25MB or smaller.';
+  }
+
+  return null;
+}
+
+function startsWithBytes(
+  bytes: Uint8Array,
+  signature: readonly number[],
+): boolean {
+  return signature.every((byte, index) => bytes[index] === byte);
+}
+
+function containsAscii(bytes: Uint8Array, value: string): boolean {
+  const signature = new TextEncoder().encode(value);
+
+  for (
+    let offset = 0;
+    offset <= bytes.length - signature.length;
+    offset += 1
+  ) {
+    if (
+      signature.every(
+        (byte, index) => bytes[offset + index] === byte,
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export async function validateAttachmentContents(
+  files: File[],
+): Promise<string | null> {
+  for (const file of files.filter((entry) => entry.size > 0)) {
+    const extension = file.name
+      .split('.')
+      .pop()
+      ?.toLowerCase();
+    const bytes = new Uint8Array(
+      await file.slice(0, 1024).arrayBuffer(),
+    );
+
+    let valid = false;
+
+    switch (extension) {
+      case 'jpeg':
+      case 'jpg':
+        valid = startsWithBytes(bytes, [0xff, 0xd8, 0xff]);
+        break;
+      case 'png':
+        valid = startsWithBytes(bytes, [
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+        break;
+      case 'pdf':
+        valid = containsAscii(bytes, '%PDF-');
+        break;
+      case 'xls':
+        valid = startsWithBytes(bytes, [
+          0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1,
+        ]);
+        break;
+      case 'xlsx':
+      case 'zip':
+        valid =
+          startsWithBytes(bytes, [0x50, 0x4b, 0x03, 0x04]) ||
+          startsWithBytes(bytes, [0x50, 0x4b, 0x05, 0x06]) ||
+          startsWithBytes(bytes, [0x50, 0x4b, 0x07, 0x08]);
+        break;
+      case 'csv':
+        valid = !startsWithBytes(bytes, [0x4d, 0x5a]);
+        break;
+      default:
+        valid = false;
+    }
+
+    if (!valid) {
+      return `Attachment content does not match its file type: ${sanitizeAttachmentFilename(
+        file.name,
+      )}`;
+    }
   }
 
   return null;

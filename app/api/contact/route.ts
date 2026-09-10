@@ -4,11 +4,28 @@ import {
   cleanFormText,
   escapeHtml,
   isValidEmail,
+  MAX_PUBLIC_JSON_BODY_BYTES,
+  validateRequestBodyHeaders,
 } from '@/lib/public-form-security';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
+  const bodyError = validateRequestBodyHeaders(req, {
+    allowedMediaTypes: ['application/json'],
+    maxBytes: MAX_PUBLIC_JSON_BODY_BYTES,
+  });
+
+  if (bodyError) {
+    return Response.json(
+      {
+        success: false,
+        error: bodyError.error,
+      },
+      { status: bodyError.status },
+    );
+  }
+
   const rateLimit = checkPublicFormRateLimit(req, 'contact');
 
   if (!rateLimit.allowed) {

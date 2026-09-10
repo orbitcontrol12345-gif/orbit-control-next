@@ -1,7 +1,10 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-export const ADMIN_SESSION_COOKIE = 'orbit_admin_session';
+export const ADMIN_SESSION_COOKIE =
+  process.env.NODE_ENV === 'production'
+    ? '__Host-orbit_admin_session'
+    : 'orbit_admin_session';
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 8;
 
 type AdminSessionPayload = {

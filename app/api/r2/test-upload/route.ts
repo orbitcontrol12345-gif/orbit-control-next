@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { downloadImageToBuffer } from '@/lib/image-uploader';
 import { r2 } from '@/lib/r2';
 
 export const runtime = 'nodejs';
@@ -10,28 +11,25 @@ export async function GET(req: NextRequest) {
       req.nextUrl.searchParams.get('url') ??
       'https://i.ebayimg.com/images/g/NO_IMAGE_AVAILABLE/s-l1600.jpg';
 
-    const response = await fetch(imageUrl);
+    const { buffer, contentType } =
+      await downloadImageToBuffer(imageUrl);
 
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Failed to download image',
-        },
-        { status: 400 }
-      );
-    }
+    const extension = contentType === 'image/webp'
+      ? 'webp'
+      : contentType === 'image/png'
+        ? 'png'
+        : 'jpg';
 
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    const key = `orbit-control/test/${Date.now()}.jpg`;
+    const key = `orbit-control/test/${Date.now()}.${extension}`;
 
     const result = await r2.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME!,
         Key: key,
         Body: buffer,
-        ContentType: response.headers.get('content-type') ?? 'image/jpeg',
+        ContentType: contentType,
+        ContentLength: buffer.length,
+        CacheControl: 'private, no-store',
       })
     );
 

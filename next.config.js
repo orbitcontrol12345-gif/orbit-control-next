@@ -1,3 +1,23 @@
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' blob: data: https://pub-e11286a0a91241bfbfe0d74a29552eed.r2.dev https://i.ebayimg.com https://images.pexels.com https://xofucnqpqmxztazhtqix.supabase.co",
+  "font-src 'self' data:",
+  "connect-src 'self' https://xofucnqpqmxztazhtqix.supabase.co wss://xofucnqpqmxztazhtqix.supabase.co",
+  "media-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  'upgrade-insecure-requests',
+].join('; ');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -54,15 +74,32 @@ const nextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
+            value: 'DENY',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value:
+              'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
           },
           {
             key: 'X-Permitted-Cross-Domain-Policies',
             value: 'none',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: contentSecurityPolicy,
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Origin-Agent-Cluster',
+            value: '?1',
           },
         ],
       },
