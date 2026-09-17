@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
@@ -7,6 +7,7 @@ import './globals.css';
 import FloatingContact from '@/components/FloatingContact';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
+import InstallAppPrompt from '@/components/pwa/InstallAppPrompt';
 import JsonLd from '@/components/seo/JsonLd';
 
 const inter = Inter({
@@ -30,6 +31,14 @@ export const metadata: Metadata = {
     'Worldwide supplier of PLCs, HMIs, VFDs, sensors, relays, circuit breakers, obsolete and surplus industrial automation spare parts. Fast RFQ response and global shipping.',
 
   applicationName: 'Orbit Control Automation',
+
+  manifest: '/manifest.webmanifest',
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black',
+    title: 'Orbit Control',
+  },
 
   keywords: [
     'industrial automation',
@@ -99,13 +108,40 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: '/icon.png',
+    icon: [
+      {
+        url: '/icons/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        url: '/icons/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+    shortcut: '/icons/icon-192.png',
+    apple: [
+      {
+        url: '/icons/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
   },
 
   verification: {
     // سنضيف رمز Google Search Console هنا لاحقًا.
     // google: 'YOUR_GOOGLE_VERIFICATION_CODE',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#07111f',
+  colorScheme: 'dark',
 };
 
 const globalSchema = {
@@ -235,6 +271,8 @@ export default function RootLayout({
         <Footer />
 
         <FloatingContact />
+
+        <InstallAppPrompt />
 
         <JsonLd id="global-schema" data={globalSchema} />
       </body>
