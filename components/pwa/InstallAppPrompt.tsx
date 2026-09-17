@@ -12,25 +12,29 @@ interface BeforeInstallPromptEvent extends Event {
   }>;
 }
 
-const DISMISS_STORAGE_KEY = 'orbit-install-prompt-dismissed-at:v1';
-const DISMISS_FOR_MS = 14 * 24 * 60 * 60 * 1000;
+const PROMPT_SHOWN_STORAGE_KEY = 'orbit-install-prompt-shown:v2';
+const LEGACY_DISMISS_STORAGE_KEY = 'orbit-install-prompt-dismissed-at:v1';
 
-function wasRecentlyDismissed() {
+function wasInstallPromptShown() {
   try {
-    const dismissedAt = Number(
-      window.localStorage.getItem(DISMISS_STORAGE_KEY)
-    );
+    if (window.localStorage.getItem(PROMPT_SHOWN_STORAGE_KEY) === 'true') {
+      return true;
+    }
 
-    return Number.isFinite(dismissedAt)
-      && Date.now() - dismissedAt < DISMISS_FOR_MS;
+    if (window.localStorage.getItem(LEGACY_DISMISS_STORAGE_KEY) !== null) {
+      window.localStorage.setItem(PROMPT_SHOWN_STORAGE_KEY, 'true');
+      return true;
+    }
+
+    return false;
   } catch {
     return false;
   }
 }
 
-function rememberDismissal() {
+function rememberInstallPromptShown() {
   try {
-    window.localStorage.setItem(DISMISS_STORAGE_KEY, String(Date.now()));
+    window.localStorage.setItem(PROMPT_SHOWN_STORAGE_KEY, 'true');
   } catch {
     // Installation still works when storage is unavailable.
   }
@@ -49,10 +53,7 @@ export default function InstallAppPrompt() {
     const alreadyInstalled =
       window.matchMedia('(display-mode: standalone)').matches
       || navigatorWithStandalone.standalone === true;
-
-    if (alreadyInstalled || wasRecentlyDismissed()) {
-      return;
-    }
+    const promptWasShown = wasInstallPromptShown();
 
     const iosDevice =
       /iPad|iPhone|iPod/.test(window.navigator.userAgent)
@@ -61,14 +62,28 @@ export default function InstallAppPrompt() {
     setIsIos(iosDevice);
 
     let revealTimer: number | undefined;
+    let promptHandled = promptWasShown;
 
     const reveal = () => {
+      if (promptHandled) {
+        return;
+      }
+
+      promptHandled = true;
       window.clearTimeout(revealTimer);
-      revealTimer = window.setTimeout(() => setVisible(true), 1200);
+      revealTimer = window.setTimeout(() => {
+        rememberInstallPromptShown();
+        setVisible(true);
+      }, 1200);
     };
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
+
+      if (alreadyInstalled || promptHandled) {
+        return;
+      }
+
       setInstallPrompt(event as BeforeInstallPromptEvent);
       reveal();
     };
@@ -76,17 +91,13 @@ export default function InstallAppPrompt() {
     const handleInstalled = () => {
       setVisible(false);
       setInstallPrompt(null);
-      try {
-        window.localStorage.removeItem(DISMISS_STORAGE_KEY);
-      } catch {
-        // No cleanup is needed when storage is unavailable.
-      }
+      rememberInstallPromptShown();
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleInstalled);
 
-    if (iosDevice) {
+    if (iosDevice && !alreadyInstalled && !promptWasShown) {
       reveal();
     }
 
@@ -101,7 +112,6 @@ export default function InstallAppPrompt() {
   }, []);
 
   const dismiss = () => {
-    rememberDismissal();
     setVisible(false);
   };
 
@@ -111,11 +121,7 @@ export default function InstallAppPrompt() {
     }
 
     await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
-
-    if (choice.outcome === 'dismissed') {
-      rememberDismissal();
-    }
+    await installPrompt.userChoice;
 
     setVisible(false);
     setInstallPrompt(null);
@@ -146,7 +152,7 @@ export default function InstallAppPrompt() {
           alt=""
           width={56}
           height={56}
-          className="h-14 w-14 shrink-0 rounded-xl shadow-lg"
+          className="h-14 w-14 shrink-0 rounded-full object-cover shadow-lg"
         />
 
         <div className="min-w-0">
