@@ -148,7 +148,7 @@ export default function InstallAppPrompt() {
 
       <div className="flex items-center gap-3 pr-7">
         <Image
-          src="/icons/icon-192.png"
+          src="/icons/icon-192-v2.png"
           alt=""
           width={56}
           height={56}
