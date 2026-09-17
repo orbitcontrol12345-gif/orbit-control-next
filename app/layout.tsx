@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react';
 
@@ -17,6 +17,13 @@ const inter = Inter({
 
 const SITE_URL = 'https://www.orbit-surplus.com';
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#07111f',
+  colorScheme: 'dark',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
@@ -30,6 +37,13 @@ export const metadata: Metadata = {
     'Worldwide supplier of PLCs, HMIs, VFDs, sensors, relays, circuit breakers, obsolete and surplus industrial automation spare parts. Fast RFQ response and global shipping.',
 
   applicationName: 'Orbit Control Automation',
+  manifest: '/manifest.webmanifest',
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Orbit Control',
+  },
 
   keywords: [
     'industrial automation',
@@ -99,7 +113,26 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: '/icon.png',
+    icon: [
+      {
+        url: '/icons/orbit-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        url: '/icons/orbit-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+    apple: [
+      {
+        url: '/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+    shortcut: '/icons/orbit-192.png',
   },
 
   verification: {
