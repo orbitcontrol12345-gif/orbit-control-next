@@ -2,6 +2,7 @@ import ProductGallery from "@/components/product/ProductGallery";
 
 import JsonLd from "@/components/seo/JsonLd";
 import ProductCard from "@/components/products/ProductCard";
+import ShareButton from "@/components/shared/ShareButton";
 import { buildProductSeo } from "@/lib/seo/productSeo";
 import {
   cleanProductDisplayText,
@@ -483,7 +484,7 @@ export default async function ProductDetailPage({ params }: Props) {
               </div>
             </div>
 
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mb-6 grid gap-3 sm:grid-cols-3">
               <Link
                 href={`/rfq?part=${encodeURIComponent(
                   validPartNumber || productReference || product.name,
@@ -502,6 +503,14 @@ export default async function ProductDetailPage({ params }: Props) {
                 <MessageSquare size={17} />
                 Ask About This Item
               </Link>
+
+              <ShareButton
+                title={`${validPartNumber ? `${validPartNumber} — ` : ""}${product.name}`}
+                text={`Orbit Control Automation${validPartNumber ? ` — Part ${validPartNumber}` : ""}: ${product.name}`}
+                url={productUrl}
+                label="Share Product"
+                className="btn-outline-slate w-full justify-center py-3 text-base"
+              />
             </div>
 
             <div className="mb-6 grid grid-cols-2 gap-3">
