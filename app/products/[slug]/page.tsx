@@ -224,14 +224,18 @@ export default async function ProductDetailPage({ params }: Props) {
     ),
   );
 
-  const productUrl = `${SITE_URL}/products/${encodeURIComponent(slug)}`;
+  const canonicalSlug = product.slug || slug;
+  const productUrl = `${SITE_URL}/products/${encodeURIComponent(canonicalSlug)}`;
 
-  const primaryImage = uniqueImages([
+  const productImages = uniqueImages([
     product.r2ImageUrl,
     product.imageUrl,
     ...(product.r2GalleryUrls || []),
     ...(product.ebayGalleryUrls || []),
-  ])[0] || `${SITE_URL}/placeholder-product.jpg`;
+  ]);
+
+  const primaryImage =
+    productImages[0] || `${SITE_URL}/placeholder-product.jpg`;
 
   const schemaDescription = seo.description;
 
@@ -508,6 +512,8 @@ export default async function ProductDetailPage({ params }: Props) {
                 title={`${validPartNumber ? `${validPartNumber} — ` : ""}${product.name}`}
                 text={`Orbit Control Automation${validPartNumber ? ` — Part ${validPartNumber}` : ""}: ${product.name}`}
                 url={productUrl}
+                imageUrl={productImages[0]}
+                imageName={validPartNumber || productReference || product.name}
                 label="Share Product"
                 className="btn-outline-slate w-full justify-center py-3 text-base"
               />

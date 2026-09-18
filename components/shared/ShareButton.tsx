@@ -8,19 +8,94 @@ type ShareButtonProps = {
   text: string;
   url: string;
   label: string;
+  imageUrl?: string;
+  imageName?: string;
   className?: string;
 };
+
+function getImageExtension(mimeType: string): string {
+  const extensions: Record<string, string> = {
+    'image/avif': 'avif',
+    'image/gif': 'gif',
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+
+  return extensions[mimeType.toLowerCase()] || 'jpg';
+}
+
+function cleanFileName(value: string): string {
+  const cleaned = value
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
+  return cleaned || 'orbit-product';
+}
+
+function getOptimizedImageUrl(imageUrl: string): string {
+  if (imageUrl.startsWith('/')) {
+    return imageUrl;
+  }
+
+  return `/_next/image?url=${encodeURIComponent(imageUrl)}&w=1080&q=75`;
+}
 
 export default function ShareButton({
   title,
   text,
   url,
   label,
+  imageUrl,
+  imageName = title,
   className = '',
 }: ShareButtonProps) {
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setImageFile(null);
+
+    if (!imageUrl) return;
+
+    const controller = new AbortController();
+
+    async function prepareImage() {
+      try {
+        const response = await fetch(getOptimizedImageUrl(imageUrl as string), {
+          cache: 'force-cache',
+          signal: controller.signal,
+        });
+
+        if (!response.ok) return;
+
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/')) return;
+
+        const extension = getImageExtension(blob.type);
+        const file = new File(
+          [blob],
+          `${cleanFileName(imageName)}.${extension}`,
+          { type: blob.type },
+        );
+
+        if (!controller.signal.aborted) {
+          setImageFile(file);
+        }
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setImageFile(null);
+        }
+      }
+    }
+
+    void prepareImage();
+
+    return () => controller.abort();
+  }, [imageName, imageUrl]);
 
   useEffect(() => {
     if (!fallbackOpen) return;
@@ -47,7 +122,21 @@ export default function ShareButton({
   const share = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title, text, url });
+        const message = `${text}\n${url}`;
+        const shareData: ShareData = {
+          title,
+          text: message,
+        };
+
+        if (
+          imageFile &&
+          typeof navigator.canShare === 'function' &&
+          navigator.canShare({ files: [imageFile] })
+        ) {
+          shareData.files = [imageFile];
+        }
+
+        await navigator.share(shareData);
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
