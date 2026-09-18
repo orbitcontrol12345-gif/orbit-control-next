@@ -17,6 +17,9 @@ import {
   getDisplayBrand,
   getDisplayPartNumber,
 } from '@/lib/product-display';
+import ShareButton from '@/components/shared/ShareButton';
+
+const SITE_URL = 'https://www.orbit-surplus.com';
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -423,6 +426,14 @@ export default function Header() {
               )}
             </div>
 
+            <ShareButton
+              title="Orbit Control Automation"
+              text="Visit Orbit Control Automation for industrial automation and surplus spare parts."
+              url={SITE_URL}
+              label="Share"
+              className="btn-outline-slate justify-center px-4 py-2 text-sm"
+            />
+
             <Link href="/rfq" className="btn-gold px-5 py-2 text-sm">
               Request Quote
             </Link>
@@ -464,6 +475,14 @@ export default function Header() {
             >
               Sell Surplus
             </Link>
+
+            <ShareButton
+              title="Orbit Control Automation"
+              text="Visit Orbit Control Automation for industrial automation and surplus spare parts."
+              url={SITE_URL}
+              label="Share website"
+              className="flex w-full items-center gap-2 rounded px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
+            />
 
             <div className="border-t border-navy-700 pt-3">
               <Link href="/rfq" className="btn-gold w-full justify-center text-sm">
