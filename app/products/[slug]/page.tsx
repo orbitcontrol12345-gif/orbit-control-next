@@ -512,9 +512,10 @@ export default async function ProductDetailPage({ params }: Props) {
                 title={`${validPartNumber ? `${validPartNumber} — ` : ""}${product.name}`}
                 text={`Orbit Control Automation${validPartNumber ? ` — Part ${validPartNumber}` : ""}: ${product.name}`}
                 url={productUrl}
+                mode="product"
                 imageUrl={productImages[0]}
                 imageName={validPartNumber || productReference || product.name}
-                label="Share Product"
+                label="Share This Product + Photo"
                 className="btn-outline-slate w-full justify-center py-3 text-base"
               />
             </div>
