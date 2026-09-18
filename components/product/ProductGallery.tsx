@@ -16,6 +16,7 @@ import {
 } from 'react';
 
 import { canOptimizeImage } from '@/lib/optimized-image';
+import ShareButton from '@/components/shared/ShareButton';
 
 type ProductGalleryProps = {
   r2GalleryUrls?: string[] | null;
@@ -23,6 +24,10 @@ type ProductGalleryProps = {
   mainImageUrl?: string | null;
   fallbackImageUrl?: string;
   alt?: string;
+  shareTitle?: string;
+  shareText?: string;
+  shareUrl?: string;
+  shareImageName?: string;
 };
 
 type GalleryImage = {
@@ -103,6 +108,10 @@ export default function ProductGallery({
   mainImageUrl,
   fallbackImageUrl,
   alt = 'Product image',
+  shareTitle,
+  shareText,
+  shareUrl,
+  shareImageName,
 }: ProductGalleryProps) {
   const initialImages = useMemo(
     () =>
@@ -258,6 +267,22 @@ export default function ProductGallery({
               <X size={26} />
             </button>
 
+            {shareTitle && shareText && shareUrl && (
+              <ShareButton
+                title={shareTitle}
+                text={shareText}
+                url={shareUrl}
+                mode="product"
+                imageUrl={activeImage}
+                imageName={shareImageName || shareTitle}
+                label="Share this product image"
+                iconOnly
+                triggerIcon="forward"
+                containerClassName="fixed right-16 top-4 z-50"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-500 text-navy-950 shadow-xl transition hover:bg-gold-400"
+              />
+            )}
+
             <div
               className="relative flex max-h-[94vh] max-w-[98vw] flex-col items-center justify-center"
               onClick={(event) =>
@@ -389,6 +414,22 @@ export default function ProductGallery({
                 >
                   <Maximize2 size={18} />
                 </button>
+
+                {shareTitle && shareText && shareUrl && (
+                  <ShareButton
+                    title={shareTitle}
+                    text={shareText}
+                    url={shareUrl}
+                    mode="product"
+                    imageUrl={activeImage}
+                    imageName={shareImageName || shareTitle}
+                    label="Share this product image"
+                    iconOnly
+                    triggerIcon="forward"
+                    containerClassName="absolute right-14 top-3 z-30"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-gold-500 text-navy-950 shadow-lg transition hover:bg-gold-400"
+                  />
+                )}
 
                 {images.length > 1 && (
                   <>

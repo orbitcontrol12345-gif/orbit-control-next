@@ -1,8 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { Check, Copy, Loader2, Mail, Share2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Check, Copy, Forward, Loader2, Mail, Share2, X } from 'lucide-react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 
 type ShareButtonProps = {
   title: string;
@@ -13,6 +18,9 @@ type ShareButtonProps = {
   imageUrl?: string;
   imageName?: string;
   className?: string;
+  containerClassName?: string;
+  iconOnly?: boolean;
+  triggerIcon?: 'share' | 'forward';
 };
 
 function getImageExtension(mimeType: string): string {
@@ -53,6 +61,9 @@ export default function ShareButton({
   imageUrl,
   imageName = title,
   className = '',
+  containerClassName = '',
+  iconOnly = false,
+  triggerIcon = 'share',
 }: ShareButtonProps) {
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -62,6 +73,7 @@ export default function ShareButton({
   >(imageUrl ? 'loading' : 'idle');
   const containerRef = useRef<HTMLDivElement>(null);
   const isProductShare = mode === 'product';
+  const TriggerIcon = triggerIcon === 'forward' ? Forward : Share2;
 
   useEffect(() => {
     setImageFile(null);
@@ -145,10 +157,12 @@ export default function ShareButton({
   const shareNative = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        const message = `${text}\n\nView this exact product:\n${url}`;
+        const nativeMessage = isProductShare
+          ? `${text}\n\nView this exact product:\n${url}`
+          : `${text}\n\n${url}`;
         const shareData: ShareData = {
           title,
-          text: message,
+          text: nativeMessage,
         };
 
         if (
@@ -172,7 +186,9 @@ export default function ShareButton({
     setFallbackOpen(true);
   };
 
-  const share = () => {
+  const share = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
     if (isProductShare) {
       setFallbackOpen(true);
       return;
@@ -202,7 +218,10 @@ export default function ShareButton({
   const message = `${text}\n\n${url}`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div
+      ref={containerRef}
+      className={`relative ${containerClassName}`}
+    >
       <button
         type="button"
         onClick={share}
@@ -213,14 +232,15 @@ export default function ShareButton({
         data-share-mode={isProductShare ? 'product' : 'website'}
         data-share-url={url}
       >
-        <Share2 size={17} />
-        {label}
+        <TriggerIcon size={iconOnly ? 21 : 17} />
+        {iconOnly ? <span className="sr-only">{label}</span> : label}
       </button>
 
       {fallbackOpen && isProductShare && (
         <div
           className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center"
           onClick={(event) => {
+            event.stopPropagation();
             if (event.target === event.currentTarget) {
               setFallbackOpen(false);
             }
