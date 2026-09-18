@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Check, Copy, Forward, Loader2, Mail, Share2, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import {
   useEffect,
   useRef,
@@ -144,12 +145,16 @@ export default function ShareButton({
       if (event.key === 'Escape') setFallbackOpen(false);
     };
 
-    document.addEventListener('mousedown', closeOnOutsideClick);
+    if (!isProductShare) {
+      document.addEventListener('mousedown', closeOnOutsideClick);
+    }
     document.addEventListener('keydown', closeOnEscape);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener('mousedown', closeOnOutsideClick);
+      if (!isProductShare) {
+        document.removeEventListener('mousedown', closeOnOutsideClick);
+      }
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [fallbackOpen, isProductShare]);
@@ -220,7 +225,7 @@ export default function ShareButton({
   return (
     <div
       ref={containerRef}
-      className={`relative ${containerClassName}`}
+      className={containerClassName || 'relative'}
     >
       <button
         type="button"
@@ -236,22 +241,25 @@ export default function ShareButton({
         {iconOnly ? <span className="sr-only">{label}</span> : label}
       </button>
 
-      {fallbackOpen && isProductShare && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center"
-          onClick={(event) => {
-            event.stopPropagation();
-            if (event.target === event.currentTarget) {
-              setFallbackOpen(false);
-            }
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label="Share this product"
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-gold-500/30 bg-navy-800 shadow-2xl shadow-black/70"
+      {fallbackOpen &&
+        isProductShare &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[2147483647] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center"
+            onClick={(event) => {
+              event.stopPropagation();
+              if (event.target === event.currentTarget) {
+                setFallbackOpen(false);
+              }
+            }}
           >
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-label="Share this product"
+              className="w-full max-w-md overflow-hidden rounded-2xl border border-gold-500/30 bg-navy-800 shadow-2xl shadow-black/70"
+            >
             <div className="flex items-center justify-between border-b border-navy-600 px-4 py-3">
               <div>
                 <p className="text-sm font-bold text-white">Share this product</p>
@@ -342,9 +350,10 @@ export default function ShareButton({
                 </div>
               </div>
             </div>
-          </section>
-        </div>
-      )}
+            </section>
+          </div>,
+          document.body,
+        )}
 
       {fallbackOpen && !isProductShare && (
         <div
