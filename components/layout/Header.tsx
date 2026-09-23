@@ -43,6 +43,8 @@ export default function Header() {
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
+  const headerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -74,6 +76,31 @@ export default function Header() {
     setMobileOpen(false);
     inputRef.current?.blur();
   }, [pathname, searchParams]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (!headerRef.current?.contains(event.target as Node)) {
+        setMobileOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    // Capture also handles touch and descendants that stop event propagation.
+    document.addEventListener('pointerdown', closeOnOutsidePress, true);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePress, true);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -229,6 +256,7 @@ export default function Header() {
 
   return (
     <header
+      ref={headerRef}
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         scrolled
           ? 'border-b border-navy-700 bg-navy-900/98 shadow-lg shadow-black/30 backdrop-blur-sm'
@@ -265,7 +293,7 @@ export default function Header() {
 
       <div className="page-container">
         <div className="flex h-20 items-center justify-between gap-4">
-          <Link href="/" className="flex shrink-0 items-center">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="flex shrink-0 items-center">
             <Image
               src="/logo.png"
               alt="Orbit Control Automation"
@@ -440,6 +468,7 @@ export default function Header() {
           </div>
 
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setMobileOpen((value) => !value)}
             className="p-2 text-slate-300 transition-colors hover:text-white lg:hidden"
@@ -459,6 +488,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setMobileOpen(false)}
                 className={`block rounded px-4 py-2.5 text-sm font-medium transition-colors ${
                   pathname === link.href
                     ? 'bg-gold-500/10 text-gold-500'
@@ -471,6 +501,7 @@ export default function Header() {
 
             <Link
               href="/sell-surplus"
+              onClick={() => setMobileOpen(false)}
               className="block rounded px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
             >
               Sell Surplus
@@ -481,11 +512,12 @@ export default function Header() {
               text="Visit Orbit Control Automation for industrial automation and surplus spare parts."
               url={SITE_URL}
               label="Share website"
+              onShareFinished={() => setMobileOpen(false)}
               className="flex w-full items-center gap-2 rounded px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-white/5 hover:text-white"
             />
 
             <div className="border-t border-navy-700 pt-3">
-              <Link href="/rfq" className="btn-gold w-full justify-center text-sm">
+              <Link href="/rfq" onClick={() => setMobileOpen(false)} className="btn-gold w-full justify-center text-sm">
                 Request a Quote
               </Link>
             </div>

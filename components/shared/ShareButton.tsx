@@ -22,6 +22,7 @@ type ShareButtonProps = {
   containerClassName?: string;
   iconOnly?: boolean;
   triggerIcon?: 'share' | 'forward';
+  onShareFinished?: () => void;
 };
 
 function getImageExtension(mimeType: string): string {
@@ -65,6 +66,7 @@ export default function ShareButton({
   containerClassName = '',
   iconOnly = false,
   triggerIcon = 'share',
+  onShareFinished,
 }: ShareButtonProps) {
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -135,7 +137,7 @@ export default function ShareButton({
       document.body.style.overflow = 'hidden';
     }
 
-    const closeOnOutsideClick = (event: MouseEvent) => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
         setFallbackOpen(false);
       }
@@ -146,18 +148,23 @@ export default function ShareButton({
     };
 
     if (!isProductShare) {
-      document.addEventListener('mousedown', closeOnOutsideClick);
+      document.addEventListener('pointerdown', closeOnOutsideClick, true);
     }
     document.addEventListener('keydown', closeOnEscape);
 
     return () => {
       document.body.style.overflow = previousOverflow;
       if (!isProductShare) {
-        document.removeEventListener('mousedown', closeOnOutsideClick);
+        document.removeEventListener('pointerdown', closeOnOutsideClick, true);
       }
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [fallbackOpen, isProductShare]);
+
+  const finishWebsiteShare = () => {
+    setFallbackOpen(false);
+    onShareFinished?.();
+  };
 
   const shareNative = async () => {
     if (typeof navigator.share === 'function') {
@@ -180,9 +187,12 @@ export default function ShareButton({
 
         await navigator.share(shareData);
         setFallbackOpen(false);
+        onShareFinished?.();
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
+          // Returning from the device share sheet should not leave navigation open.
+          if (!isProductShare) finishWebsiteShare();
           return;
         }
       }
@@ -214,6 +224,11 @@ export default function ShareButton({
       textarea.select();
       document.execCommand('copy');
       textarea.remove();
+    }
+
+    if (!isProductShare) {
+      finishWebsiteShare();
+      return;
     }
 
     setCopied(true);
@@ -363,6 +378,7 @@ export default function ShareButton({
           <a
             role="menuitem"
             href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+            onClick={finishWebsiteShare}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
@@ -374,6 +390,7 @@ export default function ShareButton({
           <a
             role="menuitem"
             href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(message)}`}
+            onClick={finishWebsiteShare}
             className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
           >
             <Mail size={17} className="text-cyan-300" />
