@@ -68,7 +68,7 @@
     "mailparser": "3.9.20",
     "next": "16.3.4",
     "next-themes": "^0.3.0",
-    "nodemailer": "9.1.1",
+    "nodemailer": "10.0.0",
     "postcss": "8.5.26",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
