@@ -223,7 +223,7 @@ export default function HeroSearchBar({
 
   return (
     <div ref={containerRef} className="relative w-full max-w-2xl">
-      <div className="flex items-center overflow-hidden rounded-lg border-2 border-transparent bg-white shadow-xl shadow-black/30 transition-all focus-within:border-gold-500">
+      <div className="flex items-center overflow-hidden rounded-lg border-2 border-navy-600 bg-navy-700 shadow-xl shadow-black/30 transition-all focus-within:border-gold-500">
         <div className="flex min-w-0 flex-1 items-center gap-2 pl-4">
           {loading ? (
             <Loader2
@@ -251,7 +251,7 @@ export default function HeroSearchBar({
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
             placeholder="Part Number..."
-            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-gray-800 outline-none placeholder:text-gray-400 md:py-4 md:text-base"
+            className="min-w-0 flex-1 bg-transparent py-3 text-sm text-slate-100 outline-none placeholder:text-slate-400 md:py-4 md:text-base"
           />
         </div>
 

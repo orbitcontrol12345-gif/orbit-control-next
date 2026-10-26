@@ -9,10 +9,10 @@ import { ChevronRight } from 'lucide-react';
 
 export default function PageHeader({ title, subtitle, breadcrumbs }: PageHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-navy-800 to-navy-700 border-b border-navy-600 pt-24 pb-8">
+    <div className="bg-navy-900 border-b border-gold-500/15 pt-24 pb-8">
       <div className="page-container">
         {breadcrumbs && (
-          <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
+          <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-3">
             <Link href="/" className="hover:text-gold-500 transition-colors">Home</Link>
             {breadcrumbs.map((crumb, i) => (
               <span key={i} className="flex items-center gap-1.5">

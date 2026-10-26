@@ -13,53 +13,53 @@ export default function HeroGlobe() {
   return (
     <div className="relative mx-auto flex min-h-[610px] w-full max-w-[720px] items-center justify-center">
       {/* Main glow */}
-      <div className="absolute left-1/2 top-[48%] h-[540px] w-[540px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/[0.12] blur-[105px]" />
+      <div className="absolute left-1/2 top-[48%] h-[540px] w-[540px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400/[0.12] blur-[105px]" />
 
-      <div className="absolute left-[58%] top-[43%] h-[390px] w-[390px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/[0.07] blur-[95px]" />
+      <div className="absolute left-[58%] top-[43%] h-[390px] w-[390px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-300/[0.07] blur-[95px]" />
 
       {/* External orbits */}
-      <div className="absolute left-1/2 top-[48%] h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 animate-[spin_48s_linear_infinite] rounded-full border border-cyan-300/[0.12]" />
+      <div className="absolute left-1/2 top-[48%] h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 animate-[spin_48s_linear_infinite] rounded-full border border-gold-300/[0.12]" />
 
-      <div className="absolute left-1/2 top-[48%] h-[420px] w-[650px] -translate-x-1/2 -translate-y-1/2 rotate-[14deg] animate-[spin_38s_linear_infinite_reverse] rounded-[50%] border border-amber-300/[0.22]" />
+      <div className="absolute left-1/2 top-[48%] h-[420px] w-[650px] -translate-x-1/2 -translate-y-1/2 rotate-[14deg] animate-[spin_38s_linear_infinite_reverse] rounded-[50%] border border-gold-300/[0.22]" />
 
-      <div className="absolute left-1/2 top-[48%] h-[650px] w-[430px] -translate-x-1/2 -translate-y-1/2 -rotate-[24deg] animate-[spin_44s_linear_infinite] rounded-[50%] border border-cyan-300/[0.11]" />
+      <div className="absolute left-1/2 top-[48%] h-[650px] w-[430px] -translate-x-1/2 -translate-y-1/2 -rotate-[24deg] animate-[spin_44s_linear_infinite] rounded-[50%] border border-gold-300/[0.11]" />
 
-      <div className="absolute left-1/2 top-[48%] h-[485px] w-[680px] -translate-x-1/2 -translate-y-1/2 -rotate-[18deg] rounded-[50%] border border-amber-300/[0.08]" />
+      <div className="absolute left-1/2 top-[48%] h-[485px] w-[680px] -translate-x-1/2 -translate-y-1/2 -rotate-[18deg] rounded-[50%] border border-gold-300/[0.08]" />
 
       {/* Globe */}
       <div className="relative h-[475px] w-[475px] max-w-[84vw]">
-        <div className="absolute inset-0 overflow-hidden rounded-full border border-cyan-200/35 bg-[#031323] shadow-[0_0_100px_rgba(14,165,233,0.28),inset_-45px_-30px_85px_rgba(0,0,0,0.82),inset_20px_15px_50px_rgba(56,189,248,0.18)]">
+        <div className="absolute inset-0 overflow-hidden rounded-full border border-gold-200/35 bg-navy-950 shadow-[0_0_100px_rgba(54,82,126,0.28),inset_-45px_-30px_85px_rgba(0,0,0,0.82),inset_20px_15px_50px_rgba(168,195,224,0.18)]">
           {/* Internal lighting */}
-          <div className="absolute inset-[2%] rounded-full bg-[radial-gradient(circle_at_32%_23%,rgba(125,211,252,0.34),transparent_20%),radial-gradient(circle_at_62%_66%,rgba(14,165,233,0.18),transparent_34%),linear-gradient(145deg,rgba(7,42,69,0.95),rgba(1,8,18,0.99))]" />
+          <div className="absolute inset-[2%] rounded-full bg-[radial-gradient(circle_at_32%_23%,rgba(107,143,191,0.34),transparent_20%),radial-gradient(circle_at_62%_66%,rgba(54,82,126,0.18),transparent_34%),linear-gradient(145deg,rgba(23,39,66,0.95),rgba(8,15,32,0.99))]" />
 
           {/* Latitude and longitude */}
-          <div className="absolute inset-[7%] rounded-full border border-cyan-300/[0.18]" />
+          <div className="absolute inset-[7%] rounded-full border border-gold-300/[0.18]" />
 
-          <div className="absolute left-1/2 top-[7%] h-[86%] w-[33%] -translate-x-1/2 rounded-[50%] border border-cyan-300/[0.16]" />
+          <div className="absolute left-1/2 top-[7%] h-[86%] w-[33%] -translate-x-1/2 rounded-[50%] border border-gold-300/[0.16]" />
 
-          <div className="absolute left-1/2 top-[7%] h-[86%] w-[60%] -translate-x-1/2 rounded-[50%] border border-cyan-300/[0.12]" />
+          <div className="absolute left-1/2 top-[7%] h-[86%] w-[60%] -translate-x-1/2 rounded-[50%] border border-gold-300/[0.12]" />
 
-          <div className="absolute left-1/2 top-[7%] h-[86%] w-[88%] -translate-x-1/2 rounded-[50%] border border-cyan-300/[0.08]" />
+          <div className="absolute left-1/2 top-[7%] h-[86%] w-[88%] -translate-x-1/2 rounded-[50%] border border-gold-300/[0.08]" />
 
-          <div className="absolute left-[7%] top-[24%] h-[24%] w-[86%] rounded-[50%] border border-cyan-300/[0.11]" />
+          <div className="absolute left-[7%] top-[24%] h-[24%] w-[86%] rounded-[50%] border border-gold-300/[0.11]" />
 
-          <div className="absolute left-[5%] top-[40%] h-[20%] w-[90%] rounded-[50%] border border-cyan-300/[0.18]" />
+          <div className="absolute left-[5%] top-[40%] h-[20%] w-[90%] rounded-[50%] border border-gold-300/[0.18]" />
 
-          <div className="absolute left-[8%] top-[58%] h-[18%] w-[84%] rounded-[50%] border border-cyan-300/[0.11]" />
+          <div className="absolute left-[8%] top-[58%] h-[18%] w-[84%] rounded-[50%] border border-gold-300/[0.11]" />
 
           {/* Abstract continents */}
-          <div className="absolute left-[20%] top-[19%] h-[90px] w-[118px] rotate-[-15deg] rounded-[48%_52%_65%_35%/42%_37%_63%_58%] border border-cyan-200/30 bg-cyan-300/[0.10] shadow-[0_0_35px_rgba(34,211,238,0.14)]" />
+          <div className="absolute left-[20%] top-[19%] h-[90px] w-[118px] rotate-[-15deg] rounded-[48%_52%_65%_35%/42%_37%_63%_58%] border border-gold-200/30 bg-gold-300/[0.10] shadow-[0_0_35px_rgba(201,168,76,0.14)]" />
 
-          <div className="absolute left-[39%] top-[28%] h-[158px] w-[106px] rotate-[10deg] rounded-[45%_55%_42%_58%/32%_51%_49%_68%] border border-cyan-200/30 bg-cyan-300/[0.10]" />
+          <div className="absolute left-[39%] top-[28%] h-[158px] w-[106px] rotate-[10deg] rounded-[45%_55%_42%_58%/32%_51%_49%_68%] border border-gold-200/30 bg-gold-300/[0.10]" />
 
-          <div className="absolute right-[13%] top-[22%] h-[102px] w-[126px] rotate-[15deg] rounded-[56%_44%_61%_39%/37%_62%_38%_63%] border border-cyan-200/25 bg-cyan-300/[0.08]" />
+          <div className="absolute right-[13%] top-[22%] h-[102px] w-[126px] rotate-[15deg] rounded-[56%_44%_61%_39%/37%_62%_38%_63%] border border-gold-200/25 bg-gold-300/[0.08]" />
 
-          <div className="absolute bottom-[12%] right-[19%] h-[70px] w-[88px] rotate-[-10deg] rounded-[60%_40%_48%_52%/50%_58%_42%_50%] border border-cyan-200/22 bg-cyan-300/[0.07]" />
+          <div className="absolute bottom-[12%] right-[19%] h-[70px] w-[88px] rotate-[-10deg] rounded-[60%_40%_48%_52%/50%_58%_42%_50%] border border-gold-200/22 bg-gold-300/[0.07]" />
 
-          {/* Blue map highlights */}
-          <div className="absolute left-[31%] top-[31%] h-[65px] w-[54px] rounded-full bg-cyan-400/[0.10] blur-sm" />
+          {/* Navy map highlights */}
+          <div className="absolute left-[31%] top-[31%] h-[65px] w-[54px] rounded-full bg-gold-400/[0.10] blur-sm" />
 
-          <div className="absolute right-[25%] top-[35%] h-[82px] w-[70px] rounded-full bg-blue-400/[0.08] blur-sm" />
+          <div className="absolute right-[25%] top-[35%] h-[82px] w-[70px] rounded-full bg-navy-300/[0.08] blur-sm" />
 
           {/* Connection points */}
           {CONNECTION_POINTS.map((point, index) => (
@@ -72,60 +72,60 @@ export default function HeroGlobe() {
               }}
             >
               <span
-                className="absolute -inset-3 animate-ping rounded-full bg-amber-300/35"
+                className="absolute -inset-3 animate-ping rounded-full bg-gold-300/35"
                 style={{
                   animationDelay: point.delay,
                   animationDuration: '3s',
                 }}
               />
 
-              <span className="relative block h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,1)]" />
+              <span className="relative block h-2.5 w-2.5 rounded-full bg-gold-300 shadow-[0_0_18px_rgba(201,168,76,1)]" />
             </div>
           ))}
 
                    {/* UAE point */}
           <div className="absolute left-[61%] top-[43%] z-30">
-            <span className="absolute -inset-6 animate-ping rounded-full border border-amber-300/50" />
+            <span className="absolute -inset-6 animate-ping rounded-full border border-gold-300/50" />
 
-            <span className="absolute -inset-3 rounded-full border border-cyan-300/35" />
+            <span className="absolute -inset-3 rounded-full border border-gold-300/35" />
 
-            <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-white/70 bg-amber-300 shadow-[0_0_30px_rgba(252,211,77,1)]">
+            <span className="relative flex h-6 w-6 items-center justify-center rounded-full border border-white/70 bg-gold-300 shadow-[0_0_30px_rgba(201,168,76,1)]">
               <span className="h-2 w-2 rounded-full bg-white" />
             </span>
           </div>
 
           {/* Glass reflection */}
-          <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(115deg,rgba(255,255,255,0.14),transparent_26%,transparent_68%,rgba(14,165,233,0.09))]" />
+          <div className="pointer-events-none absolute inset-0 rounded-full bg-[linear-gradient(115deg,rgba(255,255,255,0.14),transparent_26%,transparent_68%,rgba(54,82,126,0.09))]" />
 
-          <div className="pointer-events-none absolute inset-0 animate-[spin_60s_linear_infinite] rounded-full border border-dashed border-cyan-200/[0.14]" />
+          <div className="pointer-events-none absolute inset-0 animate-[spin_60s_linear_infinite] rounded-full border border-dashed border-gold-200/[0.14]" />
         </div>
 
         {/* Globe orbit lines */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[125%] -translate-x-1/2 -translate-y-1/2 rotate-[18deg] rounded-[50%] border border-amber-300/35" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[150px] w-[125%] -translate-x-1/2 -translate-y-1/2 rotate-[18deg] rounded-[50%] border border-gold-300/35" />
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[190px] w-[118%] -translate-x-1/2 -translate-y-1/2 -rotate-[15deg] rounded-[50%] border border-cyan-300/20" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-[190px] w-[118%] -translate-x-1/2 -translate-y-1/2 -rotate-[15deg] rounded-[50%] border border-gold-300/20" />
 
         {/* Holographic base */}
-        <div className="absolute -bottom-16 left-1/2 h-[92px] w-[128%] -translate-x-1/2 rounded-[50%] border border-cyan-300/30 bg-cyan-400/[0.025] shadow-[0_0_55px_rgba(14,165,233,0.22)]" />
+        <div className="absolute -bottom-16 left-1/2 h-[92px] w-[128%] -translate-x-1/2 rounded-[50%] border border-gold-300/30 bg-gold-400/[0.025] shadow-[0_0_55px_rgba(54,82,126,0.22)]" />
 
-        <div className="absolute -bottom-10 left-1/2 h-[55px] w-[105%] -translate-x-1/2 rounded-[50%] border border-amber-300/30" />
+        <div className="absolute -bottom-10 left-1/2 h-[55px] w-[105%] -translate-x-1/2 rounded-[50%] border border-gold-300/30" />
 
-        <div className="absolute -bottom-5 left-1/2 h-[28px] w-[78%] -translate-x-1/2 rounded-[50%] bg-cyan-300/[0.12] blur-md" />
+        <div className="absolute -bottom-5 left-1/2 h-[28px] w-[78%] -translate-x-1/2 rounded-[50%] bg-gold-300/[0.12] blur-md" />
 
-        <div className="absolute -bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-cyan-200 shadow-[0_0_45px_18px_rgba(34,211,238,0.9)]" />
+        <div className="absolute -bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-gold-200 shadow-[0_0_45px_18px_rgba(201,168,76,0.9)]" />
       </div>
 
       {/* Ajman card */}
-      <div className="absolute right-[-10px] top-[40%] z-40 hidden w-[215px] rounded-xl border border-cyan-200/25 bg-[#051524]/92 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.6)] backdrop-blur-xl xl:block">
+      <div className="absolute right-[-10px] top-[40%] z-40 hidden w-[215px] rounded-xl border border-gold-200/25 bg-navy-800/[0.92] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.6)] backdrop-blur-xl xl:block">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-cyan-300/25 bg-cyan-300/[0.08]">
-            <div className="relative h-6 w-6 rounded-full border border-amber-300">
-              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gold-300/25 bg-gold-300/[0.08]">
+            <div className="relative h-6 w-6 rounded-full border border-gold-300">
+              <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-300 shadow-[0_0_12px_rgba(201,168,76,0.9)]" />
             </div>
           </div>
 
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-200">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-gold-200">
               Supply Hub
             </p>
 
@@ -142,14 +142,14 @@ export default function HeroGlobe() {
       </div>
 
       {/* Bottom label */}
-      <div className="absolute bottom-[4px] left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-cyan-300/15 bg-[#06111d]/88 px-4 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-xl">
-        <Globe2 size={14} className="text-cyan-200" />
+      <div className="absolute bottom-[4px] left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-gold-300/15 bg-navy-900/[0.88] px-4 py-2 text-[11px] font-bold text-slate-300 backdrop-blur-xl">
+        <Globe2 size={14} className="text-gold-200" />
         Global Industrial Supply Network
       </div>
 
       {/* Decorative location label */}
-      <div className="absolute left-[11%] top-[24%] hidden items-center gap-2 rounded-full border border-white/10 bg-[#06111d]/75 px-3 py-2 text-[10px] text-slate-400 backdrop-blur lg:flex">
-        <MapPin size={13} className="text-amber-300" />
+      <div className="absolute left-[11%] top-[24%] hidden items-center gap-2 rounded-full border border-white/10 bg-navy-900/75 px-3 py-2 text-[10px] text-slate-400 backdrop-blur lg:flex">
+        <MapPin size={13} className="text-gold-300" />
         Worldwide Supply
       </div>
     </div>

@@ -123,7 +123,7 @@ export default async function BrandsPage({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 shadow-xl shadow-black/20">
+            <div className="grid grid-cols-3 gap-4 rounded-xl border border-gold-400/10 bg-navy-800 p-6 shadow-xl shadow-black/20">
               <div>
                 <p className="text-xl font-bold text-gold-500">{BRANDS.length}+</p>
                 <p className="text-xs text-slate-500">Brands</p>
@@ -145,7 +145,7 @@ export default async function BrandsPage({
 
       <div className="page-container py-8">
         {/* Search */}
-        <div className="mb-8 rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 shadow-xl shadow-black/20">
+        <div className="mb-8 rounded-2xl border border-gold-400/10 bg-navy-800 p-6 shadow-xl shadow-black/20">
           <div className="mb-4">
             <h2 className="text-xl font-bold text-white">Find Parts by Brand</h2>
             <p className="mt-1 text-sm text-slate-400">
@@ -163,7 +163,7 @@ export default async function BrandsPage({
               <Link
                 key={brand.slug}
                 href={`/brands/${brand.slug}`}
-                className="group flex h-[300px] flex-col justify-between rounded-xl border border-cyan-400/10 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-xl hover:shadow-black/20"
+                className="group flex h-[300px] flex-col justify-between rounded-xl border border-gold-400/10 bg-navy-800 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-xl hover:shadow-black/20"
               >
                 <div>
                   <div className="mb-5 flex items-start justify-between">
@@ -210,7 +210,7 @@ export default async function BrandsPage({
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-10 text-center">
+          <div className="rounded-2xl border border-gold-500/20 bg-navy-800 p-10 text-center">
             <h3 className="text-2xl font-bold text-white">No Brands Found</h3>
 
             <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
@@ -228,7 +228,7 @@ export default async function BrandsPage({
         )}
 
         {/* CTA Banner */}
-        <div className="mt-12 rounded-3xl border border-gold-500/20 bg-gradient-to-br from-[#06111d] via-[#0b1f2f] to-[#06111d] p-10 text-center">
+        <div className="mt-12 rounded-3xl border border-gold-500/20 bg-navy-800 p-10 text-center">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-gold-500/20 bg-gold-500/10">
             <Zap size={26} className="text-gold-500" />
           </div>

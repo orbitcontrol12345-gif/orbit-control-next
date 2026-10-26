@@ -310,7 +310,7 @@ export default function ShareButton({
                   <p className="line-clamp-3 text-sm font-bold leading-5 text-white">
                     {title}
                   </p>
-                  <p className="mt-2 break-all text-[11px] leading-4 text-cyan-300">
+                  <p className="mt-2 break-all text-[11px] leading-4 text-gold-300">
                     {url}
                   </p>
                 </div>
@@ -344,9 +344,9 @@ export default function ShareButton({
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <a
                     href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(message)}`}
-                    className="flex items-center justify-center gap-2 rounded-xl border border-navy-600 px-3 py-3 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/50 hover:bg-white/5 hover:text-white"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-navy-600 px-3 py-3 text-sm font-semibold text-slate-200 transition hover:border-gold-400/50 hover:bg-white/5 hover:text-white"
                   >
-                    <Mail size={17} className="text-cyan-300" />
+                    <Mail size={17} className="text-gold-300" />
                     Email link
                   </a>
 
@@ -358,7 +358,7 @@ export default function ShareButton({
                     {copied ? (
                       <Check size={17} className="text-emerald-400" />
                     ) : (
-                      <Copy size={17} className="text-amber-300" />
+                      <Copy size={17} className="text-gold-300" />
                     )}
                     {copied ? 'Link copied' : 'Copy product link'}
                   </button>
@@ -393,7 +393,7 @@ export default function ShareButton({
             onClick={finishWebsiteShare}
             className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
           >
-            <Mail size={17} className="text-cyan-300" />
+            <Mail size={17} className="text-gold-300" />
             Email
           </a>
 
@@ -406,7 +406,7 @@ export default function ShareButton({
             {copied ? (
               <Check size={17} className="text-emerald-400" />
             ) : (
-              <Copy size={17} className="text-amber-300" />
+              <Copy size={17} className="text-gold-300" />
             )}
             {copied ? 'Link copied' : 'Copy link'}
           </button>

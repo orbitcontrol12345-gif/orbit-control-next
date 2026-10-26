@@ -240,7 +240,7 @@ const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 {selectedFiles.length > 0 && (
   <div className="mt-3 space-y-1">
     {selectedFiles.map((file, index) => (
-      <p key={index} className="text-xs text-green-400">
+      <p key={index} className="text-xs text-gold-400">
         ✓ {file.name}
       </p>
     ))}

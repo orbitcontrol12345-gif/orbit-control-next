@@ -135,13 +135,13 @@ export default function InstallAppPrompt() {
     <aside
       aria-label="Install Orbit Control"
       aria-live="polite"
-      className="animate-fade-in fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] mx-auto max-w-md overflow-hidden rounded-2xl border border-cyan-300/25 bg-[#0b1c2d]/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-6 md:left-6 md:right-auto md:mx-0"
+      className="animate-fade-in fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[60] mx-auto max-w-md overflow-hidden rounded-2xl border border-gold-300/25 bg-navy-800/95 p-4 shadow-2xl shadow-black/50 backdrop-blur-xl md:bottom-6 md:left-6 md:right-auto md:mx-0"
     >
       <button
         type="button"
         onClick={dismiss}
         aria-label="Dismiss install prompt"
-        className="absolute right-2 top-2 rounded-full p-2 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        className="absolute right-2 top-2 rounded-full p-2 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
       >
         <X className="h-4 w-4" />
       </button>
@@ -169,13 +169,13 @@ export default function InstallAppPrompt() {
         <button
           type="button"
           onClick={dismiss}
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
         >
           {isIos ? 'Got it' : 'Not now'}
         </button>
 
         {isIos ? (
-          <span className="inline-flex items-center gap-2 rounded-lg border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-sm font-semibold text-amber-200">
+          <span className="inline-flex items-center gap-2 rounded-lg border border-gold-300/30 bg-gold-400/10 px-3 py-2 text-sm font-semibold text-gold-200">
             <Share2 className="h-4 w-4" />
             Share
           </span>
@@ -183,7 +183,7 @@ export default function InstallAppPrompt() {
           <button
             type="button"
             onClick={install}
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2 text-sm font-bold text-[#07111f] transition hover:bg-amber-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1c2d]"
+            className="inline-flex items-center gap-2 rounded-lg bg-gold-400 px-4 py-2 text-sm font-bold text-navy-900 transition hover:bg-gold-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-200 focus-visible:ring-offset-2 focus-visible:ring-offset-navy-800"
           >
             <Download className="h-4 w-4" />
             Install

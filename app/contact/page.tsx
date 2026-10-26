@@ -102,16 +102,16 @@ export default function ContactPage() {
         </div>
       </a>
 
-      <a href="https://wa.me/971554835199" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-green-500/20 bg-green-500/10 p-3 hover:border-green-400/50 transition">
-        <MessageCircle size={18} className="text-green-400" />
+      <a href="https://wa.me/971554835199" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
+        <MessageCircle size={18} className="text-gold-400" />
         <div>
           <p className="text-xs text-slate-400">WhatsApp</p>
           <p className="font-semibold text-white">+971 55 483 5199</p>
         </div>
       </a>
 
-      <a href="tel:+97167677094" className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 hover:border-blue-400/50 transition">
-        <Phone size={18} className="text-blue-400" />
+      <a href="tel:+97167677094" className="flex items-center gap-3 rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 hover:border-gold-400/50 transition">
+        <Phone size={18} className="text-gold-400" />
         <div>
           <p className="text-xs text-slate-400">Office</p>
           <p className="font-semibold text-white">+971 6 767 7094</p>

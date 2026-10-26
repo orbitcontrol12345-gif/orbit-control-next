@@ -313,7 +313,7 @@ export default async function CategoryPage({
         data={breadcrumbSchema}
       />
 
-      <section className="border-b border-navy-700 bg-navy-800">
+      <section className="border-b border-gold-500/15 bg-navy-900">
         <div className="page-container py-12">
           <nav
             aria-label="Breadcrumb"

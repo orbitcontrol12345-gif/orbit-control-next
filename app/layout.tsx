@@ -140,7 +140,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#07111f',
+  themeColor: '#0b1529',
   colorScheme: 'dark',
 };
 
@@ -256,17 +256,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body
-        className={`${inter.className} min-h-screen bg-[#07111f] text-slate-100 antialiased`}
+        className={`${inter.className} min-h-screen bg-navy-900 text-slate-100 antialiased`}
       >
-        <div className="fixed inset-0 -z-10 overflow-hidden bg-[radial-gradient(circle_at_top_left,#153c4f_0%,transparent_32%),radial-gradient(circle_at_top_right,#4b2e12_0%,transparent_28%),linear-gradient(180deg,#07111f_0%,#081827_45%,#050b14_100%)]" />
-
-        <div className="fixed inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:42px_42px] opacity-40" />
-
         <Suspense fallback={null}>
           <Header />
         </Suspense>
 
-        <main className="relative">{children}</main>
+        <main className="relative bg-navy-900">{children}</main>
 
         <Footer />
 

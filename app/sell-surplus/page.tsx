@@ -281,8 +281,8 @@ const response = await fetch('/api/sell-surplus', {
     }
   }}
 />{selectedFiles.length > 0 && (
-  <div className="mt-4 w-full rounded-xl border border-green-500/20 bg-green-500/10 p-3 text-left">
-    <p className="mb-2 text-sm font-semibold text-green-400">
+  <div className="mt-4 w-full rounded-xl border border-gold-500/20 bg-gold-500/10 p-3 text-left">
+    <p className="mb-2 text-sm font-semibold text-gold-400">
       {selectedFiles.length} file(s) selected
     </p>
 

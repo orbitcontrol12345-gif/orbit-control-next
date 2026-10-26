@@ -259,11 +259,11 @@ export default function Header() {
       ref={headerRef}
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'border-b border-navy-700 bg-navy-900/98 shadow-lg shadow-black/30 backdrop-blur-sm'
+          ? 'border-b border-navy-700 bg-navy-900/[0.98] shadow-lg shadow-black/30 backdrop-blur-sm'
           : 'border-b border-navy-800 bg-navy-900/95 backdrop-blur-sm'
       }`}
     >
-      <div className="hidden border-b border-navy-800 bg-navy-950 md:block">
+      <div className="hidden border-b border-gold-500/15 bg-navy-900 md:block">
         <div className="page-container flex items-center justify-between py-2">
           <p className="text-xs text-slate-400">
             Worldwide Industrial Automation Spare Parts Supplier — UAE

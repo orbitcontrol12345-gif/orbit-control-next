@@ -30,7 +30,7 @@ const footerLinks = {
 };
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#050b14]">
+    <footer className="border-t border-white/10 bg-navy-900">
       <div className="page-container py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
@@ -52,54 +52,54 @@ export default function Footer() {
 
             <div className="space-y-3">
               <div className="flex items-start gap-3 text-sm text-slate-400">
-                <MapPin size={16} className="mt-0.5 shrink-0 text-amber-400" />
+                <MapPin size={16} className="mt-0.5 shrink-0 text-gold-400" />
                 <span>United Arab Emirates, Ajman</span>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Mail size={16} className="shrink-0 text-amber-400" />
+                <Mail size={16} className="shrink-0 text-gold-400" />
                 <a
                   href="mailto:info@orbit-surplus.com"
-                  className="transition-colors hover:text-amber-300"
+                  className="transition-colors hover:text-gold-300"
                 >
                   info@orbit-surplus.com
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Mail size={16} className="shrink-0 text-amber-400" />
+                <Mail size={16} className="shrink-0 text-gold-400" />
                 <a
                   href="mailto:sales@orbit-surplus.com"
-                  className="transition-colors hover:text-amber-300"
+                  className="transition-colors hover:text-gold-300"
                 >
                   sales@orbit-surplus.com
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Phone size={16} className="shrink-0 text-amber-400" />
+                <Phone size={16} className="shrink-0 text-gold-400" />
                 <a
                   href="tel:+97167677094"
-                  className="transition-colors hover:text-amber-300"
+                  className="transition-colors hover:text-gold-300"
                 >
                   +971 6 767 7094
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Phone size={16} className="shrink-0 text-amber-400" />
+                <Phone size={16} className="shrink-0 text-gold-400" />
                 <a
                   href="https://wa.me/971554835199"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-amber-300"
+                  className="transition-colors hover:text-gold-300"
                 >
                   WhatsApp: +971 55 483 5199
                 </a>
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-400">
-                <Globe size={16} className="shrink-0 text-amber-400" />
+                <Globe size={16} className="shrink-0 text-gold-400" />
                 <span>Worldwide shipping via DHL &amp; FedEx</span>
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
+                    className="text-sm text-slate-400 transition-colors hover:text-gold-300"
                   >
                     {link.label}
                   </Link>
@@ -132,7 +132,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
+                    className="text-sm text-slate-400 transition-colors hover:text-gold-300"
                   >
                     {link.label}
                   </Link>
@@ -150,7 +150,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-slate-400 transition-colors hover:text-amber-300"
+                    className="text-sm text-slate-400 transition-colors hover:text-gold-300"
                   >
                     {link.label}
                   </Link>

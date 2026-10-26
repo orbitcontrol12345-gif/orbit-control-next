@@ -103,14 +103,14 @@ const formattedProductsCount =
       <TrustedBrands />
 
       {/* TRUST BOXES */}
-      <section className="border-b border-white/10 bg-[#071827] py-12">
+      <section className="border-b border-white/10 bg-navy-900 py-12">
         <div className="page-container grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST_ITEMS.map(([Icon, title, desc]: any) => (
             <div
               key={title}
-              className="group rounded-3xl border border-white/10 bg-white/[0.05] p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]"
+              className="group rounded-3xl border border-white/10 bg-navy-800 p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-gold-300/30 hover:bg-gold-300/[0.06]"
             >
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-gold-300/20 bg-gold-300/10 text-gold-200">
                 <Icon size={22} />
               </div>
               <p className="text-lg font-black text-white">{title}</p>
@@ -121,7 +121,7 @@ const formattedProductsCount =
       </section>
 
       {/* BRANDS */}
-      <section className="relative overflow-hidden border-y border-white/10 bg-[#04101b] py-20">
+      <section className="relative overflow-hidden border-y border-white/10 bg-navy-900 py-20">
         <div
           className="absolute inset-0 opacity-[0.08]"
           style={{
@@ -133,7 +133,7 @@ const formattedProductsCount =
 
         <div className="page-container relative">
           <div className="mx-auto mb-10 max-w-3xl text-center">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
               Global Automation Brands
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -145,13 +145,13 @@ const formattedProductsCount =
             </p>
           </div>
 
-          <div className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl shadow-black/30 backdrop-blur">
+          <div className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-navy-800 p-5 shadow-2xl shadow-black/30 backdrop-blur">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {BRANDS.slice(0, 12).map((brand) => (
                 <Link
                   key={brand.slug}
                   href={`/brands/${brand.slug}`}
-                  className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-[#0b1825] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/40 hover:bg-[#102033]"
+                  className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-navy-800 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400/40 hover:bg-navy-700"
                 >
                   {brand.logo ? (
                     <Image
@@ -174,7 +174,7 @@ const formattedProductsCount =
           <div className="mt-8 text-center">
             <Link
               href="/brands"
-              className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-7 py-3 text-sm font-black text-amber-300 transition hover:border-amber-300/60 hover:bg-amber-300/15"
+              className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-gold-300/10 px-7 py-3 text-sm font-black text-gold-300 transition hover:border-gold-300/60 hover:bg-gold-300/15"
             >
               View all manufacturers
               <ArrowRight size={16} />
@@ -184,11 +184,11 @@ const formattedProductsCount =
       </section>
 
       {/* CATEGORIES */}
-      <section className="border-y border-white/10 bg-[#071827] py-20">
+      <section className="border-y border-white/10 bg-navy-900 py-20">
         <div className="page-container">
           <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
                 Product Categories
               </p>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -198,7 +198,7 @@ const formattedProductsCount =
 
             <Link
               href="/categories"
-              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-5 py-3 text-sm font-black text-cyan-200 transition hover:border-cyan-300/30"
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-navy-800 px-5 py-3 text-sm font-black text-gold-200 transition hover:border-gold-300/30"
             >
               Browse Categories
               <ArrowRight size={16} />
@@ -213,12 +213,12 @@ const formattedProductsCount =
                 <Link
                   key={category.slug}
                   href={`/categories/${category.slug}`}
-                  className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]"
+                  className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-navy-800 p-6 shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-gold-300/30 hover:bg-gold-300/[0.06]"
                 >
-                  <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-cyan-300/10 blur-2xl transition group-hover:bg-cyan-300/20" />
+                  <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-gold-300/10 blur-2xl transition group-hover:bg-gold-300/20" />
 
                   <div className="relative">
-                    <div className="mb-5 flex h-13 w-13 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                    <div className="mb-5 flex h-13 w-13 items-center justify-center rounded-2xl border border-gold-300/20 bg-gold-300/10 text-gold-200">
                       <Icon size={24} />
                     </div>
 
@@ -229,7 +229,7 @@ const formattedProductsCount =
                         'Industrial automation and electrical spare parts.'}
                     </p>
 
-                    <div className="mt-6 inline-flex items-center gap-2 text-sm font-black text-amber-300">
+                    <div className="mt-6 inline-flex items-center gap-2 text-sm font-black text-gold-300">
                       Explore Category
                       <ArrowRight size={15} className="transition group-hover:translate-x-1" />
                     </div>
@@ -242,13 +242,13 @@ const formattedProductsCount =
       </section>
 
       {/* INDUSTRIES */}
-      <section className="relative overflow-hidden border-y border-white/10 bg-[#04101b] py-20">
-        <div className="absolute left-[-120px] top-20 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute bottom-[-140px] right-[-120px] h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
+      <section className="relative overflow-hidden border-y border-white/10 bg-navy-900 py-20">
+        <div className="absolute left-[-120px] top-20 h-80 w-80 rounded-full bg-gold-500/5 blur-3xl" />
+        <div className="absolute bottom-[-140px] right-[-120px] h-96 w-96 rounded-full bg-gold-500/5 blur-3xl" />
 
         <div className="page-container relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
               Industries We Serve
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -273,9 +273,9 @@ const formattedProductsCount =
             {INDUSTRIES.map((industry) => (
               <div
                 key={industry}
-                className="rounded-3xl border border-white/10 bg-white/[0.05] p-5 text-center transition hover:-translate-y-1 hover:border-amber-300/30 hover:bg-amber-300/[0.07]"
+                className="rounded-3xl border border-white/10 bg-navy-800 p-5 text-center transition hover:-translate-y-1 hover:border-gold-300/30 hover:bg-gold-300/[0.07]"
               >
-                <Factory className="mx-auto mb-3 text-cyan-200" size={22} />
+                <Factory className="mx-auto mb-3 text-gold-200" size={22} />
                 <p className="text-sm font-black text-white">{industry}</p>
               </div>
             ))}
@@ -284,10 +284,10 @@ const formattedProductsCount =
       </section>
 
       {/* GLOBAL PROCESS */}
-      <section className="border-y border-white/10 bg-[#071827] py-20">
+      <section className="border-y border-white/10 bg-navy-900 py-20">
         <div className="page-container">
           <div className="mb-10 text-center">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-300">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
               Global Supply Process
             </p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -305,9 +305,9 @@ const formattedProductsCount =
             ].map(([Icon, title, desc]: any) => (
               <div
                 key={title}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-6 text-center transition hover:border-cyan-300/30"
+                className="rounded-[2rem] border border-white/10 bg-navy-800 p-6 text-center transition hover:border-gold-300/30"
               >
-                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-gold-300/20 bg-gold-300/10 text-gold-200">
                   <Icon size={22} />
                 </div>
                 <p className="font-black text-white">{title}</p>
@@ -321,13 +321,13 @@ const formattedProductsCount =
       {/* FEATURED PRODUCTS */}
       {featuredProducts.length > 0 && (
         <section
-          className="bg-[#04101b] py-20"
+          className="bg-navy-900 py-20"
           data-nosnippet=""
         >
           <div className="page-container">
             <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
                   Available Inventory
                 </p>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">
@@ -349,7 +349,7 @@ const formattedProductsCount =
                   <Link
                     key={tab.label}
                     href={tab.href}
-                    className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:border-cyan-300/30 hover:text-cyan-200"
+                    className="rounded-full border border-white/10 bg-navy-800 px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-300 transition hover:border-gold-300/30 hover:text-gold-200"
                   >
                     {tab.label}
                   </Link>
@@ -366,7 +366,7 @@ const formattedProductsCount =
             <div className="mt-10 text-center">
               <Link
                 href="/products"
-                className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-7 py-3 text-sm font-black text-amber-300 transition hover:border-amber-300/60 hover:bg-amber-300/15"
+                className="inline-flex items-center gap-2 rounded-full border border-gold-300/30 bg-gold-300/10 px-7 py-3 text-sm font-black text-gold-300 transition hover:border-gold-300/60 hover:bg-gold-300/15"
               >
                 Browse full inventory
                 <ArrowRight size={16} />
@@ -377,14 +377,14 @@ const formattedProductsCount =
       )}
 
       {/* FINAL CTA */}
-      <section className="relative overflow-hidden border-t border-white/10 bg-[#071827] py-20">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 via-transparent to-amber-400/10" />
+      <section className="relative overflow-hidden border-t border-white/10 bg-navy-900 py-20">
+        <div className="absolute inset-0 bg-gradient-to-r from-gold-400/10 via-transparent to-gold-400/10" />
 
         <div className="page-container relative">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-8 shadow-2xl shadow-black/30 md:p-10">
+          <div className="rounded-[2rem] border border-white/10 bg-navy-800 p-8 shadow-2xl shadow-black/30 md:p-10">
             <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-gold-300">
                   Need urgent industrial parts?
                 </p>
                 <h2 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">

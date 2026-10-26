@@ -96,20 +96,11 @@ export default function ManufacturersPage() {
   );
 
   return (
-    <main className="bg-[#06111d] text-white">
+    <main className="bg-navy-900 text-white">
       <section className="relative overflow-hidden border-b border-white/10 py-20">
-        <div
-          className="absolute inset-0"
-          aria-hidden="true"
-          style={{
-            background:
-              'radial-gradient(circle at 20% 20%, rgba(34,211,238,0.16), transparent 30%), radial-gradient(circle at 85% 20%, rgba(245,158,11,0.14), transparent 28%), linear-gradient(135deg, #06111d 0%, #0b1f2f 55%, #06111d 100%)',
-          }}
-        />
-
         <div className="page-container relative">
           <div className="max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-200">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-gold-300/20 bg-gold-300/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-gold-200">
               <Factory size={15} aria-hidden="true" />
               Industrial Manufacturers
             </div>
@@ -132,7 +123,7 @@ export default function ManufacturersPage() {
                 className="rounded-2xl border border-white/10 bg-white/5 p-5"
               >
                 <Icon
-                  className="mb-4 text-cyan-200"
+                  className="mb-4 text-gold-200"
                   size={22}
                   aria-hidden="true"
                 />
@@ -152,7 +143,7 @@ export default function ManufacturersPage() {
         <div className="page-container">
           <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-300">
+              <p className="text-xs font-black uppercase tracking-widest text-gold-300">
                 Featured Manufacturers
               </p>
 
@@ -163,7 +154,7 @@ export default function ManufacturersPage() {
 
             <Link
               href="/brands"
-              className="inline-flex items-center gap-2 text-sm font-bold text-amber-300 transition-colors hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+              className="inline-flex items-center gap-2 text-sm font-bold text-gold-300 transition-colors hover:text-gold-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
             >
               View all brands
               <ArrowRight size={16} aria-hidden="true" />
@@ -176,7 +167,7 @@ export default function ManufacturersPage() {
                 key={brand.slug}
                 href={`/brands/${brand.slug}`}
                 aria-label={`Browse ${brand.name} industrial automation parts`}
-                className="group flex h-28 items-center justify-center rounded-2xl bg-white p-5 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="group flex h-28 items-center justify-center rounded-2xl bg-white p-5 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-gold-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
               >
                 {brand.logo ? (
                   <Image
@@ -200,7 +191,7 @@ export default function ManufacturersPage() {
       <section className="py-16">
         <div className="page-container">
           <div className="mb-8 text-center">
-            <p className="text-xs font-black uppercase tracking-widest text-amber-300">
+            <p className="text-xs font-black uppercase tracking-widest text-gold-300">
               Featured A–Z Directory
             </p>
 
@@ -218,7 +209,7 @@ export default function ManufacturersPage() {
                 key={letter}
                 href={`#letter-${letter}`}
                 aria-label={`Browse manufacturers starting with ${letter}`}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-cyan-200 transition hover:bg-cyan-300/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-sm font-bold text-gold-200 transition hover:bg-gold-300/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
               >
                 {letter}
               </a>
@@ -235,7 +226,7 @@ export default function ManufacturersPage() {
               >
                 <h3
                   id={`heading-${letter}`}
-                  className="mb-5 text-2xl font-black text-amber-300"
+                  className="mb-5 text-2xl font-black text-gold-300"
                 >
                   {letter}
                 </h3>
@@ -245,14 +236,14 @@ export default function ManufacturersPage() {
                     <Link
                       key={brand.slug}
                       href={`/brands/${brand.slug}`}
-                      className="group flex items-center justify-between rounded-xl border border-white/10 bg-[#081827] px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                      className="group flex items-center justify-between rounded-xl border border-white/10 bg-navy-800 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-gold-300/30 hover:bg-gold-300/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
                     >
                       <span>{brand.name}</span>
 
                       <ArrowRight
                         size={14}
                         aria-hidden="true"
-                        className="text-cyan-300 transition group-hover:translate-x-1"
+                        className="text-gold-300 transition group-hover:translate-x-1"
                       />
                     </Link>
                   ))}

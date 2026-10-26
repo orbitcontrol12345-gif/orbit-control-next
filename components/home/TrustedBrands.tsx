@@ -21,9 +21,9 @@ function BrandRow({ rowKey }: { rowKey: string }) {
           key={`${rowKey}-${brand.slug}`}
           href={`/brands/${brand.slug}`}
           aria-label={`View all ${brand.name} products`}
-          className="group flex h-24 min-w-[260px] items-center justify-center border-r border-white/[0.06] px-8 transition duration-300 hover:bg-white/[0.035] focus-visible:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300/60"
+          className="group flex h-24 min-w-[260px] items-center justify-center border-r border-white/[0.06] px-8 transition duration-300 hover:bg-white/[0.035] focus-visible:bg-white/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-300/60"
         >
-          <span className="text-center text-2xl font-black tracking-[-0.02em] text-slate-400 transition duration-300 group-hover:text-cyan-200 group-focus-visible:text-cyan-200">
+          <span className="text-center text-2xl font-black tracking-[-0.02em] text-slate-400 transition duration-300 group-hover:text-gold-200 group-focus-visible:text-gold-200">
             {brand.name}
           </span>
         </Link>
@@ -34,7 +34,7 @@ function BrandRow({ rowKey }: { rowKey: string }) {
 
 export default function TrustedBrands() {
   return (
-    <section className="relative overflow-hidden border-y border-cyan-300/10 bg-[#030b14] py-8">
+    <section className="relative overflow-hidden border-y border-gold-300/10 bg-navy-900 py-8">
       <div
         className="absolute inset-0 opacity-[0.05]"
         style={{
@@ -47,7 +47,7 @@ export default function TrustedBrands() {
       <div className="page-container relative">
         <div className="mb-8 flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-gold-300">
               TRUSTED BY
             </p>
 
@@ -58,7 +58,7 @@ export default function TrustedBrands() {
 
           <Link
             href="/brands"
-            className="rounded-full border border-cyan-300/20 bg-cyan-400/10 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition hover:border-cyan-300/40 hover:bg-cyan-400/15 hover:text-white"
+            className="rounded-full border border-gold-300/20 bg-gold-400/10 px-5 py-2 text-xs font-black uppercase tracking-[0.18em] text-gold-200 transition hover:border-gold-300/40 hover:bg-gold-400/15 hover:text-white"
           >
             GLOBAL BRANDS
           </Link>
@@ -66,10 +66,10 @@ export default function TrustedBrands() {
       </div>
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-28 bg-gradient-to-r from-[#030b14] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-28 bg-gradient-to-l from-[#030b14] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-28 bg-gradient-to-r from-navy-900 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-28 bg-gradient-to-l from-navy-900 to-transparent" />
 
-        <div className="overflow-hidden rounded-2xl border border-cyan-300/10 bg-[#06101a]/80 shadow-[0_0_50px_rgba(0,180,255,0.05)]">
+        <div className="overflow-hidden rounded-2xl border border-gold-300/10 bg-navy-800/80 shadow-[0_0_50px_rgba(201,168,76,0.05)]">
           <div className="flex w-max animate-[brandScroll_55s_linear_infinite] hover:[animation-play-state:paused]">
             <BrandRow rowKey="first" />
             <BrandRow rowKey="second" />
