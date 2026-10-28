@@ -1,4 +1,5 @@
 import ProductGallery from "@/components/product/ProductGallery";
+import CopyableProductTitle from "@/components/product/CopyableProductTitle";
 
 import JsonLd from "@/components/seo/JsonLd";
 import ProductCard from "@/components/products/ProductCard";
@@ -337,9 +338,7 @@ export default async function ProductDetailPage({ params }: Props) {
             </div>
           )}
 
-          <h1 className="mb-3 text-4xl font-bold leading-tight text-white md:text-5xl">
-            {product.name}
-          </h1>
+          <CopyableProductTitle title={product.name} />
 
           <p className="max-w-3xl text-slate-300">
             Industrial automation spare part available for RFQ, worldwide
