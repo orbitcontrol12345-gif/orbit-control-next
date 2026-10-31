@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.orbitcontrol.automation",
+      "sha256_cert_fingerprints": [
+        "E4:82:68:53:12:7E:3D:73:87:E1:FD:D7:96:17:66:1F:E6:ED:FD:3C:8B:04:C7:C7:62:25:0C:C5:37:7A:9A:1D"
+      ]
+    }
+  }
+]
