@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import type { LucideIcon } from 'lucide-react';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { BRANDS } from '@/lib/data';
+import BrandLogoTile from '@/components/brands/BrandLogoTile';
 
 const SITE_URL = 'https://www.orbit-surplus.com';
 
@@ -163,26 +163,7 @@ export default function ManufacturersPage() {
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {FEATURED_BRANDS.map((brand) => (
-              <Link
-                key={brand.slug}
-                href={`/brands/${brand.slug}`}
-                aria-label={`Browse ${brand.name} industrial automation parts`}
-                className="group flex h-28 items-center justify-center rounded-2xl bg-white p-5 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-gold-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
-              >
-                {brand.logo ? (
-                  <Image
-                    src={brand.logo}
-                    alt={`${brand.name} logo`}
-                    width={210}
-                    height={90}
-                    className="max-h-16 w-auto object-contain transition group-hover:scale-105"
-                  />
-                ) : (
-                  <span className="text-center text-sm font-black text-slate-800">
-                    {brand.name}
-                  </span>
-                )}
-              </Link>
+              <BrandLogoTile key={brand.slug} brand={brand} />
             ))}
           </div>
         </div>
