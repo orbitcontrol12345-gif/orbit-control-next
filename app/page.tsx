@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import IndustrialHero from '@/components/home/IndustrialHero';
 import { getVisibleProductsCount } from '@/lib/supabase-products';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -26,6 +25,7 @@ import {
 } from 'lucide-react';
 
 import TrustedBrands from '@/components/home/TrustedBrands';
+import BrandLogoTile from '@/components/brands/BrandLogoTile';
 import ProductCard from '@/components/products/ProductCard';
 import { CATEGORIES, BRANDS } from '@/lib/data';
 import { getSupabaseProductsPage } from '@/lib/supabase-products';
@@ -148,25 +148,7 @@ const formattedProductsCount =
           <div className="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-navy-800 p-5 shadow-2xl shadow-black/30 backdrop-blur">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {BRANDS.slice(0, 12).map((brand) => (
-                <Link
-                  key={brand.slug}
-                  href={`/brands/${brand.slug}`}
-                  className="group flex h-28 items-center justify-center rounded-2xl border border-white/10 bg-navy-800 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold-400/40 hover:bg-navy-700"
-                >
-                  {brand.logo ? (
-                    <Image
-                      src={brand.logo}
-                      alt={`${brand.name} logo`}
-                      width={210}
-                      height={90}
-                      className="max-h-20 w-auto object-contain opacity-60 saturate-50 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-hover:saturate-100"
-                    />
-                  ) : (
-                    <span className="text-center text-sm font-black text-white">
-                      {brand.name}
-                    </span>
-                  )}
-                </Link>
+                <BrandLogoTile key={brand.slug} brand={brand} />
               ))}
             </div>
           </div>
